@@ -82,6 +82,44 @@
                   </div>
                 </fieldset>
 
+                <fieldset rsf:id="selectInstructorTA:" class="visibleFS">
+                    <legend rsf:id="msg=evalsettings.selection.header">Instructor / Teaching Assistant selection:</legend>
+                    <div class="shorttext">
+                        <span rsf:id="msg=evalsettings.selection.instruction" class="instruction">
+                            These options control which Instructor and Teaching Assistant questions are repeated in the evaluation.
+                      </span>
+                    </div>
+                    
+                    <h4 rsf:id="msg=evalsettings.selection.header.instructor">Instructor questions:</h4>
+                    <span rsf:id="selectionRadioInstructors" />
+                    <div rsf:id="selectInstructorsChoice:">
+                      <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio" value="radio" checked="checked" />
+                      <label rsf:id="radioLabel" for="radio" >Respondents evaluate all instructors included in the evaluation</label>
+                    </div>
+                    <div rsf:id="selectInstructorsChoice:">
+                       <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio2" value="radio2" />
+                       <label rsf:id="radioLabel" for="radio2">Respondents select one instructor to evaluate</label>
+                    </div>
+                    <div rsf:id="selectInstructorsChoice:">
+                      <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio3" value="radio3"/>
+                      <label rsf:id="radioLabel" for="radio3">Respondents may select multiple instructors to evaluate</label>
+                    </div>
+                    <h4 rsf:id="msg=evalsettings.selection.header.ta">Teaching Assistant questions:</h4>  
+                    <span rsf:id="selectionRadioTAs" />                  
+                    <div rsf:id="selectTAsChoice:">
+                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio4" value="radio4" checked="checked" />
+                      <label rsf:id="radioLabel" for="radio4">Respondents evaluate all TAs included in the evaluation</label>
+                    </div>
+                    <div rsf:id="selectTAsChoice:">
+                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio5" value="radio5" />
+                      <label rsf:id="radioLabel" for="radio5">Respondents select one TA to evaluate</label>
+                    </div>
+                    <div rsf:id="selectTAsChoice:">
+                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio6" value="radio6" />
+                      <label rsf:id="radioLabel" for="radio6">Respondents may select multiple TAs to evaluate</label>
+                    </div>
+                </fieldset>
+
 				<fieldset class="visibleFS">
 					<legend rsf:id="msg=evalsettings.dates.header">Evaluation Dates:</legend>
                         <div class="shorttext">
@@ -125,86 +163,6 @@
 				</fieldset>
 
 				<fieldset class="visibleFS">
-					<legend rsf:id="msg=evalsettings.results.viewing.header">Evaluation Results:</legend>
-                    <div>
-                      <span rsf:id="msg=evalsettings.results.viewing.sharing.header">Results sharing:</span>
-                      <span rsf:id="dummyRadioSharing" />
-                      <span rsf:id="resultsSharingChoice:">
-                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue1" />
-                          <label rsf:id="radioLabel" for="radioValue1">Private</label>
-                      </span>
-                      <span rsf:id="resultsSharingChoice:">
-                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue2" checked="checked" />
-                          <label rsf:id="radioLabel" for="radioValue2">Configurable</label>
-                      </span>
-                      <span rsf:id="resultsSharingChoice:">
-                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue3" />
-                          <label rsf:id="radioLabel" for="radioValue3">Public</label>
-                      </span>
-
-                      <div rsf:id="msg=evalsettings.results.viewable.admin.note" class="instruction">
-                          Note that admins above in the hierarchy can view the results UNLESS results sharing is set to private
-                      </div>
-                    </div>
-                    <div rsf:id="showViewDate:" class="shorttext" id="evaluation_show_viewdate_area">
-                         <label rsf:id="msg=evalsettings.view.date.header" for="viewDate:::date-field">View Date:</label>
-                         <span rsf:id="viewDate:">
-                             <input type="text" name="date_dummy" value="MM/DD/YYYY" size="12" maxlength="10"/>
-                             <img src="../images/calendar.gif" />
-                         </span>
-                         <span rsf:id="viewDate_disabled" />
-                         <span rsf:id="msg=evalsettings.view.date.desc" class="instruction textPanelFooter">
-                             Results are not viewable until this date
-                         </span>
-                    </div>
-					<table class="listHier" border="0" cellspacing="0" cellpadding="0" width="99%" style="margin:0" id="evaluation_show_results_area"><!-- DO NOT CHANGE THIS ID, it is used by JS logic -AZ -->
-						<tr rsf:id="showResultsToStudents:" id="showResultsToStudents">
-							<td width="50%" class="checkbox">
-								<input rsf:id="studentViewResults" type="checkbox" name="student_view_results" id="studentViewResults" />
-								<label rsf:id="studentViewResults_label"for="studentViewResults">Students in the courses this evaluation is assigned to</label>
-							</td>
-							<td width="50%" class="shorttext">
-								<span rsf:id="studentsViewDate_label">Results viewable on "View Date"</span>
-								<span rsf:id="studentsViewDate:">
-									<input type="text" name="dummy_date" value="MM/DD/YYYY" size="12" maxlength="10"/>
-									<img src="../images/calendar.gif" />
-								</span>
-							</td>
-						</tr>
-						<tr rsf:id="showResultsToInst:" id="showResultsToInst">
-							<td width="50%" class="checkbox">
-								<input rsf:id="instructorViewResults" type="checkbox" name="instructor_view_results" id="instructorViewResults" />
-								<label rsf:id="instructorViewResults_label" for="instructorViewResults">Instructors in the courses this evaluation is assigned to</label>
-							</td>
-							<td width="50%" class="shorttext">
-								<span rsf:id="instructorsViewDate_label">Results viewable on "View Date"</span>
-								<span rsf:id="instructorsViewDate:" >
-									<input type="text" name="dummy_date" value="MM/DD/YYYY" size="12" maxlength="10"/>
-									<img src="../images/calendar.gif" />
-								</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2"> </td>
-						</tr>
-					</table>
-				</fieldset>
-
-				<fieldset class="visibleFS">
-					<legend rsf:id="msg=evalsettings.student.completion.settings.header">Student Completion Settings:</legend>
-					<div rsf:id="showBlankQuestionAllowedToStut:"  class="checkbox">
-						<input rsf:id="blankResponsesAllowed" type="checkbox" name="blankResponsesAllowed" id="blankResponsesAllowed" />
-						<label rsf:id="blankResponsesAllowed_label" for="blankResponsesAllowed">Blank non-text question responses allowed:</label>
-						<p rsf:id="msg=evalsettings.blank.responses.allowed.note" class="instruction textPanelFooter indnt2">Participants are not warned when responses are left blank if unchecked</p>
-					</div>	
-					<div rsf:id="showModifyResponsesAllowedToStu:" class="checkbox">
-						<input rsf:id="modifyResponsesAllowed" type="checkbox" name="modifyResponsesAllowed" id="modifyResponsesAllowed" />
-						<label rsf:id="modifyResponsesAllowed_label" for="modifyResponsesAllowed">Modification of responses allowed:</label>
-						<p rsf:id="msg=evalsettings.modify.responses.allowed.note"  class="instruction textPanelFooter indnt2">Participants may submit responses once only if unchecked</p>
-					</div>
-				</fieldset>
-
-				<fieldset class="visibleFS">
 					<legend rsf:id="msg=evalsettings.admin.settings.header">Administrative Settings</legend>
 					<p rsf:id="msg=evalsettings.auth.control.instructions" class="instruction">
 						This setting allows you to choose whether to require authentication to take this evaluation
@@ -217,6 +175,7 @@
 							<option value="NONE">None (anonymous allowed)</option>
 						</select>
 					</p>	
+					<!-- 
 					<p  rsf:id="instructor-opt-instructions"  class="instruction">
 						This setting allows you to give the instructor control over whether to use the evaluation (or simply require them to).
 					</p>
@@ -227,48 +186,26 @@
 							<option>Opt Out</option>
 							<option>Required</option>
 						</select>
-						<!--//gsilver: what is this?  This shows the system option when the select is disabled -AZ -->
 						<span rsf:id="instructorOptLabel" style="font-weight:bold;"></span>
 					</p>
+					 -->
 				</fieldset>
 
-                <fieldset rsf:id="selectInstructorTA:" class="visibleFS">
-                    <legend rsf:id="msg=evalsettings.selection.header">Instructor / Teaching Assistant selection:</legend>
-                    <div class="shorttext">
-                        <span rsf:id="msg=evalsettings.selection.instruction" class="instruction">
-                            These options control which Instructor and Teaching Assistant questions are repeated in the evaluation.
-                      </span>
-                    </div>
-                    
-                    <h4 rsf:id="msg=evalsettings.selection.header.instructor">Instructor questions:</h4>
-                    <span rsf:id="selectionRadioInstructors" />
-                    <div rsf:id="selectInstructorsChoice:">
-                      <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio" value="radio" checked="checked" />
-                      <label rsf:id="radioLabel" for="radio" >Respondents evaluate all instructors included in the evaluation</label>
-                    </div>
-                    <div rsf:id="selectInstructorsChoice:">
-                       <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio2" value="radio2" />
-                       <label rsf:id="radioLabel" for="radio2">Respondents select one instructor to evaluate</label>
-                    </div>
-                    <div rsf:id="selectInstructorsChoice:">
-                      <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio3" value="radio3"/>
-                      <label rsf:id="radioLabel" for="radio3">Respondents may select multiple instructors to evaluate</label>
-                    </div>
-                    <h4 rsf:id="msg=evalsettings.selection.header.ta">Teaching Assistant questions:</h4>  
-                    <span rsf:id="selectionRadioTAs" />                  
-                    <div rsf:id="selectTAsChoice:">
-                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio4" value="radio4" checked="checked" />
-                      <label rsf:id="radioLabel" for="radio4">Respondents evaluate all TAs included in the evaluation</label>
-                    </div>
-                    <div rsf:id="selectTAsChoice:">
-                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio5" value="radio5" />
-                      <label rsf:id="radioLabel" for="radio5">Respondents select one TA to evaluate</label>
-                    </div>
-                    <div rsf:id="selectTAsChoice:">
-                      <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio6" value="radio6" />
-                      <label rsf:id="radioLabel" for="radio6">Respondents may select multiple TAs to evaluate</label>
-                    </div>
-                </fieldset>
+				<fieldset class="visibleFS">
+					<legend rsf:id="msg=evalsettings.student.completion.settings.header">Student Completion Settings:</legend>
+					<!-- 
+					<div rsf:id="showBlankQuestionAllowedToStut:"  class="checkbox">
+						<input rsf:id="blankResponsesAllowed" type="checkbox" name="blankResponsesAllowed" id="blankResponsesAllowed" />
+						<label rsf:id="blankResponsesAllowed_label" for="blankResponsesAllowed">Blank non-text question responses allowed:</label>
+						<p rsf:id="msg=evalsettings.blank.responses.allowed.note" class="instruction textPanelFooter indnt2">Participants are not warned when responses are left blank if unchecked</p>
+					</div>
+					 -->	
+					<div rsf:id="showModifyResponsesAllowedToStu:" class="checkbox">
+						<input rsf:id="modifyResponsesAllowed" type="checkbox" name="modifyResponsesAllowed" id="modifyResponsesAllowed" />
+						<label rsf:id="modifyResponsesAllowed_label" for="modifyResponsesAllowed">Modification of responses allowed:</label>
+						<p rsf:id="msg=evalsettings.modify.responses.allowed.note"  class="instruction textPanelFooter indnt2">Participants may submit responses once only if unchecked</p>
+					</div>
+				</fieldset>
 
 				<fieldset rsf:id="showEvalExtras:" class="visibleFS">
 					<legend rsf:id="msg=evalsettings.extra.settings.header">Evaluation Extras:</legend>
@@ -316,6 +253,75 @@
 						<label  rsf:id="msg=evalsettings.from.email.header" for="reminderFromEmail" >Email From/Reply-to Address:</label>
 						<input type="text" name="reminder_from_email" rsf:id="reminderFromEmail" id="reminderFromEmail"  size="50" maxlength="100"/>
 					</div>
+				</fieldset>
+
+
+				<fieldset class="visibleFS">
+					<legend rsf:id="msg=evalsettings.results.viewing.header">Evaluation Results:</legend>
+				<!-- 
+                    <div>
+                      <span rsf:id="msg=evalsettings.results.viewing.sharing.header">Results sharing:</span>
+                      <span rsf:id="dummyRadioSharing" />
+                      <span rsf:id="resultsSharingChoice:">
+                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue1" />
+                          <label rsf:id="radioLabel" for="radioValue1">Private</label>
+                      </span>
+                      <span rsf:id="resultsSharingChoice:">
+                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue2" checked="checked" />
+                          <label rsf:id="radioLabel" for="radioValue2">Configurable</label>
+                      </span>
+                      <span rsf:id="resultsSharingChoice:">
+                          <input rsf:id="radioValue" type="radio" name="resultsSharing" id="radioValue3" />
+                          <label rsf:id="radioLabel" for="radioValue3">Public</label>
+                      </span>
+
+                      <div rsf:id="msg=evalsettings.results.viewable.admin.note" class="instruction">
+                          Note that admins above in the hierarchy can view the results UNLESS results sharing is set to private
+                      </div>
+                    </div>
+                     -->
+                    <div rsf:id="showViewDate:" class="shorttext" id="evaluation_show_viewdate_area">
+                         <label rsf:id="msg=evalsettings.view.date.header" for="viewDate:::date-field">View Date:</label>
+                         <span rsf:id="viewDate:">
+                             <input type="text" name="date_dummy" value="MM/DD/YYYY" size="12" maxlength="10"/>
+                             <img src="../images/calendar.gif" />
+                         </span>
+                         <span rsf:id="viewDate_disabled" />
+                         <span rsf:id="msg=evalsettings.view.date.desc" class="instruction textPanelFooter">
+                             Results are not viewable until this date
+                         </span>
+                    </div>
+					<table class="listHier" border="0" cellspacing="0" cellpadding="0" width="99%" style="margin:0" id="evaluation_show_results_area"><!-- DO NOT CHANGE THIS ID, it is used by JS logic -AZ -->
+						<tr rsf:id="showResultsToStudents:" id="showResultsToStudents">
+							<td width="50%" class="checkbox">
+								<input rsf:id="studentViewResults" type="checkbox" name="student_view_results" id="studentViewResults" />
+								<label rsf:id="studentViewResults_label"for="studentViewResults">Students in the courses this evaluation is assigned to</label>
+							</td>
+							<td width="50%" class="shorttext">
+								<span rsf:id="studentsViewDate_label">Results viewable on "View Date"</span>
+								<span rsf:id="studentsViewDate:">
+									<input type="text" name="dummy_date" value="MM/DD/YYYY" size="12" maxlength="10"/>
+									<img src="../images/calendar.gif" />
+								</span>
+							</td>
+						</tr>
+						<tr rsf:id="showResultsToInst:" id="showResultsToInst">
+							<td width="50%" class="checkbox">
+								<input rsf:id="instructorViewResults" type="checkbox" name="instructor_view_results" id="instructorViewResults" />
+								<label rsf:id="instructorViewResults_label" for="instructorViewResults">Instructors in the courses this evaluation is assigned to</label>
+							</td>
+							<td width="50%" class="shorttext">
+								<span rsf:id="instructorsViewDate_label">Results viewable on "View Date"</span>
+								<span rsf:id="instructorsViewDate:" >
+									<input type="text" name="dummy_date" value="MM/DD/YYYY" size="12" maxlength="10"/>
+									<img src="../images/calendar.gif" />
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2"> </td>
+						</tr>
+					</table>
 				</fieldset>
 
 				<p class="act">
