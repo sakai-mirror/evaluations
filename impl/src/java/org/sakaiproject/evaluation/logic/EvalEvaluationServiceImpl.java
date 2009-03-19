@@ -210,26 +210,11 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
     public Set<String> getUserIdsTakingEvalInGroup(Long evaluationId, String evalGroupId,
             String includeConstant) {
         EvalUtils.validateEmailIncludeConstant(includeConstant);
-        Set<String> userIds = null;
-        if (EvalConstants.EVAL_INCLUDE_NONTAKERS.equals(includeConstant)) {
-            // get all users who have NOT responded
-            userIds = commonLogic.getUserIdsForEvalGroup(evalGroupId,
-                    EvalConstants.PERM_TAKE_EVALUATION);
-            Set<String> respondedUserIds = dao.getResponseUserIds(evaluationId,
-                    new String[] { evalGroupId });
-            // subtract responded users from the total list of users who can take to get the
-            // non-responders
-            userIds.removeAll(respondedUserIds);
-        } else if (EvalConstants.EVAL_INCLUDE_RESPONDENTS.equals(includeConstant)) {
-            // get all users who have responded
-            userIds = dao.getResponseUserIds(evaluationId, new String[] { evalGroupId });
-        } else if (EvalConstants.EVAL_INCLUDE_ALL.equals(includeConstant)) {
-            // get all users permitted to take the evaluation
-            userIds = commonLogic.getUserIdsForEvalGroup(evalGroupId,
-                    EvalConstants.PERM_TAKE_EVALUATION);
-        }
-        if (userIds == null) {
-            userIds = new HashSet<String>();
+        List<EvalAssignUser> l = getParticipantsForEval(evaluationId, null, new String[] {evalGroupId}, 
+                EvalAssignUser.TYPE_EVALUATOR, null, includeConstant, null);
+        HashSet<String> userIds = new HashSet<String>(l.size());
+        for (EvalAssignUser evalAssignUser : l) {
+            userIds.add(evalAssignUser.getUserId());
         }
         return userIds;
     }
@@ -542,7 +527,9 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
         }
         Boolean instructorAllowedCreateEvals = (Boolean) settings.get(EvalSettings.INSTRUCTOR_ALLOWED_CREATE_EVALUATIONS);
         if (instructorAllowedCreateEvals != null && instructorAllowedCreateEvals) {
-            if ( commonLogic.countEvalGroupsForUser(userId, EvalConstants.PERM_ASSIGN_EVALUATION) > 0 ) {
+            // check if this user has the assign evals permission in any groups
+            int permCount = commonLogic.countEvalGroupsForUser(userId, EvalConstants.PERM_ASSIGN_EVALUATION);
+            if ( permCount > 0 ) {
                 log.debug("User has permission to assign evaluation in at least one group");
                 /*
                  * TODO - this check needs to be more robust at some point

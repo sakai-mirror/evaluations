@@ -263,8 +263,8 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
 
         // get the assignments based on the search/HQL
         String hql = "select eau from EvalAssignUser eau "+joinHQL+" where 1=1 "+evalHQL+userHQL+evalStateHQL+assignStatusHQL+assignTypeHQL+groupsHQL
-            +" order by eau.id";
-//        System.out.println("*** QUERY: " + hql + " :PARAMS:" + params);
+        +" order by eau.id";
+        //        System.out.println("*** QUERY: " + hql + " :PARAMS:" + params);
         List<EvalAssignUser> results = (List<EvalAssignUser>) executeHqlQuery(hql, params, 0, 0);
         List<EvalAssignUser> assignments = new ArrayList<EvalAssignUser>( results );
 
@@ -465,7 +465,7 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
     /**
      * Returns all evaluation objects associated with the input groups,
      * can also include anonymous evaluations and filter on a number
-     * of options
+     * of options (fills in the optional assign groups)
      * 
      * @param evalGroupIds an array of eval group IDs to get associated evals for, 
      * can be empty or null but only anonymous evals will be returned
@@ -485,34 +485,45 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
     public List<EvalEvaluation> getEvaluationsByEvalGroups(String[] evalGroupIds, Boolean activeOnly,
             Boolean approvedOnly, Boolean includeAnonymous, int startResult, int maxResults) {
 
+        HashMap<Long, List<EvalAssignGroup>> evalToAGList = new HashMap<Long, List<EvalAssignGroup>>();
+
         boolean emptyReturn = false;
         Map<String, Object> params = new HashMap<String, Object>();
 
         String groupsHQL = "";
         if (evalGroupIds != null && evalGroupIds.length > 0) {
-            String approvedHQL = "";
+
+            Search search = new Search("evalGroupId", evalGroupIds);
             if (approvedOnly != null) {
-                approvedHQL = " and assign.instructorApproval = :approval ";
-                if (approvedOnly) {
-                    params.put("approval", true);
-                } else {
-                    params.put("approval", false);               
+                search.addRestriction( new Restriction("instructorApproval", approvedOnly) );
+            }
+            List<EvalAssignGroup> eags = findBySearch(EvalAssignGroup.class, search);
+            for (EvalAssignGroup evalAssignGroup : eags) {
+                Long evalId = evalAssignGroup.getEvaluation().getId();
+                if (! evalToAGList.containsKey(evalId)) {
+                    List<EvalAssignGroup> l = new ArrayList<EvalAssignGroup>();
+                    evalToAGList.put(evalId, l);
                 }
+                evalToAGList.get(evalId).add(evalAssignGroup);
             }
 
-            String anonymousHQL = "";
-            if (includeAnonymous != null) {
-                params.put("authControl", EvalConstants.EVALUATION_AUTHCONTROL_NONE);
-                if (includeAnonymous) {
-                    anonymousHQL += "or eval.authControl = :authControl";
-                } else {
-                    anonymousHQL += "and eval.authControl <> :authControl";            
+            if (eags.isEmpty()) {
+                groupsHQL = " and (eval.id = -1) "; // this will never match, that's the point
+            } else {
+                String anonymousHQL = "";
+                if (includeAnonymous != null) {
+                    params.put("authControl", EvalConstants.EVALUATION_AUTHCONTROL_NONE);
+                    if (includeAnonymous) {
+                        anonymousHQL += "or eval.authControl = :authControl";
+                    } else {
+                        anonymousHQL += "and eval.authControl <> :authControl";            
+                    }
                 }
+    
+                groupsHQL = " and (eval.id in (:evalIds)" + anonymousHQL + ")";
+                Set<Long> s = evalToAGList.keySet();
+                params.put("evalIds", s.toArray(new Long[s.size()]));
             }
-
-            groupsHQL = " and (eval.id in (select distinct assign.evaluation.id from EvalAssignGroup as assign " 
-                + "where assign.evalGroupId in (:evalGroupIds)" + approvedHQL + ")" + anonymousHQL + ")";
-            params.put("evalGroupIds", evalGroupIds);
         } else {
             // no groups but we want to get anonymous evals
             if (includeAnonymous != null
@@ -571,6 +582,15 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
                 + " order by eval.dueDate, eval.title, eval.id";
             evals = (List<EvalEvaluation>) executeHqlQuery(hql, params, startResult, maxResults);
             Collections.sort(evals, new ComparatorsUtils.EvaluationDateTitleIdComparator());
+        }
+        // add in the filtered assign groups which we retrieved earlier
+        for (EvalEvaluation eval : evals) {
+            Long evalId = eval.getId();
+            List<EvalAssignGroup> l = evalToAGList.get(evalId);
+            if (l == null) {
+                l = new ArrayList<EvalAssignGroup>(0);
+            }
+            eval.setEvalAssignGroups(l);
         }
         return evals;
 
@@ -682,12 +702,12 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
             + "right join eau.evaluation eval "
             + "where 1=1 "+activeHQL+userAssignAuthHQL
             + " order by eval.dueDate, eval.title, eval.id";
-        System.out.println("*** QUERY: " + hql + " :PARAMS:" + params);
+        //System.out.println("*** QUERY: " + hql + " :PARAMS:" + params);
 
         List<EvalEvaluation> evals = (List<EvalEvaluation>) executeHqlQuery(hql, params, startResult, maxResults);
 
         // TODO populate the assign groups
-        
+
 
         // sort the evals remaining
         Collections.sort(evals, new ComparatorsUtils.EvaluationDateTitleIdComparator());
@@ -1161,22 +1181,23 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
      * a subset (the same size or smaller) of the input
      * 
      * @param evaluationId a unique id for an {@link EvalEvaluation}
-     * @param permissionConstant a permission constant which is 
-     * {@link EvalConstants#PERM_BE_EVALUATED} for instructors/evaluatees OR
-     * {@link EvalConstants#PERM_TAKE_EVALUATION} for students/evaluators,
+     * @param assignTypeConstant an assign type constant which is 
+     * {@link EvalAssignUser#TYPE_EVALUATEE} for instructors/evaluatees OR
+     * {@link EvalAssignUser#TYPE_EVALUATOR} for students/evaluators,
      * other permissions will return no results
      * @param evalGroupIds the unique eval group ids associated with this evaluation, 
      * can be null or empty to get all ids for this evaluation
      * @return a set of eval group ids which allow viewing by the specified permission
      */
-    public Set<String> getViewableEvalGroupIds(Long evaluationId, String permissionConstant, String[] evalGroupIds) {
-        if (evaluationId == null || permissionConstant == null) {
-            throw new IllegalArgumentException("evaluationId and permissionConstant both must not be null");
+    public Set<String> getViewableEvalGroupIds(Long evaluationId, String assignTypeConstant, String[] evalGroupIds) {
+        if (evaluationId == null || assignTypeConstant == null) {
+            throw new IllegalArgumentException("evaluationId and assignTypeConstant both must not be null");
         }
+        EvalAssignUser.validateType(assignTypeConstant);
         String permCheck = null;
-        if (EvalConstants.PERM_BE_EVALUATED.equals(permissionConstant)) {
+        if (EvalAssignUser.TYPE_EVALUATEE.equals(assignTypeConstant)) {
             permCheck = "instructorsViewResults";
-        } else if (EvalConstants.PERM_TAKE_EVALUATION.equals(permissionConstant)) {
+        } else if (EvalAssignUser.TYPE_EVALUATOR.equals(assignTypeConstant)) {
             permCheck = "studentsViewResults";
         }
 
@@ -1185,12 +1206,15 @@ public class EvaluationDaoImpl extends HibernateGeneralGenericDao implements Eva
             Map<String, Object> params = new HashMap<String, Object>();
             String groupsHQL = "";
             if (evalGroupIds != null && evalGroupIds.length > 0) {
-                groupsHQL = " and ag.evalGroupId in (:evalGroupIds) ";
+                groupsHQL = " and eag.evalGroupId in (:evalGroupIds) ";
                 params.put("evalGroupIds", evalGroupIds);
             }
             params.put("evaluationId", evaluationId);
-            String hql = "SELECT ag.evalGroupId from EvalAssignGroup as ag where ag.evaluation.id = :evaluationId "
-                + " and ag."+permCheck+" = true " + groupsHQL;
+            params.put("assignTypeConstant", assignTypeConstant);
+            String hql = "SELECT eag.evalGroupId from EvalAssignGroup eag where eag.evaluation.id = :evaluationId "
+                + " and eag.evalGroupId in (select distinct eau.evalGroupId from EvalAssignUser eau " +
+                		"where eau.evaluation.id = :evaluationId and eau.type = :assignTypeConstant)"
+                + " and eag."+permCheck+" = true " + groupsHQL;
             List<?> results = executeHqlQuery(hql, params, 0, 0);
             // put the results into a set and convert them to strings
             for (Object object : results) {
