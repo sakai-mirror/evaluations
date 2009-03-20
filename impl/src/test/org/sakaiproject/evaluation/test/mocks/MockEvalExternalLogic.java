@@ -561,4 +561,9 @@ public String getContentCollectionId(String siteId) {
 	return null;
 }
 
+public Set<String[]> getUsersByRole(String evalGroupId, String perm) {
+	// TODO Auto-generated method stub
+	return null;
+}
+
 }

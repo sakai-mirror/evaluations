@@ -15,6 +15,7 @@
 package org.sakaiproject.evaluation.logic;
 
 import java.util.List;
+import java.util.Set;
 
 import org.sakaiproject.evaluation.logic.externals.ExternalContent;
 import org.sakaiproject.evaluation.logic.externals.ExternalEmail;

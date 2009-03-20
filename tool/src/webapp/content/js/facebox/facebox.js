@@ -405,21 +405,22 @@
    * Bindings
    */
 
-  $(document).bind('close.facebox', function() {
-    $(document).unbind('keydown.facebox')
-    $('#facebox').fadeOut(500, function() {
-		resetClasses()
-      $('#facebox .content').removeClass().addClass('content')
-      hideOverlay()
-      $('#facebox .loading').remove()
-   	  $('#facebox .loading').remove()
-      $('#facebox table').attr('width', 700);
-      $('#facebox .body').css('width',660);
-      $('#facebox .header').eq(0).show();
+    $(document).bind('close.facebox', function() {
+      $(document).unbind('keydown.facebox')
+      $('#facebox').fadeOut(500, function() {
+          resetClasses()
+        $('#facebox .content').removeClass().addClass('content')
+        hideOverlay()
+        $('#facebox .loading').remove()
+           $('#facebox .loading').remove()
+        $('#facebox table').attr('width', 700);
+        $('#facebox .body').css('width',660);
+        $('#facebox .header').eq(0).show();
+      })
+        $(document).trigger('afterClose.facebox');
+        return false
     })
-  	return false
-  })
- 
+
 
 })(jQuery);
 

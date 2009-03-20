@@ -143,4 +143,5 @@ public interface EvalGroupsProvider {
 	 */
 	public boolean isUserAllowedInGroup(String userId, String permission, String groupId);
 
+
 }

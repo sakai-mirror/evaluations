@@ -678,4 +678,10 @@ public String getContentCollectionId(String siteId) {
 	return externalLogic.getContentCollectionId(siteId);
 }
 
+
+public Set<String[]> getUsersByRole(String evalGroupId, String perm) {
+	// TODO Auto-generated method stub
+	return externalLogic.getUsersByRole(evalGroupId, perm);
+}
+
 }
