@@ -82,6 +82,7 @@ $(document).ready(function() {
                     tempText = tempText.replace(sRegExInput,"("+variables.selectedPeople);
                     variables.that.text(tempText);
                     log("Replaced text is:"+tempText);
+                    $(document).trigger('close.facebox');
                 }else{
                     log("CATASTROPHIC ERROR: replaceText cannot be null!");
                 }
