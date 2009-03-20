@@ -432,15 +432,33 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
             // check Sakai
             try {
                 // try to get the site object based on the entity reference (which is the evalGroupId)
-                Object entity = entityBroker.fetchEntity(evalGroupId);
-                if (entity instanceof Site) {
-                    Site site = (Site) entityBroker.fetchEntity(evalGroupId);
-                    c = new EvalGroup( evalGroupId, site.getTitle(), 
-                            getContextType(SAKAI_SITE_TYPE) );
-                } else if (entity instanceof Group) {
-                    Group group = (Group) entityBroker.fetchEntity(evalGroupId);
+                // first we try to go straight to the siteService which is fastest
+                if (evalGroupId.contains("/group/")) {
+                    Group group = siteService.findGroup(evalGroupId);
                     c = new EvalGroup( evalGroupId, group.getTitle(), 
                             getContextType(SAKAI_GROUP_TYPE) );
+                } else if (evalGroupId.startsWith("/site/")) {
+                    String siteId = evalGroupId.substring(6);
+                    try {
+                        Site site = siteService.getSite(siteId);
+                        c = new EvalGroup( evalGroupId, site.getTitle(), 
+                                getContextType(SAKAI_SITE_TYPE) );
+                    } catch (IdUnusedException e) {
+                        c = null;
+                    }
+                }
+                if (c == null) {
+                    // next try getting from entity system
+                    Object entity = entityBroker.fetchEntity(evalGroupId);
+                    if (entity instanceof Site) {
+                        Site site = (Site) entity;
+                        c = new EvalGroup( evalGroupId, site.getTitle(), 
+                                getContextType(SAKAI_SITE_TYPE) );
+                    } else if (entity instanceof Group) {
+                        Group group = (Group) entity;
+                        c = new EvalGroup( evalGroupId, group.getTitle(), 
+                                getContextType(SAKAI_GROUP_TYPE) );
+                    }
                 }
             } catch (Exception e) {
                 // invalid site reference
@@ -606,6 +624,9 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         return false;
     }
 
+    /* (non-Javadoc)
+     * @see org.sakaiproject.evaluation.logic.externals.ExternalEmail#sendEmailsToAddresses(java.lang.String, java.lang.String[], java.lang.String, java.lang.String, boolean)
+     */
     public String[] sendEmailsToAddresses(String from, String[] to, String subject, String message, boolean deferExceptions) {
         String exceptionTracker = null;
 
@@ -644,7 +665,7 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
      * @param message
      * @param deferExceptions
      * @param exceptionTracker
-     * @return
+     * @return an array of all email addresses that were sent to
      */
     private String[] sendEmails(InternetAddress fromAddress, List<String> toEmails, String subject,
             String message, boolean deferExceptions, String exceptionTracker) {
@@ -658,7 +679,10 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
             } catch (AddressException e) {
                 if (deferExceptions) {
                     exceptionTracker += e.getMessage() + " :: ";
-                    log.error("Invalid to address: " + email + ", skipping..." + e);
+                    log.error("Invalid to address (" + email + "), skipping it, error:("+e+")...");
+                    if (log.isDebugEnabled()) {
+                    	e.printStackTrace();
+                    }
                     continue;
                 } else {
                     // die here since we were unable to find this user at all
