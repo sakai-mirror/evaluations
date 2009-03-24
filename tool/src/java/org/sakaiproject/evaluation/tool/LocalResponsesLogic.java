@@ -59,9 +59,9 @@ public class LocalResponsesLogic {
      */
     public EvalResponse newResponse() {
         log.debug("Creating a new response");
-        EvalResponse togo = new EvalResponse(new Date(), 
-                commonLogic.getCurrentUserId(), new String(), new Date(), null);
-        togo.setEndTime(new Date()); // TODO - I don't think this will work
+        EvalResponse togo = new EvalResponse(commonLogic.getCurrentUserId(), 
+                new String(), null, new Date());
+        //togo.setEndTime(new Date()); // TODO - I don't think this will work
         return togo;
     }
 
@@ -87,7 +87,7 @@ public class LocalResponsesLogic {
     public Map<String, EvalAnswer> getAnswersMapByTempItemAndAssociated(Long responseId) {
         EvalResponse response = responsesLogic.getResponseById(responseId);
         Map<String, EvalAnswer> map;
-        if (response.getAnswers() == null) {
+        if (response.getAnswers() == null || response.getAnswers().isEmpty()) {
             map = new HashMap<String, EvalAnswer>();
         } else {
             map = EvalUtils.getAnswersMapByTempItemAndAssociated(response);

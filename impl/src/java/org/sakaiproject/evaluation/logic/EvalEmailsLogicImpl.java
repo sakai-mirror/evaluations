@@ -334,11 +334,8 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
                 limitGroupIds = new String[] {evalGroupId};
             }
 
-            HashSet<String> userIdsSet = new HashSet<String>();
             List<EvalAssignUser> participants = evaluationService.getParticipantsForEval(evaluationId, null, limitGroupIds, null, null, includeConstant, null);
-            for (EvalAssignUser evalAssignUser : participants) {
-                userIdsSet.add( evalAssignUser.getUserId() );
-            }
+            Set<String> userIdsSet = EvalUtils.getUserIdsFromUserAssignments(participants);
 
             if (userIdsSet.size() > 0) {
                 // turn the set into an array
@@ -604,8 +601,7 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
         String evalEntityURL = null;
         if (group != null && group.evalGroupId != null) {
             // get the URL directly to the evaluation with group context included
-            Long assignGroupId = evaluationService.getAssignGroupId(eval.getId(), group.evalGroupId);
-            EvalAssignGroup assignGroup = evaluationService.getAssignGroupById(assignGroupId);
+            EvalAssignGroup assignGroup = evaluationService.getAssignGroupByEvalAndGroupId(eval.getId(), group.evalGroupId);
             if (assignGroup != null) {
                 evalEntityURL = commonLogic.getEntityURL(assignGroup);
             }

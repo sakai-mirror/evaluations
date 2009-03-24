@@ -301,6 +301,13 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                 throw new SecurityException("User ("+userId+") attempted to create evaluation without permissions");
             }
 
+            // force new evals to respect the settings
+            Boolean enableSelection = (Boolean) settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION);
+            if (! enableSelection) {
+                // force it to null
+                evaluation.setSelectionSettings(null);
+            }
+
         } else {
             // updating existing evaluation
 
@@ -388,21 +395,6 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
             }
         } else {
             evaluation.setBlankResponsesAllowed( systemBlankResponses );
-        }
-
-        Boolean enableSelection = (Boolean) settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION);
-        if (enableSelection) {
-            // if not set then inherit from the eval
-            if (evaluation.getInstructorSelection() == null || "".equals(evaluation.getInstructorSelection())) {
-                evaluation.setInstructorSelection(EvalAssignHierarchy.SELECTION_ALL);
-            }
-            if (evaluation.getAssistantSelection() == null || "".equals(evaluation.getAssistantSelection())) {
-                evaluation.setAssistantSelection(EvalAssignHierarchy.SELECTION_ALL);
-            }
-        } else {
-            // set to defaults
-            evaluation.setInstructorSelection(EvalAssignHierarchy.SELECTION_ALL);
-            evaluation.setAssistantSelection(EvalAssignHierarchy.SELECTION_ALL);
         }
 
         // TODO - disabled for now
@@ -644,12 +636,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                 // get the list of all assignments where this user is instructor
                 List<EvalAssignUser> userEvaluateeAssignments = evaluationService.getParticipantsForEval(
                         null, userId, null, EvalAssignUser.TYPE_EVALUATEE, null, null, null);
-                HashSet<String> egidSet = new HashSet<String>();
-                for (EvalAssignUser evalAssignUser : userEvaluateeAssignments) {
-                    if (evalAssignUser.getEvalGroupId() != null) {
-                        egidSet.add(evalAssignUser.getEvalGroupId());
-                    }
-                }
+                Set<String> egidSet = EvalUtils.getGroupIdsFromUserAssignments(userEvaluateeAssignments);
                 if (!egidSet.isEmpty()) {
                     // create array of all assigned groupIds where this user is instructor
                     evalGroupIds = egidSet.toArray(new String[egidSet.size()]);
@@ -727,12 +714,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         List<EvalAssignUser> userAssignments = evaluationService.getParticipantsForEval(null, userId, null, 
                 EvalAssignUser.TYPE_EVALUATOR, null, null, 
                 (activeOnly ? EvalConstants.EVALUATION_STATE_ACTIVE : null) );
-        HashSet<String> egidSet = new HashSet<String>();
-        for (EvalAssignUser evalAssignUser : userAssignments) {
-            if (evalAssignUser.getEvalGroupId() != null) {
-                egidSet.add(evalAssignUser.getEvalGroupId());
-            }
-        }
+        Set<String> egidSet = EvalUtils.getGroupIdsFromUserAssignments(userAssignments);
         if (!egidSet.isEmpty()) {
             // create array of all assigned groupIds where this user is instructor
             evalGroupIds = egidSet.toArray(new String[egidSet.size()]);
@@ -865,18 +847,21 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         if (evalGroupId != null) {
             limitGroupIds = new String[] {evalGroupId};
         }
+        // all users assigned to this eval (and group if specified)
         List<EvalAssignUser> assignedUsers = evaluationService.getParticipantsForEval(evaluationId, null, limitGroupIds, null, EvalEvaluationService.STATUS_ANY, null, null);
+        // keys of all assignments which are unlinked or removed
         HashSet<String> assignUserUnlinkedRemovedKeys = new HashSet<String>();
+        // all assignments which are linked (groupId => assignments)
         HashMap<String, List<EvalAssignUser>> groupIdLinkedAssignedUsersMap = new HashMap<String, List<EvalAssignUser>>();
         for (EvalAssignUser evalAssignUser : assignedUsers) {
-            if (EvalAssignUser.STATUS_UNLINKED.equals(evalAssignUser.getType()) 
-                    || EvalAssignUser.STATUS_REMOVED.equals(evalAssignUser.getType())) {
+            if (EvalAssignUser.STATUS_UNLINKED.equals(evalAssignUser.getStatus()) 
+                    || EvalAssignUser.STATUS_REMOVED.equals(evalAssignUser.getStatus())) {
                 String key = makeEvalAssignUserKey(evalAssignUser, false, false);
                 assignUserUnlinkedRemovedKeys.add(key);
             }
             String egid = evalAssignUser.getEvalGroupId();
             if (egid != null) {
-                if (EvalAssignUser.STATUS_LINKED.equals(evalAssignUser.getType())) {
+                if (EvalAssignUser.STATUS_LINKED.equals(evalAssignUser.getStatus())) {
                     List<EvalAssignUser> l = groupIdLinkedAssignedUsersMap.get(egid);
                     if (l == null) {
                         l = new ArrayList<EvalAssignUser>();
@@ -894,9 +879,8 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         } else {
             // only dealing with a single assign group (or possibly none if invalid)
             assignedGroups = new ArrayList<EvalAssignGroup>();
-            Long assignGroupId = evaluationService.getAssignGroupId(evaluationId, evalGroupId);
-            if (assignGroupId != null) {
-                EvalAssignGroup assignGroup = evaluationService.getAssignGroupById(assignGroupId);
+            EvalAssignGroup assignGroup = evaluationService.getAssignGroupByEvalAndGroupId(evaluationId, evalGroupId);
+            if (assignGroup != null) {
                 assignedGroups.add(assignGroup);
             }
         }
@@ -1039,7 +1023,8 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
     }
 
     /**
-     * This method can be called internally to avoid looking up the evaluation again
+     * This method can be called internally to avoid looking up the evaluation again,
+     * will check to ensure it does not recreate an existing user assignment
      * @param eval
      * @param assignUsers
      */
@@ -1047,6 +1032,15 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         // check permissions
         if ( securityChecks.checkCreateAssignments(null, eval) ) {
             String currentUserId = commonLogic.getCurrentUserId();
+            // create the set of user assignments for this eval
+            List<EvalAssignUser> assignedUsers = evaluationService.getParticipantsForEval(eval.getId(), null, null, null, EvalEvaluationService.STATUS_ANY, null, null);
+            HashMap<String, EvalAssignUser> assignedKeysToEAUs = new HashMap<String, EvalAssignUser>();
+            for (EvalAssignUser evalAssignUser : assignedUsers) {
+                String key = makeEvalAssignUserKey(evalAssignUser, true, false);
+                assignedKeysToEAUs.put(key, evalAssignUser);
+            }
+
+            // now create the set of all assignments to save (only save the ones that do not already exist though)
             HashSet<EvalAssignUser> eauSet = new HashSet<EvalAssignUser>();
             for (EvalAssignUser evalAssignUser : assignUsers) {
                 evalAssignUser.setLastModified( new Date() );
@@ -1055,6 +1049,15 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                     evalAssignUser.setStatus(EvalAssignUser.STATUS_UNLINKED);
                 }
                 setAssignUserDefaults(evalAssignUser, eval, currentUserId);
+                String key = makeEvalAssignUserKey(evalAssignUser, true, false);
+                if (assignedKeysToEAUs.containsKey(key)) {
+                    EvalAssignUser existing = assignedKeysToEAUs.get(key);
+                    if (! existing.getId().equals(evalAssignUser.getId())) {
+                        // trying to save an assignment over top of one that exists already
+                        log.warn("Found an user assignment that matches an existing one so it will not be saved: " + evalAssignUser);
+                        continue; // SKIP
+                    }
+                }
                 eauSet.add(evalAssignUser);
             }
             // save all of the user assignments
@@ -1083,8 +1086,10 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                 && evalAssignUser.getEvalGroupId() != null) {
             String evalGroupId = evalAssignUser.getEvalGroupId();
             Long evaluationId = eval.getId();
-            Long assignGroupId = evaluationService.getAssignGroupId(evaluationId, evalGroupId);
-            evalAssignUser.setAssignGroupId(assignGroupId);
+            EvalAssignGroup assignGroup = evaluationService.getAssignGroupByEvalAndGroupId(evaluationId, evalGroupId);
+            if (assignGroup != null) {
+                evalAssignUser.setAssignGroupId(assignGroup.getId());
+            }
             evalAssignUser.setStatus(EvalAssignUser.STATUS_LINKED);
         }
     }
@@ -1153,7 +1158,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                 // set the settings to null to allow the defaults to override correctly
                 EvalAssignHierarchy eah = new EvalAssignHierarchy(userId, nodeId, eval);
                 // fill in defaults and the values from the evaluation
-                setDefaults(eval, eah);
+                setAssignmentDefaults(eval, eah);
                 nodeAssignments.add(eah);
             }
 
@@ -1306,7 +1311,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         }
         EvalEvaluation eval = getEvaluationOrFail(assignGroup.getEvaluation().getId());
 
-        setDefaults(eval, assignGroup); // set the group defaults before saving
+        setAssignmentDefaults(eval, assignGroup); // set the group defaults before saving
 
         if (assignGroup.getId() == null) {
             // creating new AC
@@ -1562,7 +1567,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
             EvalAssignGroup eag = new EvalAssignGroup(userId, evalGroupId, type, eval);
             eag.setNodeId(nodeId);
             // fill in defaults and the values from the evaluation
-            setDefaults(eval, eag);
+            setAssignmentDefaults(eval, eag);
             groupAssignments.add(eag);
         }
         return groupAssignments;
@@ -1572,10 +1577,13 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
      * Ensures that the settings for assignments are correct based on the system settings and the evaluation settings,
      * also ensures that none of them are null
      * 
-     * @param eval the evaluation associated with this assginment
+     * @param eval the evaluation associated with this assignment
      * @param eah the assignment object (persistent or non)
      */
-    protected void setDefaults(EvalEvaluation eval, EvalAssignHierarchy eah) {
+    protected void setAssignmentDefaults(EvalEvaluation eval, EvalAssignHierarchy eah) {
+        if (eval == null || eah == null) {
+            throw new IllegalArgumentException("eval ("+eval+") and assigment ("+eah+") must not be null");
+        }
         // setInstructorsViewResults
         if (eah.getInstructorsViewResults() == null) {
             Boolean instViewResults = (Boolean) settings.get(EvalSettings.INSTRUCTOR_ALLOWED_VIEW_RESULTS);
@@ -1624,19 +1632,18 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
         //         }
         //      }
         // selections
-        Boolean enableSelection = (Boolean) settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION);
-        if (enableSelection) {
-            // if not set then inherit from the eval
-            if (eah.getInstructorSelection() == null || "".equals(eah.getInstructorSelection())) {
-                eah.setInstructorSelection(eval.getInstructorSelection());
+        if (eah instanceof EvalAssignGroup) {
+            EvalAssignGroup eag = (EvalAssignGroup) eah;
+            Boolean enableSelection = (Boolean) settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION);
+            if (enableSelection) {
+                // if not set then inherit from the eval
+                if (eag.getSelectionSettings() == null || "".equals(eag.getSelectionSettings())) {
+                    eag.setSelectionSettings(eval.getSelectionSettings());
+                }
+            } else {
+                // set to defaults
+                eag.setSelectionSettings(null);
             }
-            if (eah.getAssistantSelection() == null) {
-                eah.setAssistantSelection(eval.getAssistantSelection());
-            }
-        } else {
-            // set to defaults
-            eah.setInstructorSelection(EvalAssignHierarchy.SELECTION_ALL);
-            eah.setAssistantSelection(EvalAssignHierarchy.SELECTION_ALL);
         }
     }
 

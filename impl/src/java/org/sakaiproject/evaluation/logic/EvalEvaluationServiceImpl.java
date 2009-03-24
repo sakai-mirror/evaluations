@@ -15,7 +15,6 @@
 package org.sakaiproject.evaluation.logic;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -210,12 +209,9 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
     public Set<String> getUserIdsTakingEvalInGroup(Long evaluationId, String evalGroupId,
             String includeConstant) {
         EvalUtils.validateEmailIncludeConstant(includeConstant);
-        List<EvalAssignUser> l = getParticipantsForEval(evaluationId, null, new String[] {evalGroupId}, 
+        List<EvalAssignUser> userAssignments = getParticipantsForEval(evaluationId, null, new String[] {evalGroupId}, 
                 EvalAssignUser.TYPE_EVALUATOR, null, includeConstant, null);
-        HashSet<String> userIds = new HashSet<String>(l.size());
-        for (EvalAssignUser evalAssignUser : l) {
-            userIds.add(evalAssignUser.getUserId());
-        }
+        Set<String> userIds = EvalUtils.getUserIdsFromUserAssignments(userAssignments);
         return userIds;
     }
 
@@ -317,7 +313,7 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
                 }
             }
         }
-        **/
+         **/
         // this is handled in the DAO now
         List<EvalAssignUser> assignments = dao.getParticipantsForEval(evaluationId, userId, evalGroupIds, assignTypeConstant, assignStatusConstant, includeConstant, evalStateConstant);
         return assignments;
@@ -449,12 +445,7 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
                             // hopefully this is faster than checking if the user has the right permission in every group -AZ
                             List<EvalAssignUser> userAssigns = getParticipantsForEval(evaluationId, userId, null, EvalAssignUser.TYPE_EVALUATOR, null, null, null);
                             if (! userAssigns.isEmpty()) {
-                                HashSet<String> egids = new HashSet<String>();
-                                for (EvalAssignUser evalAssignUser : userAssigns) {
-                                    if (evalAssignUser.getEvalGroupId() != null) {
-                                        evalAssignUser.getEvalGroupId();
-                                    }
-                                }
+                                Set<String> egids = EvalUtils.getGroupIdsFromUserAssignments(userAssigns);
                                 String[] evalGroupIds = egids.toArray(new String[egids.size()]);
                                 long count = dao.countBySearch(EvalAssignGroup.class, new Search(
                                         new Restriction[] {
@@ -601,18 +592,18 @@ public class EvalEvaluationServiceImpl implements EvalEvaluationService {
         return eag;
     }
 
-    public Long getAssignGroupId(Long evaluationId, String evalGroupId) {
+    public EvalAssignGroup getAssignGroupByEvalAndGroupId(Long evaluationId, String evalGroupId) {
         log.debug("evaluationId: " + evaluationId + ", evalGroupId: " + evalGroupId);
-        Long agid = null;
+        if (evaluationId == null
+                || evalGroupId == null || "".equals(evalGroupId)) {
+            throw new IllegalArgumentException("evaluationId and evalGroupId must not be null");
+        }
         EvalAssignGroup assignGroup = dao.findOneBySearch(EvalAssignGroup.class, new Search(
                 new Restriction[] {
                         new Restriction("evaluation.id", evaluationId),
                         new Restriction("evalGroupId", evalGroupId)
                 }) );
-        if (assignGroup != null) {
-            agid = assignGroup.getId();
-        }
-        return agid;
+        return assignGroup;
     }
 
     public List<EvalAssignHierarchy> getAssignHierarchyByEval(Long evaluationId) {

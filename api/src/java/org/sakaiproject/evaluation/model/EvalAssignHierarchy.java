@@ -13,10 +13,6 @@ import java.util.Date;
  */
 public class EvalAssignHierarchy implements java.io.Serializable {
 
-    public static final String SELECTION_ALL = "all";
-    public static final String SELECTION_ONE = "one";
-    public static final String SELECTION_MULTIPLE = "multiple";
-
     // Fields
 
     protected Long id;
@@ -38,17 +34,6 @@ public class EvalAssignHierarchy implements java.io.Serializable {
 
     protected EvalEvaluation evaluation;
 
-    /**
-     * The key which determines which way to render instructors items from this group assignment,
-     * use the SELECTION_* constants like {@link #SELECTION_ONE}, default is null (equivalent to all)
-     */
-    protected String instructorSelection;
-    /**
-     * The key which determines which way to render assistants items from this group assignment, use
-     * the SELECTION_* constants like {@link #SELECTION_ONE}, default is null (equivalent to all)
-     */
-    protected String assistantSelection;
-
     // Constructors
 
     /** default constructor */
@@ -61,31 +46,22 @@ public class EvalAssignHierarchy implements java.io.Serializable {
      * EvalAssignHierarchy eah)
      */
     public EvalAssignHierarchy(String owner, String nodeId, EvalEvaluation evaluation) {
-        if (this.lastModified == null) {
-            this.lastModified = new Date();
-        }
-        this.owner = owner;
-        this.nodeId = nodeId;
-        this.evaluation = evaluation;
+        this(owner, nodeId, evaluation, null, null, null, null, null);
     }
 
     /** 
      * full constructor
      */
-    public EvalAssignHierarchy(String owner, String nodeId, Boolean instructorApproval,
-            Boolean instructorsViewResults, Boolean studentsViewResults, EvalEvaluation evaluation, 
+    public EvalAssignHierarchy(String owner, String nodeId, EvalEvaluation evaluation,
+            Boolean instructorApproval, Boolean instructorsViewResults, Boolean studentsViewResults, 
             String instructorSelection, String assistantSelection) {
-        if (this.lastModified == null) {
-            this.lastModified = new Date();
-        }
+        this.lastModified = new Date();
         this.owner = owner;
         this.nodeId = nodeId;
         this.instructorApproval = instructorApproval;
         this.instructorsViewResults = instructorsViewResults;
         this.studentsViewResults = studentsViewResults;
         this.evaluation = evaluation;
-        this.instructorSelection = instructorSelection;
-        this.assistantSelection = assistantSelection;
     }
 
     public Long getId() {
@@ -150,28 +126,6 @@ public class EvalAssignHierarchy implements java.io.Serializable {
 
     public void setEvaluation(EvalEvaluation evaluation) {
         this.evaluation = evaluation;
-    }
-
-    /**
-     * @return the instructor selection constant OR null if not set (null is equivalent to {@link #SELECTION_ALL})
-     */
-    public String getInstructorSelection() {
-        return instructorSelection;
-    }
-
-    public void setInstructorSelection(String instructorSelection) {
-        this.instructorSelection = instructorSelection;
-    }
-
-    /**
-     * @return the assistant selection constant OR null if not set (null is equivalent to {@link #SELECTION_ALL})
-     */
-    public String getAssistantSelection() {
-        return assistantSelection;
-    }
-
-    public void setAssistantSelection(String assistantSelection) {
-        this.assistantSelection = assistantSelection;
     }
 
 }

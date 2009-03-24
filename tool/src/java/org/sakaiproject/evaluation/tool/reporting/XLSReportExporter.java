@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -151,13 +149,7 @@ public class XLSReportExporter implements ReportExporter {
          */
 
         // 1 Make TIDL
-        TemplateItemDataList tidl = responseAggregator.prepareTemplateItemDataStructure(evaluation,
-                groupIds);
-
-        // 1.5 get instructor info
-        Set<String> instructorIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
-        Map<String, EvalUser> instructorIdtoEvalUser = responseAggregator
-                .getInstructorsInformation(instructorIds);
+        TemplateItemDataList tidl = responseAggregator.prepareTemplateItemDataStructure(evaluation.getId(), groupIds);
 
         // 2 get DTIs for this eval from tidl
         List<DataTemplateItem> dtiList = tidl.getFlatListOfDataTemplateItems(true);
@@ -180,9 +172,15 @@ public class XLSReportExporter implements ReportExporter {
 
             HSSFCell questionCat = questionCatRow.createCell(headerCount);
             if (EvalConstants.ITEM_CATEGORY_INSTRUCTOR.equals(dti.associateType)) {
-                setPlainStringCell(questionCat, messageLocator.getMessage(
-                        "reporting.spreadsheet.instructor", instructorIdtoEvalUser
-                                .get(dti.associateId).displayName));
+                EvalUser user = commonLogic.getEvalUserById( dti.associateId );
+                String instructorMsg = messageLocator.getMessage("reporting.spreadsheet.instructor", 
+                        new Object[] {user.displayName});
+                setPlainStringCell(questionCat, instructorMsg );
+            } else if (EvalConstants.ITEM_CATEGORY_ASSISTANT.equals(dti.associateType)) {
+                EvalUser user = commonLogic.getEvalUserById( dti.associateId );
+                String assistantMsg = messageLocator.getMessage("reporting.spreadsheet.ta", 
+                        new Object[] {user.displayName});
+                setPlainStringCell(questionCat, assistantMsg );
             } else if (EvalConstants.ITEM_CATEGORY_COURSE.equals(dti.associateType)) {
                 setPlainStringCell(questionCat, messageLocator
                         .getMessage("reporting.spreadsheet.course"));

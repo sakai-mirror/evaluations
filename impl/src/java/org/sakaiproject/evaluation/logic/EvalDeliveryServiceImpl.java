@@ -14,13 +14,13 @@
 
 package org.sakaiproject.evaluation.logic;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,12 +28,10 @@ import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.dao.EvaluationDao;
 import org.sakaiproject.evaluation.logic.exceptions.ResponseSaveException;
 import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
-import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.model.EvalAnswer;
-import org.sakaiproject.evaluation.model.EvalAssignUser;
+import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.model.EvalResponse;
-import org.sakaiproject.evaluation.model.EvalTemplateItem;
 import org.sakaiproject.evaluation.utils.ArrayUtils;
 import org.sakaiproject.evaluation.utils.EvalUtils;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList;
@@ -96,7 +94,6 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
     /* (non-Javadoc)
      * @see org.sakaiproject.evaluation.logic.EvalDeliveryService#saveResponse(org.sakaiproject.evaluation.model.EvalResponse, java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public void saveResponse(EvalResponse response, String userId) {
         log.debug("userId: " + userId + ", response: " + response.getId() + ", evalGroupId: " + response.getEvalGroupId());
 
@@ -109,6 +106,8 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
             // TODO - existing response, don't allow change to any setting
             // except starttime, endtime, and answers
         }
+
+        boolean responseComplete = response.getEndTime() != null;
 
         // fill in any default values and nulls here
 
@@ -124,7 +123,7 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
 
             // check to make sure answers are valid for this evaluation
             if (response.getAnswers() != null && !response.getAnswers().isEmpty()) {
-                checkAnswersValidForEval(response);
+                checkAnswersValidForEval(response, responseComplete);
             } else {
                 // there are no answers
                 if (response.getEndTime() != null) {
@@ -140,7 +139,9 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
                                 ResponseSaveException.TYPE_BLANK_RESPONSE);
                     }
                 }
-                response.setAnswers(new HashSet());
+                if (response.getAnswers() == null) {
+                    response.setAnswers(new HashSet<EvalAnswer>());
+                }
             }
 
             // save everything in one transaction
@@ -163,7 +164,7 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
             }
 
             String completeMessage = ", response is incomplete";
-            if (response.getEndTime() != null) {
+            if (responseComplete) {
                 /* the response is complete (submission of an evaluation) 
                  * and not just creating the empty response so lock related evaluation
                  */
@@ -218,7 +219,7 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
                 }) );
         if (responses.isEmpty()) {
             // create a new response and save it
-            response = new EvalResponse(new Date(), userId, evalGroupId, new Date(), evaluation);
+            response = new EvalResponse(userId, evalGroupId, evaluation, new Date());
             saveResponse(response, userId);
         } else {
             if (responses.size() == 1) {
@@ -407,94 +408,126 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
     }
 
     /**
-     * Checks the answers in the response for validity<br/>
+     * Checks the answers in the response for validity,
+     * also will ensure that all answers are actually valid by fixing up the ones which are not quite right if
+     * it can be done automaticaly, also optionally checks to make sure all required answers are filled in
      * 
-     * @param response
+     * @param response the response
+     * @param checkRequiredAnswers if true then also check all the required answers have been completed,
+     * if false then only check the validity of all current answers
      * @return true if all answers valid, exception otherwise
      */
-    protected boolean checkAnswersValidForEval(EvalResponse response) {
+    protected boolean checkAnswersValidForEval(EvalResponse response, boolean checkRequiredAnswers) {
 
         // get a list of the valid templateItems for this evaluation
         EvalEvaluation eval = response.getEvaluation();
         Long evaluationId = eval.getId();
         String evalGroupId = response.getEvalGroupId();
 
-        // Get the Hierarchy Nodes for the current Group and turn it into an array of node ids
-        List<EvalHierarchyNode> hierarchyNodes = hierarchyLogic.getNodesAboveEvalGroup(evalGroupId);
-        String[] hierarchyNodeIDs = new String[hierarchyNodes.size()];
-        for (int i = 0; i < hierarchyNodes.size(); i++) {
-            hierarchyNodeIDs[i] = hierarchyNodes.get(i).id;
+        // EVALSYS-618 - handle the special case of instructor/assistant selections
+        boolean selectionsEnabled = (Boolean) settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION);
+        HashMap<String, Set<String>> typeToIdsFilter = new HashMap<String, Set<String>>();
+        if (selectionsEnabled) {
+            // check the selections are valid for the response and handle required items in a special way
+            EvalAssignGroup assignGroup = evaluationService.getAssignGroupByEvalAndGroupId(evaluationId, evalGroupId);
+            Map<String, String> selectionOptions = assignGroup.getSelectionOptions();
+            if (! selectionOptions.isEmpty()) {
+                // validate the selections for the response against the assign group
+                Map<String, String[]> selections = response.getSelections();
+                if (selections.isEmpty()) {
+                    throw new IllegalArgumentException("Selections are invalid for this evaluation ("+evaluationId+") and group ("+evalGroupId+"): "
+                    		+ " no selections in the response, but this assign group ("+assignGroup+") requires them: " + selectionOptions);
+                }
+                if (! selectionOptions.keySet().equals(selections.keySet())) {
+                    throw new IllegalArgumentException("Selections are invalid for this evaluation ("+evaluationId+") and group ("+evalGroupId+"): "
+                            + " selections in the response ("+response+") do not match the selections in the assign group ("+assignGroup+"): "
+                            + selectionOptions.keySet()+" != "+selections.keySet());
+                }
+                // expose the map of selection type => selection Ids so we can filter required items out
+                for (Entry<String, String[]> entry : selections.entrySet()) {
+                    HashSet<String> s = new HashSet<String>();
+                    String[] ids = entry.getValue();
+                    for (String id : ids) {
+                        s.add(id);
+                    }
+                    typeToIdsFilter.put(entry.getKey(), s);
+                }
+            } else {
+                // clear the selections code, they are not used for this assign group
+                response.setSelectionsCode(null);
+            }
+        } else {
+            // system setting disabled so clear them
+            response.setSelectionsCode(null);
         }
 
-        // get the instructors for this evaluation
-        List<EvalAssignUser> userAssignments = evaluationService.getParticipantsForEval(evaluationId, null, 
-                new String[] {evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, null, null, null);
-        Set<String> instructors = EvalUtils.getUserIdsFromUserAssignments(userAssignments);
-
-        // get all items for this evaluation
-        List<EvalTemplateItem> allItems = authoringService.getTemplateItemsForEvaluation(evaluationId, hierarchyNodeIDs, 
-                instructors.toArray(new String[instructors.size()]), new String[] {evalGroupId});
-
-        Map<String, List<String>> associates = new HashMap<String, List<String>>();
-        associates.put(EvalConstants.ITEM_CATEGORY_INSTRUCTOR, new ArrayList<String>(instructors));
-
-        // add in the TA list if there are any TAs
-        List<EvalAssignUser> taAssignments = evaluationService.getParticipantsForEval(evaluationId, null, 
-                new String[] {evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, null, null, null);
-        Set<String> teachingAssistants = EvalUtils.getUserIdsFromUserAssignments(taAssignments);
-        Boolean taEnabled = (Boolean) settings.get(EvalSettings.ENABLE_ASSISTANT_CATEGORY);
-        if (taEnabled) {
-            if (teachingAssistants.size() > 0) {
-                associates.put(EvalConstants.ITEM_CATEGORY_ASSISTANT, new ArrayList<String>(teachingAssistants));
+        // see if this eval allows blank responses
+        boolean requireNonBlankAnswerableItemsForEval = false; // default to skipping the check
+        if (checkRequiredAnswers) {
+            Boolean unansweredAllowed = (Boolean) settings.get(EvalSettings.STUDENT_ALLOWED_LEAVE_UNANSWERED);
+            if (unansweredAllowed == null) {
+                // configured per eval
+                unansweredAllowed = eval.getBlankResponsesAllowed();
+            }
+            if (unansweredAllowed != null) {
+                // convert to easier to understand boolean
+                requireNonBlankAnswerableItemsForEval = ! unansweredAllowed;
             }
         }
 
         // make the TI data structure and get the flat list of DTIs
-        TemplateItemDataList tidl = new TemplateItemDataList(allItems, hierarchyNodes, associates, null);
+        TemplateItemDataList tidl = new TemplateItemDataList(evaluationId, evalGroupId, 
+                evaluationService, authoringService, hierarchyLogic, null);
 
         List<DataTemplateItem> allDTIs = tidl.getFlatListOfDataTemplateItems(true);
 
-        // see if this eval allows blank responses
-        Boolean unansweredAllowed = (Boolean) settings.get(EvalSettings.STUDENT_ALLOWED_LEAVE_UNANSWERED);
-        if (unansweredAllowed == null) {
-           unansweredAllowed = eval.getBlankResponsesAllowed();
-        }
-        if (unansweredAllowed == null) {
-           unansweredAllowed = true; // default to skipping the check
-        }
-
+        // create the set of answerable items
         Set<Long> answerableTemplateItemIds = new HashSet<Long>();
         Set<String> requiredAnswerKeys = new HashSet<String>();
         for (DataTemplateItem dti : allDTIs) {
-           if (dti.isAnswerable()) {
-              answerableTemplateItemIds.add(dti.templateItem.getId());
-           }
-           if (dti.isRequired()) {
-              requiredAnswerKeys.add(dti.getKey());
-           }
+            if (dti.isAnswerable()) {
+                answerableTemplateItemIds.add(dti.templateItem.getId());
+            }
+            if (checkRequiredAnswers) {
+                boolean required = false;
+                if (requireNonBlankAnswerableItemsForEval) {
+                    // all items which can be answered must be
+                    required = dti.isRequireable();
+                } else {
+                    // only items marked as compulsory must be answered
+                    required = dti.isCompulsory();
+                }
+                // if the item is required then add it to the required keys listing
+                if (required) {
+                    boolean filteredOut = false;
+                    if (selectionsEnabled 
+                            && typeToIdsFilter.size() > 0) {
+                        /* Do a selection filter check here,
+                         * Only include dtis where the associateType is not matched OR
+                         * (the associateType is matched AND the id is also matched)
+                         */
+                        Set<String> ids = typeToIdsFilter.get(dti.associateType);
+                        if (ids != null) {
+                            // check the id as well
+                            if (! ids.contains(dti.associateId)) {
+                                filteredOut = true;
+                            }
+                        }
+                    }
+                    if (! filteredOut) {
+                        requiredAnswerKeys.add(dti.getKey());
+                    }
+                }
+            }
         }
 
-        // check the answers
+        // check the validity of all answers (just making sure they are not invalid)
         Set<String> answeredAnswerKeys = new HashSet<String>();
         for (EvalAnswer answer : response.getAnswers()) {
 
             // check the answer for correctness
             if (answer.getNumeric() == null && answer.getText() == null && 
                     (answer.getMultiAnswerCode() == null || answer.getMultiAnswerCode().length() == 0) ) {
-                throw new IllegalArgumentException("Cannot save blank answers: answer for templateItem: "
-                        + answer.getTemplateItem().getId());
-            }
-
-            // FIXME - this is not going to work, need to change it
-            // if the author has specified this as a compulsory question
-            if (log.isDebugEnabled()) {
-                log.debug(" checking answer " + answer.getTemplateItem().getId() + " which has a compulsory of " +  answer.getTemplateItem().getIsCompulsory());
-                log.debug("numeric " + answer.getNumeric() + " text: " + answer.getText() );
-            }
-            if (answer.getNumeric() == null && answer.getText() == null &&  answer.getTemplateItem().getIsCompulsory() ) {
-                if (log.isDebugEnabled()) {
-                    log.debug("answer for " + answer.getTemplateItem().getId() + "has not been answered ");
-                }
                 throw new IllegalArgumentException("Cannot save blank answers: answer for templateItem: "
                         + answer.getTemplateItem().getId());
             }
@@ -511,7 +544,7 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
             // verify the base state of new answers
             if (answer.getId() == null) {
                 // force the item to be set correctly
-                answer.setItem(answer.getTemplateItem().getItem());
+                answer.setItem(answer.getTemplateItem().getItem()); // LAZY LOAD
 
                 // check that the associated id is filled in for associated items
                 if (EvalConstants.ITEM_CATEGORY_COURSE.equals(answer.getTemplateItem().getCategory())) {
@@ -564,20 +597,21 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
                     answer.getAssociatedType(), answer.getAssociatedId()) );
         }
 
-        // check if required answers are filled in
-        if (! unansweredAllowed) {
-           // all items must be completed so die if they are not
-
-           // remove all the answered keys from the required keys and if everything was answered then there will be nothing left in the required keys set
-           requiredAnswerKeys.removeAll(answeredAnswerKeys);
-           if (requiredAnswerKeys.size() > 0) {
-              throw new ResponseSaveException("Missing " + requiredAnswerKeys.size() 
-                    + " answers for required items (received "+answeredAnswerKeys.size()+" answers) for this evaluation"
-                    + " response (" + response.getId() + ") for user (" + response.getOwner() + ")"
-                    + " :: missing keys=" + ArrayUtils.arrayToString(requiredAnswerKeys.toArray(new String[] {})) 
-                    + " :: received keys=" + ArrayUtils.arrayToString(answeredAnswerKeys.toArray(new String[] {})), 
-                    requiredAnswerKeys.toArray(new String[] {}) );
-           }
+        if (checkRequiredAnswers) {
+            // check if required answers are filled in
+            if (! requiredAnswerKeys.isEmpty()) {
+                // remove all the answered keys from the required keys and if everything was answered then there will be nothing left in the required keys set
+                requiredAnswerKeys.removeAll(answeredAnswerKeys);
+                if (requiredAnswerKeys.size() > 0) {
+                    String[] reqAnsKeysArray = requiredAnswerKeys.toArray(new String[requiredAnswerKeys.size()]);
+                    throw new ResponseSaveException("Missing " + requiredAnswerKeys.size() 
+                            + " answers for required items (received "+answeredAnswerKeys.size()+" answers) for this evaluation"
+                            + " response (" + response.getId() + ") for user (" + response.getOwner() + ")"
+                            + " :: missing keys=" + ArrayUtils.arrayToString(reqAnsKeysArray) 
+                            + " :: received keys=" + ArrayUtils.arrayToString(answeredAnswerKeys.toArray(new String[answeredAnswerKeys.size()])), 
+                            reqAnsKeysArray );
+                }
+            }
         }
 
         return true;

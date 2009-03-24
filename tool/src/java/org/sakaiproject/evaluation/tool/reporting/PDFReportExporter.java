@@ -5,11 +5,10 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalDeliveryService;
@@ -104,13 +103,14 @@ public class PDFReportExporter implements ReportExporter {
 
         String groupNames = responseAggregator.getCommaSeparatedGroupNames(groupIds);
 
+        // TODO this is so hard to read it makes me cry, it should not be written as a giant single line like this -AZ
         evalPDFReportBuilder.addTitlePage(evaluation.getTitle(), groupNames, messageLocator
                 .getMessage("reporting.pdf.startdatetime", df.format(evaluation.getStartDate())),
                 messageLocator.getMessage("reporting.pdf.enddatetime", df.format(evaluation
                         .getDueDate())), messageLocator.getMessage("reporting.pdf.replyrate",
-                        new String[] { EvalUtils.makeResponseRateStringFromCounts(responsesCount,
-                                enrollmentsCount) }), bannerImageBytes, messageLocator
-                        .getMessage("reporting.pdf.defaultsystemname"));
+                                new String[] { EvalUtils.makeResponseRateStringFromCounts(responsesCount,
+                                        enrollmentsCount) }), bannerImageBytes, messageLocator
+                                        .getMessage("reporting.pdf.defaultsystemname"));
 
         // set title and instructions
         evalPDFReportBuilder.addIntroduction(evaluation.getTitle(), commonLogic
@@ -120,13 +120,7 @@ public class PDFReportExporter implements ReportExporter {
         displayNumber = 0;
 
         // 1 Make TIDL
-        TemplateItemDataList tidl = responseAggregator.prepareTemplateItemDataStructure(evaluation,
-                groupIds);
-
-        // 1.5 get instructor info
-        Set<String> instructorIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
-        Map<String, EvalUser> instructorIdtoEvalUser = responseAggregator
-                .getInstructorsInformation(instructorIds);
+        TemplateItemDataList tidl = responseAggregator.prepareTemplateItemDataStructure(evaluation.getId(), groupIds);
 
         // Loop through the major group types: Course Questions, Instructor Questions, etc.
         int renderedItemCount = 0;
@@ -136,9 +130,15 @@ public class PDFReportExporter implements ReportExporter {
                 evalPDFReportBuilder.addSectionHeader(messageLocator
                         .getMessage("viewreport.itemlist.course"));
             } else if (EvalConstants.ITEM_CATEGORY_INSTRUCTOR.equals(tig.associateType)) {
-                evalPDFReportBuilder.addSectionHeader(messageLocator.getMessage(
-                        "viewreport.itemlist.instructor", new String[] { instructorIdtoEvalUser
-                                .get(tig.associateId).displayName }));
+                EvalUser user = commonLogic.getEvalUserById( tig.associateId );
+                String instructorMsg = messageLocator.getMessage("reporting.spreadsheet.instructor", 
+                        new Object[] {user.displayName});
+                evalPDFReportBuilder.addSectionHeader( instructorMsg );
+            } else if (EvalConstants.ITEM_CATEGORY_ASSISTANT.equals(tig.associateType)) {
+                EvalUser user = commonLogic.getEvalUserById( tig.associateId );
+                String assistantMsg = messageLocator.getMessage("reporting.spreadsheet.ta", 
+                        new Object[] {user.displayName});
+                evalPDFReportBuilder.addSectionHeader( assistantMsg );
             } else {
                 evalPDFReportBuilder.addSectionHeader(messageLocator.getMessage("unknown.caps"));
             }

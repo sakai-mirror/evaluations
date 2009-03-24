@@ -14,7 +14,6 @@
 
 package org.sakaiproject.evaluation.dao;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -89,18 +88,18 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
     protected void onSetUpInTransaction() {
         // preload additional data if desired
         String[] optionsA = {"Male", "Female", "Unknown"};
-        scaleLocked = new EvalScale(new Date(), EvalTestDataLoad.ADMIN_USER_ID, "Scale Alpha", 
-                EvalConstants.SCALE_MODE_SCALE, EvalConstants.SHARING_PRIVATE, EvalTestDataLoad.NOT_EXPERT, 
-                "description", EvalConstants.SCALE_IDEAL_NONE, optionsA, EvalTestDataLoad.LOCKED);
+        scaleLocked = new EvalScale(EvalTestDataLoad.ADMIN_USER_ID, "Scale Alpha", EvalConstants.SCALE_MODE_SCALE, 
+                EvalConstants.SHARING_PRIVATE, EvalTestDataLoad.NOT_EXPERT, "description", 
+                EvalConstants.SCALE_IDEAL_NONE, optionsA, EvalTestDataLoad.LOCKED);
         evaluationDao.save( scaleLocked );
 
-        itemLocked = new EvalItem(new Date(), EvalTestDataLoad.MAINT_USER_ID, "Header type locked", 
-                EvalConstants.SHARING_PRIVATE, EvalConstants.ITEM_TYPE_HEADER, EvalTestDataLoad.NOT_EXPERT);
+        itemLocked = new EvalItem(EvalTestDataLoad.MAINT_USER_ID, "Header type locked", EvalConstants.SHARING_PRIVATE, 
+                EvalConstants.ITEM_TYPE_HEADER, EvalTestDataLoad.NOT_EXPERT);
         itemLocked.setLocked(EvalTestDataLoad.LOCKED);
         evaluationDao.save( itemLocked );
 
-        itemUnlocked = new EvalItem(new Date(), EvalTestDataLoad.MAINT_USER_ID, "Header type locked", 
-                EvalConstants.SHARING_PRIVATE, EvalConstants.ITEM_TYPE_HEADER, EvalTestDataLoad.NOT_EXPERT);
+        itemUnlocked = new EvalItem(EvalTestDataLoad.MAINT_USER_ID, "Header type locked", EvalConstants.SHARING_PRIVATE, 
+                EvalConstants.ITEM_TYPE_HEADER, EvalTestDataLoad.NOT_EXPERT);
         itemUnlocked.setScale(etdl.scale2);
         itemUnlocked.setScaleDisplaySetting( EvalConstants.ITEM_SCALE_DISPLAY_VERTICAL );
         itemUnlocked.setCategory(EvalConstants.ITEM_CATEGORY_COURSE);
@@ -112,7 +111,7 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
                 false, null, 
                 EvalConstants.EVALUATION_STATE_ACTIVE, EvalConstants.SHARING_VISIBLE, EvalConstants.INSTRUCTOR_OPT_IN, new Integer(1), null, null, null, null,
                 etdl.templatePublicUnused, null, Boolean.TRUE, Boolean.FALSE, Boolean.FALSE,
-                EvalTestDataLoad.UNLOCKED, EvalConstants.EVALUATION_AUTHCONTROL_AUTH_REQ, null, null, null);
+                EvalTestDataLoad.UNLOCKED, EvalConstants.EVALUATION_AUTHCONTROL_AUTH_REQ, null, null);
         evaluationDao.save( evalUnLocked );
 
     }
@@ -1248,9 +1247,9 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
         // check that new scale cannot be unlocked
         try {
             evaluationDao.lockScale( 
-                    new EvalScale(new Date(), 
-                            EvalTestDataLoad.ADMIN_USER_ID, "new scale", 
-                            EvalConstants.SCALE_MODE_SCALE, EvalConstants.SHARING_PRIVATE, Boolean.FALSE),
+                    new EvalScale(EvalTestDataLoad.ADMIN_USER_ID, 
+                            "new scale", EvalConstants.SCALE_MODE_SCALE, 
+                            EvalConstants.SHARING_PRIVATE, Boolean.FALSE),
                             Boolean.FALSE
             );
             fail("Should have thrown an exception");
@@ -1323,9 +1322,9 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
         // check that new item cannot be locked/unlocked
         try {
             evaluationDao.lockItem(
-                    new EvalItem( new Date(), EvalTestDataLoad.ADMIN_USER_ID, 
-                            "something", EvalConstants.SHARING_PRIVATE, 
-                            EvalConstants.ITEM_TYPE_HEADER, Boolean.FALSE),
+                    new EvalItem( EvalTestDataLoad.ADMIN_USER_ID, "something", 
+                            EvalConstants.SHARING_PRIVATE, EvalConstants.ITEM_TYPE_HEADER, 
+                            Boolean.FALSE),
                             Boolean.TRUE);
             fail("Should have thrown an exception");
         } catch (IllegalStateException e) {
@@ -1400,10 +1399,10 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
         // check that new template cannot be locked/unlocked
         try {
             evaluationDao.lockTemplate(
-                    new EvalTemplate(new Date(), EvalTestDataLoad.ADMIN_USER_ID, 
-                            EvalConstants.TEMPLATE_TYPE_STANDARD, "new template one", 
-                            "description", EvalConstants.SHARING_PRIVATE, EvalTestDataLoad.NOT_EXPERT, 
-                            "expert desc", null, EvalTestDataLoad.LOCKED, false),
+                    new EvalTemplate(EvalTestDataLoad.ADMIN_USER_ID, EvalConstants.TEMPLATE_TYPE_STANDARD, 
+                            "new template one", "description", 
+                            EvalConstants.SHARING_PRIVATE, EvalTestDataLoad.NOT_EXPERT, "expert desc", 
+                            null, EvalTestDataLoad.LOCKED, false),
                             Boolean.TRUE);
             fail("Should have thrown an exception");
         } catch (IllegalStateException e) {
@@ -1442,7 +1441,7 @@ public class EvaluationDaoImplTest extends AbstractTransactionalSpringContextTes
                             false, null, 
                             EvalConstants.EVALUATION_STATE_INQUEUE, EvalConstants.SHARING_VISIBLE, EvalConstants.INSTRUCTOR_OPT_IN, new Integer(1), null, null, null, null,
                             etdl.templatePublic, null, Boolean.TRUE, Boolean.FALSE, Boolean.FALSE,
-                            EvalTestDataLoad.UNLOCKED, EvalConstants.EVALUATION_AUTHCONTROL_AUTH_REQ, null, null, null),
+                            EvalTestDataLoad.UNLOCKED, EvalConstants.EVALUATION_AUTHCONTROL_AUTH_REQ, null, null),
                             true
             );
             fail("Should have thrown an exception");
