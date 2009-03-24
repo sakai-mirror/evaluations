@@ -321,14 +321,6 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         }
         return user;
     }
-   
-   public Set<String[]> getUsersByRole(String authzGroupId, String perm){
-	 //Set<String> authzGroupIds = authzGroupService.getAuthzGroupsIsAllowed(getCurrentUserId(), perm, null);
-	   List<String> authzGroupIds = new ArrayList<String>();
-	   authzGroupIds.add(authzGroupId);
-	   Set<String []> users = authzGroupService.getUsersIsAllowedByGroup(perm, authzGroupIds);
-	   return users;
-   }
 
     /* (non-Javadoc)
      * @see org.sakaiproject.evaluation.logic.externals.ExternalUsers#getEvalUserByEmail(java.lang.String)

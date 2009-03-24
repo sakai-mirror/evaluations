@@ -16,26 +16,27 @@
     </h4>
     
     <div rsf:id="instruction" class="instruction">Choose  the instructors to be included in the above evaluation.</div>
-    <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines" >
-							<thead>
-								<tr>
-									<th><span rsf:id="msg=assigneval.select.header">Select</span></th>
-									<th>
-										<span rsf:id="col-number">Staff/Student number</span>									</th>
-							        <th><span rsf:id="col-name">Name</span></th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr rsf:id="item-row:"> 
-									<td>
-										<input rsf:id="row-select" class="evalgroupselect" type="checkbox" id="evalGroupId" />									</td>
-									<td>
-										<span rsf:id="row-number">01419112</span>
-										</td>
-							        <td><span rsf:id="row-name">Marquard,  Stephen</span></td>
-								</tr>
-							</tbody>
-						</table>
+    <div class="selectTable">
+      <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines " >
+        <thead>
+          <tr>
+            <th><span rsf:id="msg=assigneval.select.header">Select</span></th>
+			  <th>
+			      <span rsf:id="col-number">Staff/Student number</span>									</th>
+	          <th><span rsf:id="col-name">Name</span></th>
+		    </tr>
+          </thead>
+        <tbody>
+          <tr rsf:id="item-row:"> 
+            <td>
+              <input rsf:id="row-select" class="evalgroupselect" type="checkbox" id="evalGroupId" />									</td>
+			  <td>
+			      <span rsf:id="row-number">01419112</span>			      </td>
+	          <td><span rsf:id="row-name">Marquard,  Stephen</span></td>
+		    </tr>
+          </tbody>
+        </table>
+    </div>
     <p class="act">
       <input rsf:id="save-item-action" value="Save" accesskey="s" class="active" name="" type="submit" />
       <input rsf:id="cancel-button" value="Cancel" accesskey="x" onclick="$(document).trigger('close.facebox');return false;" type="button" />

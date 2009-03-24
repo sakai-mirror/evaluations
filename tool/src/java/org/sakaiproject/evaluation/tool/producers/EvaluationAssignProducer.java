@@ -30,6 +30,7 @@ import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.model.EvalAdhocGroup;
+import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRenderer;
 import org.sakaiproject.evaluation.tool.viewparams.AdhocGroupParams;
@@ -265,19 +266,15 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
-                int totalUsers = commonLogic.getUsersByRole(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE)).size();
+                int totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE)).size();
                 int selectedUsers = 0;
-                
-                if(totalUsers > 0)
-                	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {selectedUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, "instructor") );
-                
-                totalUsers = commonLogic.getUsersByRole(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE)).size();
-                
-                if(totalUsers > 0)
-                    UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {selectedUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, "ta") );
-                   
-
-                
+                if(totalUsers > 0){
+                	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {selectedUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+                }
+                totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE)).size();
+                if(totalUsers > 0){
+                    UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {selectedUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
+                }  
                 count++;
             }
         } else {

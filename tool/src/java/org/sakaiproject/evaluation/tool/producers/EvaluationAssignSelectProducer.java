@@ -18,6 +18,7 @@
 
 package org.sakaiproject.evaluation.tool.producers;
 
+import java.security.InvalidParameterException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
 import org.sakaiproject.evaluation.logic.model.EvalUser;
 import org.sakaiproject.evaluation.model.EvalAdhocGroup;
+import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.tool.viewparams.AdhocGroupParams;
 import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
@@ -73,49 +75,11 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			ComponentChecker checker) {
 		// TODO Auto-generated method stub		
 		String groupTitle = "", evalGroupId = "", currentUserId = commonLogic.getCurrentUserId(), selectType = "";
-		Long groupId, evalId;
-		AdhocGroupParams adhocGroupParams;
+		Long evalId;
 		EvalViewParameters evalParameters;
 		
 		UIForm form = UIForm.make(tofill, "form");
-		
-		//Deal with AdhocGroups  ******Detect type of AdhocGroupParams here and  deal with that type else check if it's EvalViewParameters type and deal with it. Is this needed??
-		/*if(viewparams != null && viewparams instanceof AdhocGroupParams){
-			adhocGroupParams = (AdhocGroupParams) viewparams;
-			groupId = adhocGroupParams.adhocGroupId;
-			selectType = adhocGroupParams.selectType;
-			evalId = adhocGroupParams.evalId;
-			EvalAdhocGroup evalAdhocGroup = commonLogic.getAdhocGroupById(groupId);
-			List<EvalAdhocGroup> myAdhocGroups = commonLogic.getAdhocGroupsForOwner(currentUserId);
-			if(myAdhocGroups.size() > 0){
-				for (EvalAdhocGroup adhocGroup: myAdhocGroups) {
-					if(adhocGroup.getId().equals(groupId)){
-						groupTitle = adhocGroup.getTitle();
-					}
-				}
-				if(groupTitle == ""){
-					throw new IllegalArgumentException("Cannot find group with id: "+ groupId +" in this users profile.");
-				}
-			}else{
-				throw new IllegalArgumentException("This user: "+currentUserId+" does not have any groups.");
-			}
-			log.info("Got and adhocGroup with ID: " + adhocGroupParams.adhocGroupId + " for type: " + adhocGroupParams.selectType);
-			
-			String[] participants = evalAdhocGroup.getParticipantIds();
-	         if (participants.length > 0) {
-	            List<EvalUser> evalUsers = commonLogic.getEvalUsersByIds(participants);
-	            for (EvalUser evalUser : evalUsers) {
-	               UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
-	               UISelect.make(row, "row-select", new String[] {}, new String[] {}, "#{}");
-	               if (EvalConstants.USER_TYPE_INTERNAL.equals(evalUser.type)) {
-	                  UIMessage.make(row, "row-number", "modifyadhocgroup.adhocuser.label");
-	               } else {
-	                  UIOutput.make(row, "row-number", evalUser.username);
-	               }
-	               UIOutput.make(row, "row-name", evalUser.displayName);
-	               }
-	         }
-		}else */
+		String actionBean = "setupEvalBean.";
 		//Deal with EvalGroups
 		 if(viewparams != null && viewparams instanceof EvalViewParameters){
 			evalParameters = (EvalViewParameters) viewparams;
@@ -123,12 +87,17 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			evalGroupId = evalParameters.evalGroupId;
 			groupTitle = commonLogic.getDisplayTitle(evalGroupId);
 			selectType = evalParameters.evalCategory;
-			
-			Set<String[]> users = commonLogic.getUsersByRole(evalGroupId, ("instructor".equals(selectType)? EvalConstants.PERM_INSTRUCTOR_ROLE : EvalConstants.PERM_ASSISTANT_ROLE));
-			Iterator<String[]> i = users.iterator();
-			while(i.hasNext()){
-				String[] r = i.next();
-				EvalUser user = commonLogic.getEvalUserById(r[0]);
+			Set<String> users;
+			if(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)){
+				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_INSTRUCTOR_ROLE);
+			}else if(EvalAssignGroup.SELECTION_TYPE_ASSISTANT.equals(selectType)){
+				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);	
+			}else{
+				throw new InvalidParameterException("Cannot handle this selection type: "+selectType);
+			}
+			for(Iterator<String> selector = users.iterator(); selector.hasNext();){
+				String userId = selector.next();
+				EvalUser user = commonLogic.getEvalUserById(userId);
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
 	            UISelect.make(row, "row-select", new String[] {}, new String[] {}, "#{}");
 	            UIOutput.make(row, "row-number", user.username);
@@ -156,14 +125,11 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 		UIMessage.make(form, "col-number", "assignselect.table.numbers");
 		UIMessage.make(form, "col-name", "assignselect.table.names");
 		
-		
-		 
-		
 		form.parameters = new ParameterList();
-		form.parameters.add(new UIELBinding("templateBBean.saveAssignSelection.evalGroupId", evalGroupId));
-		form.parameters.add(new UIELBinding("templateBBean.saveAssignSelection.selectType", selectType));
+		form.parameters.add(new UIELBinding(actionBean+".evalGroupId", evalGroupId));
+		form.parameters.add(new UIELBinding(actionBean+".selectType", selectType));
          
-		UICommand.make(form, "save-item-action", UIMessage.make("assignselect.form.save"), "#{templateBBean.saveAssignSelection}");
+		UICommand.make(form, "save-item-action", UIMessage.make("assignselect.form.save"), actionBean+".completeSaveAssignSelection}");
 		UIMessage.make(form, "cancel-button", "general.cancel.button");
 		
 		 }else{

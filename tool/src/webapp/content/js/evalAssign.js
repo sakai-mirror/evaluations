@@ -105,6 +105,13 @@ $(document).ready(function() {
                 var _that = $('#facebox div.content:eq(0)');    //lightbox $document object
                 variables.get.documentFB = _that ? _that : null;
                 variables.get.documentFB.find('form:eq(0)').ajaxForm(variables.ajaxOptions);
+                //Make list scrollable if hieght is more than 200px
+                var tableHolder = variables.get.documentFB.find('.selectTable:eq(0)');
+                tableHolder.css({
+                    'overflow': 'auto',
+                    'height': tableHolder.height() > 200?'200px':(tableHolder.height()+5)+"px"
+                });
+                log("Formatting table holder hieght. Set height to:"+tableHolder.height());
             }
         });
         $(document).bind('afterClose.facebox', function() {

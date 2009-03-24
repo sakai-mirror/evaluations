@@ -88,14 +88,5 @@ public interface ExternalEvalGroups {
 	 * @return the count of the eval groups that the user has a permission in
 	 */
 	public int countEvalGroupsForUser(String userId, String permission);
-	   
-	   /**
-	    * Get a set of users in this evalGroup who have this permission eg. section.role.ta
-	    * @param evalGroupId the internal unique ID for an evalGroup
-		* @param perm a String representing the permission to be checked
-		* @return
-		*/
-	   public Set<String[]> getUsersByRole(String evalGroupId,String perm);
-
 
 }

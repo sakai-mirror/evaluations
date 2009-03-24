@@ -69,10 +69,15 @@
 			<div rsf:id="msg=takeeval.selection.warn" id="evalSelectWarn" style="display:none;">You are removing an already selected person. Are you sure?</div>
 			
 			
+			<div rsf:id="form-branch:">
+				<form rsf:id="evaluationForm" id="eval_form" name="eval_form" method="post"
+                        onsubmit="$(':submit').hide;$('submit_process').show();">
+					
+
 			<!-- Selector for ONE instructor -->
-			<div rsf:id="select-instructor-one:" class="navPanel"  rel="evalInstructorSelector">
+			<div rsf:id="select-instructor-one:" class="navPanel"  rel="evalinstructorSelector">
 				<fieldset class="itemListNew">
-					<legend rsf:id="msg=takeeval.selection.instructors.header.one" for="select-instructor-one-list"> Select Instructor to evaluate:</legend>
+					<legend rsf:id="msg=takeeval.selection.instructor.header.one" for="select-instructor-one-list"> Select Instructor to evaluate:</legend>
 						<select rsf:id="select-instructor-one-list">
 							<option selected="selected">Person 1</option>
 							<option>Person 2</option>
@@ -82,9 +87,9 @@
 				</fieldset>
 			</div>
 			<!-- Selector for MULTIPLE Instructors -->
-			<div rsf:id="select-instructor-multiple:" class="navPanel" rel="evalInstructorSelector">
+			<div rsf:id="select-instructor-multiple:" class="navPanel" rel="evalinstructorSelector">
 				<fieldset class="itemListNew">
-					<legend rsf:id="msg=takeeval.selection.instructors.header.multiple"> Select Instructors to evaluate:</legend>
+					<legend rsf:id="msg=takeeval.selection.instructor.header.multiple"> Select Instructors to evaluate:</legend>
 					<div rsf:id="select-instructor-multiple-row:">
 						<input rsf:id="select-instructor-multiple-box" type="checkbox" />
 						<label rsf:id="select-instructor-multiple-label" for="select-instructor-multiple-selection"> Lovemore Nalube</label>
@@ -92,9 +97,9 @@
 				</fieldset>
 			</div>
             <!-- Selector for ONE TA -->
-                        <div rsf:id="select-assistant-one:" class="navPanel"  rel="evalTaSelector">
+                        <div rsf:id="select-assistant-one:" class="navPanel"  rel="evalassistantSelector">
                             <fieldset class="itemListNew">
-                                <legend rsf:id="msg=takeeval.selection.ta.header.one" for="select-assistant-one-list"> Select TA to evaluate:</legend>
+                                <legend rsf:id="msg=takeeval.selection.assistant.header.one" for="select-assistant-one-list"> Select TA to evaluate:</legend>
                                     <select rsf:id="select-assistant-one-list">
                                         <option selected="selected">Person 1</option>
                                         <option>Person 2</option>
@@ -104,20 +109,17 @@
                         </div>
 
 						<!-- Selector for MULTIPLE TAs-->
-			<div rsf:id="select-assistant-multiple:" class="navPanel" rel="evalTaSelector">
+			<div rsf:id="select-assistant-multiple:" class="navPanel" rel="evalassistantSelector">
 				<fieldset class="itemListNew">
-					<legend rsf:id="msg=takeeval.selection.ta.header.multiple"> Select TAs to evaluate:</legend>
+					<legend rsf:id="msg=takeeval.selection.assistant.header.multiple"> Select TAs to evaluate:</legend>
 					<div rsf:id="select-assistant-multiple-row:">
 						<input rsf:id="select-assistant-multiple-box" type="checkbox" />
-						<label rsf:id="select-assistant-multiple-label" for="select-instructor-multiple-selection"> Lovemore Nalube</label>
+						<label rsf:id="select-assistant-multiple-label" for="select-assistant-multiple-selection"> Lovemore Nalube</label>
 					</div>
 				</fieldset>
 			</div>
 
-			<div rsf:id="form-branch:">
-				<form rsf:id="evaluationForm" id="eval_form" name="eval_form" method="post"
-                        onsubmit="$(':submit').hide;$('submit_process').show();">
-					<div rsf:id="categorySection:">
+			<div rsf:id="categorySection:">
                         <fieldset class="itemListNew">
                            <legend rsf:id="categoryHeader"> Group Items: </legend>
                            <ol class="itemListEval">
@@ -134,17 +136,12 @@
 
 					<div class="act">
                         <input rsf:id="msg=general.processing" name="submit_process" type="button" style="display:none;" value="Processing........" disabled="disabled" />
-						<input rsf:id="submitEvaluation" id="submit_eval" type="submit" value="Submit Evaluation" accesskey="s" class="active" 
-                            onclick="$(this).hide();" />
+						<input rsf:id="submitEvaluation" id="submit_eval" type="submit" value="Submit Evaluation" accesskey="s" class="active" />
 					</div>
 				</form>
 			</div>
 
 <script type="text/javascript" language="javascript">processCommentBoxes();</script>
-<script type="text/javascript" language="javascript">
-  $(':submit').show();
-  $('submit_process').hide();
-</script>
 
 </div>
 	</body>

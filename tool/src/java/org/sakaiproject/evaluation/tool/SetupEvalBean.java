@@ -328,6 +328,33 @@ public class SetupEvalBean {
    }
 
    // NOTE: There is no action for the 3) assign step because that one just passes the data straight to the confirm view
+   
+   public String completeSaveAssignSelection(){
+	   if (evaluationId == null) {
+	         throw new IllegalArgumentException("evaluationId and emailTemplateId cannot be null");
+	      }
+	// make sure that the submitted nodes are valid and populate the nodes list
+	      Set<EvalHierarchyNode> nodes = null;
+	      if (selectedHierarchyNodeIDs.length > 0) {
+	         nodes = hierarchyLogic.getNodesByIds(selectedHierarchyNodeIDs);
+	         if (nodes.size() != selectedHierarchyNodeIDs.length) {
+	            throw new IllegalArgumentException("Invalid set of hierarchy node ids submitted which "
+	                  + "includes node Ids which are not in the hierarchy: " + ArrayUtils.arrayToString(selectedHierarchyNodeIDs));
+	         }
+	      } else {
+	         nodes = new HashSet<EvalHierarchyNode>();
+	      }
+
+	      // at least 1 node or group must be selected
+	      if (selectedGroupIDs.length == 0 
+	            && nodes.isEmpty() ) {
+	         messages.addMessage( new TargettedMessage("assigneval.invalid.selection",
+	               new Object[] {}, TargettedMessage.SEVERITY_ERROR));
+	         return "fail";
+	      }
+	      EvalEvaluation eval = evaluationService.getEvaluationById(evaluationId);
+	      return "success";
+   }
 
    // TODO - how do we handle removing assignments? (Currently not supported)
 
