@@ -17,6 +17,7 @@ package org.sakaiproject.evaluation.logic;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -122,27 +123,48 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
             }
 
             // check to make sure answers are valid for this evaluation
-            if (response.getAnswers() != null && !response.getAnswers().isEmpty()) {
-                checkAnswersValidForEval(response, responseComplete);
+            if (response.getAnswers() == null) {
+                response.setAnswers( new HashSet<EvalAnswer>(0) );
             } else {
-                // there are no answers
-                if (response.getEndTime() != null) {
-                    // the response is complete (submission of an evaluation) and not just creating the empty response
-                    // check if answers are required to be filled in
-                    Boolean unansweredAllowed = (Boolean)settings.get(EvalSettings.STUDENT_ALLOWED_LEAVE_UNANSWERED);
-                    if (unansweredAllowed == null) {
-                        unansweredAllowed = response.getEvaluation().getBlankResponsesAllowed();
+                // cleanup the answers before saving them, this removes empty answers and may end up removing all answers
+                // strip out answers with no value set
+                Set<EvalAnswer> answers = response.getAnswers();
+                for (Iterator<EvalAnswer> it = answers.iterator(); it.hasNext();) {
+                    EvalAnswer answer = it.next();
+
+                    // we need to encode the data in the MA array so it can be stored
+                    answer.setMultiAnswerCode(EvalUtils.encodeMultipleAnswers(answer.multipleAnswers));
+
+                    // need to encode the NA value
+                    EvalUtils.encodeAnswerNA(answer);
+
+                    // answers cleanup
+                    if (answer.getNumeric() == null &&
+                            EvalUtils.isBlank(answer.getText()) &&
+                            answer.getMultiAnswerCode() == null) {
+                        // all parts are null so ignore this answer
+                        it.remove();
+                    } else {
+                        // some parts are not null so do the fixup and store the answer before saving
+                        /*
+                         * If the numeric and text fields are left null, batch update will fail when several answers of different types are modified
+                         * This is the error that is triggered within the sakai generic dao: java.sql.BatchUpdateException: Driver can not
+                         * re-execute prepared statement when a parameter has been changed from a streaming type to an intrinsic data type without
+                         * calling clearParameters() first.
+                         */
+                        if (answer.getNumeric() == null) {
+                            answer.setNumeric(EvalConstants.NO_NUMERIC_ANSWER);
+                        }
+                        if (EvalUtils.isBlank(answer.getText())) {
+                            answer.setText(EvalConstants.NO_TEXT_ANSWER);
+                        }
+                        if (answer.getMultiAnswerCode() == null) {
+                            answer.setMultiAnswerCode(EvalConstants.NO_MULTIPLE_ANSWER);
+                        }
                     }
-                    if (! unansweredAllowed) {
-                        // all items must be completed so die if they are not
-                        throw new ResponseSaveException("User submitted a blank response and there are required answers", 
-                                ResponseSaveException.TYPE_BLANK_RESPONSE);
-                    }
-                }
-                if (response.getAnswers() == null) {
-                    response.setAnswers(new HashSet<EvalAnswer>());
                 }
             }
+            checkAnswersValidForEval(response, responseComplete);
 
             // save everything in one transaction
 
@@ -604,11 +626,16 @@ public class EvalDeliveryServiceImpl implements EvalDeliveryService {
                 requiredAnswerKeys.removeAll(answeredAnswerKeys);
                 if (requiredAnswerKeys.size() > 0) {
                     String[] reqAnsKeysArray = requiredAnswerKeys.toArray(new String[requiredAnswerKeys.size()]);
+                    String failureType = ResponseSaveException.TYPE_MISSING_REQUIRED_ANSWERS;
+                    if (answeredAnswerKeys.isEmpty()) {
+                        failureType = ResponseSaveException.TYPE_BLANK_RESPONSE;
+                    }
                     throw new ResponseSaveException("Missing " + requiredAnswerKeys.size() 
                             + " answers for required items (received "+answeredAnswerKeys.size()+" answers) for this evaluation"
                             + " response (" + response.getId() + ") for user (" + response.getOwner() + ")"
                             + " :: missing keys=" + ArrayUtils.arrayToString(reqAnsKeysArray) 
-                            + " :: received keys=" + ArrayUtils.arrayToString(answeredAnswerKeys.toArray(new String[answeredAnswerKeys.size()])), 
+                            + " :: received keys=" + ArrayUtils.arrayToString(answeredAnswerKeys.toArray(new String[answeredAnswerKeys.size()])),
+                            failureType,
                             reqAnsKeysArray );
                 }
             }

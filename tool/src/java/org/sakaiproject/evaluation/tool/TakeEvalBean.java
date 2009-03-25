@@ -14,7 +14,6 @@
 
 package org.sakaiproject.evaluation.tool;
 
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,23 +47,25 @@ public class TakeEvalBean {
      */
     public String[] selectioninstructorIds;
     public String[] selectionassistantIds;
-    
+
     /**
      * A {@link Map} of the selection settings to inject into Eval and set further Selection Options
-     * eg.for {@link EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR} and {@link EvalAssignGroup.SELECTION_TYPE_ASSISTANT}
-     * @return selectionOptions {@link Map}
+     * eg.for {@link EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR} and
+     * {@link EvalAssignGroup.SELECTION_TYPE_ASSISTANT}
+     * 
+     * @return selectionOptions {@link Map} of selection constant => ids
      */
-    private Map<String, String[]> setSelectionOptions(){
-    	Map<String, String[]> selectionOptions = new HashMap<String, String[]>();
-    	if(selectioninstructorIds!=null){
-    	selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, selectioninstructorIds);
-    	}
-    	if(selectionassistantIds!=null){
- 	   selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, selectionassistantIds);
-    	}
-    	return selectionOptions==null?new HashMap<String, String[]>():selectionOptions; //Avoid returning null
+    private Map<String, String[]> setSelectionOptions() {
+        Map<String, String[]> selectionOptions = new HashMap<String, String[]>();
+        if (selectioninstructorIds != null) {
+            selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, selectioninstructorIds);
+        }
+        if (selectionassistantIds != null) {
+            selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, selectionassistantIds);
+        }
+        // avoid null return
+        return selectionOptions == null ? new HashMap<String, String[]>(0) : selectionOptions;
     }
-
 
     private ResponseBeanLocator responseBeanLocator;
     public void setResponseBeanLocator(ResponseBeanLocator responseBeanLocator) {
@@ -84,7 +85,7 @@ public class TakeEvalBean {
     public String submitEvaluation() {
         log.debug("submit evaluation");
         try {
-            responseBeanLocator.saveAll(eval, evalGroupId, startDate,setSelectionOptions());
+            responseBeanLocator.saveAll(eval, evalGroupId, startDate, setSelectionOptions());
         } catch (ResponseSaveException e) {
             String messageKey = "unknown.caps";
             if (ResponseSaveException.TYPE_MISSING_REQUIRED_ANSWERS.equals(e.type)) {
@@ -96,11 +97,11 @@ public class TakeEvalBean {
             } else {
                 messageKey = "takeeval.user.cannot.save.reponse";
             }
-            messages.addMessage( new TargettedMessage(messageKey, e) );
+            messages.addMessage(new TargettedMessage(messageKey, e));
             return "failure";
         }
-        messages.addMessage( new TargettedMessage("evaluations.take.message",
-                new Object[] { eval.getTitle(), commonLogic.getDisplayTitle(evalGroupId) }, 
+        messages.addMessage(new TargettedMessage("evaluations.take.message", new Object[] {
+                eval.getTitle(), commonLogic.getDisplayTitle(evalGroupId) },
                 TargettedMessage.SEVERITY_INFO));
         return "success";
     }
