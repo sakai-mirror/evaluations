@@ -19,6 +19,7 @@
 package org.sakaiproject.evaluation.tool.producers;
 
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,8 @@ import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
 import org.sakaiproject.evaluation.tool.viewparams.ItemViewParameters;
 
 import uk.org.ponder.rsf.components.ParameterList;
+import uk.org.ponder.rsf.components.UIBoundBoolean;
+import uk.org.ponder.rsf.components.UIBoundList;
 import uk.org.ponder.rsf.components.UIBranchContainer;
 import uk.org.ponder.rsf.components.UICommand;
 import uk.org.ponder.rsf.components.UIContainer;
@@ -47,6 +50,8 @@ import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
 import uk.org.ponder.rsf.components.UIParameter;
 import uk.org.ponder.rsf.components.UISelect;
+import uk.org.ponder.rsf.components.decorators.DecoratorList;
+import uk.org.ponder.rsf.components.decorators.UIIDStrategyDecorator;
 import uk.org.ponder.rsf.flow.jsfnav.NavigationCaseReporter;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
@@ -74,12 +79,13 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 	public void fillComponents(UIContainer tofill, ViewParameters viewparams,
 			ComponentChecker checker) {
 		// TODO Auto-generated method stub		
-		String groupTitle = "", evalGroupId = "", currentUserId = commonLogic.getCurrentUserId(), selectType = "";
+		String groupTitle = "", evalGroupId = "", selectType = "";
 		Long evalId;
 		EvalViewParameters evalParameters;
 		
 		UIForm form = UIForm.make(tofill, "form");
 		String actionBean = "setupEvalBean.";
+		String actionBeanVariable = actionBean;
 		//Deal with EvalGroups
 		 if(viewparams != null && viewparams instanceof EvalViewParameters){
 			evalParameters = (EvalViewParameters) viewparams;
@@ -90,8 +96,10 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			Set<String> users;
 			if(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)){
 				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_INSTRUCTOR_ROLE);
+				actionBeanVariable = actionBeanVariable+"deselectedInstructors";
 			}else if(EvalAssignGroup.SELECTION_TYPE_ASSISTANT.equals(selectType)){
 				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);	
+				actionBeanVariable = actionBeanVariable+"deselectedAssistants";
 			}else{
 				throw new InvalidParameterException("Cannot handle this selection type: "+selectType);
 			}
@@ -99,12 +107,12 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 				String userId = selector.next();
 				EvalUser user = commonLogic.getEvalUserById(userId);
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
-	            UISelect.make(row, "row-select", new String[] {}, new String[] {}, "#{}");
+				UIBoundBoolean bb = UIBoundBoolean.make(row, "row-select", Boolean.TRUE);
+				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(user.username) );
 	            UIOutput.make(row, "row-number", user.username);
 	            UIOutput.make(row, "row-name", user.displayName); 
 	            }
-		
-
+			
 		 /**
          * This is the evaluation we are working with on this page,
          * this should ONLY be read from, do not change any of these fields
@@ -114,7 +122,7 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
         
 		
 		//do a check for the Header
-		UIMessage.make(tofill, "title", ("instructor".equals(selectType)? "assignselect.instructors.page.title" : "assignselect.tas.page.title"));
+		UIMessage.make(tofill, "title", (EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)? "assignselect.instructors.page.title" : "assignselect.tas.page.title"));
 		
 		
 		UIMessage.make(form, "group-title", "assignselect.page.group");
@@ -126,10 +134,10 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 		UIMessage.make(form, "col-name", "assignselect.table.names");
 		
 		form.parameters = new ParameterList();
-		form.parameters.add(new UIELBinding(actionBean+".evalGroupId", evalGroupId));
-		form.parameters.add(new UIELBinding(actionBean+".selectType", selectType));
+		form.parameters.add(new UIELBinding(actionBeanVariable, "JSsendVarsToBean"));
+		form.parameters.add(new UIELBinding(actionBean+"evaluationId", evalId));
          
-		UICommand.make(form, "save-item-action", UIMessage.make("assignselect.form.save"), actionBean+".completeSaveAssignSelection}");
+		UICommand.make(form, "save-item-action", UIMessage.make("assignselect.form.save"), actionBean+"completeSaveAssignSelection");
 		UIMessage.make(form, "cancel-button", "general.cancel.button");
 		
 		 }else{

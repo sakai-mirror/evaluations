@@ -16,7 +16,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: true
+        debug: false
     }
     /**
      * Private methods and variables
@@ -52,44 +52,50 @@ $(document).ready(function() {
             }
         },
         ajaxOptions:{
+            cache: false,
             beforeSubmit: function() {
                 log("Running pre-post checks");
                 var temp = variables.get.documentFB.find('input[@type=checkbox]:checked');
                 variables.selectedPeople = temp.length > 0 ? temp.length : 0;
                 if (variables.selectedPeople == 0) {
+                    alert('Please select at least one ' + (variables.options.type == 0 ? "Lecturer." : "Tutor."));
                     log("ERROR: No checkboxes selected. Resetting class variables now.");  //Should warn user about this.
                     initClassVars();
                     return false;
-                } 
+                } else {
+                    return handleCheckboxes();
+                }
+                log('Submitting ajax.');
             },
             success: function(data) {
                 data != null ? log("Got some data!") : log("ERROR: Got NO data!");
                 var tempText = variables.that.text();
                 var index1 = tempText.indexOf('(');
                 var index2 = tempText.indexOf('/');
-                var diff = parseInt((index2 - index1)-1);
+                var diff = parseInt((index2 - index1) - 1);
                 var replaceText;
-                log("Found string: "+tempText+".( is char #:"+index1+"./ is char #:"+index2+". Num of digits:"+diff);
-                if(diff == 1){
-                    replaceText = tempText.charAt(parseInt(index1+1)) ;
-                }else{
+                log("Found string: " + tempText + ".( is char #:" + index1 + "./ is char #:" + index2 + ". Num of digits:" + diff);
+                if (diff == 1) {
+                    replaceText = tempText.charAt(parseInt(index1 + 1));
+                } else {
                     //replaceText = tempText.charAt(parseInt(index1+1)) ;
                 }
-                if(replaceText!=null){
-                    replaceText = "\\("+replaceText;
+                if (replaceText != null) {
+                    replaceText = "\\(" + replaceText;
                     var sRegExInput = new RegExp(replaceText);
                     log(variables.selectedPeople);
-                    tempText = tempText.replace(sRegExInput,"("+variables.selectedPeople);
+                    tempText = tempText.replace(sRegExInput, "(" + variables.selectedPeople);
                     variables.that.text(tempText);
-                    log("Replaced text is:"+tempText);
+                    log("Replaced text is:" + tempText);
                     $(document).trigger('close.facebox');
-                }else{
+                } else {
                     log("CATASTROPHIC ERROR: replaceText cannot be null!");
                 }
 
             }
         },
         selectedPeople:0,
+        deselectedPeopleIds: new Array(),
         initedafterRevealFacebox:0,
         that:null
     }
@@ -109,9 +115,9 @@ $(document).ready(function() {
                 var tableHolder = variables.get.documentFB.find('.selectTable:eq(0)');
                 tableHolder.css({
                     'overflow': 'auto',
-                    'height': tableHolder.height() > 200?'200px':(tableHolder.height()+5)+"px"
+                    'height': tableHolder.height() > 200 ? '200px' : (tableHolder.height() + 5) + "px"
                 });
-                log("Formatting table holder hieght. Set height to:"+tableHolder.height());
+                log("Formatting table holder hieght. Set height to:" + tableHolder.height());
             }
         });
         $(document).bind('afterClose.facebox', function() {
@@ -126,7 +132,7 @@ $(document).ready(function() {
 
     function initClassVars() {
         variables.selectedPeople = 0;
-
+        variables.deselectedPeopleIds = new Array();
     }
 
     function initControls(that) {
@@ -137,6 +143,28 @@ $(document).ready(function() {
             $.facebox({ajax: _url});
             return false;
         });
+    }
+
+    function handleCheckboxes(){
+        var unChecked = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
+                    if (unChecked.length != 0) {
+                        unChecked.each(function() {
+                            var id = $(this).attr('id');
+                            variables.deselectedPeopleIds.push(id);
+                        });
+                        var field;
+                        field = variables.get.documentFB.find('input[name=el-binding]:eq(0)');
+                            if (field.val().search(/deselected/) != -1) {
+                                field.val(field.val().replace(/JSsendVarsToBean/, variables.deselectedPeopleIds.toString()));
+                                log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
+                                return true;
+                            }
+
+                    }
+                    else {
+                        $(document).trigger('close.facebox');
+                        return false;
+                    }
     }
 
     // Debugging

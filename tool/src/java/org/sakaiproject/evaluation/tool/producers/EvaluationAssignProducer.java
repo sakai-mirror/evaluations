@@ -267,11 +267,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
                 int totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE)).size();
-                int selectedUsers = 0;
+                int selectedUsers = totalUsers;
                 if(totalUsers > 0){
                 	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {selectedUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
                 }
                 totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE)).size();
+                selectedUsers = totalUsers;
                 if(totalUsers > 0){
                     UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {selectedUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
                 }  

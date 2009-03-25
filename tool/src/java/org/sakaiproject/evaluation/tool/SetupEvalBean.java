@@ -16,6 +16,7 @@ package org.sakaiproject.evaluation.tool;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalAssignHierarchy;
+import org.sakaiproject.evaluation.model.EvalAssignUser;
 import org.sakaiproject.evaluation.model.EvalEmailTemplate;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.model.EvalTemplate;
@@ -102,6 +104,8 @@ public class SetupEvalBean {
     * selection value to populate {@link SetupEvalBean.selectionOptions}
     */
    public String selectionInstructors, selectionAssistants;
+   
+   public String deselectedInstructors, deselectedAssistants, evalGroupId;
 
    private EvalEvaluationService evaluationService;
    public void setEvaluationService(EvalEvaluationService evaluationService) {
@@ -333,26 +337,31 @@ public class SetupEvalBean {
 	   if (evaluationId == null) {
 	         throw new IllegalArgumentException("evaluationId and emailTemplateId cannot be null");
 	      }
-	// make sure that the submitted nodes are valid and populate the nodes list
-	      Set<EvalHierarchyNode> nodes = null;
-	      if (selectedHierarchyNodeIDs.length > 0) {
-	         nodes = hierarchyLogic.getNodesByIds(selectedHierarchyNodeIDs);
-	         if (nodes.size() != selectedHierarchyNodeIDs.length) {
-	            throw new IllegalArgumentException("Invalid set of hierarchy node ids submitted which "
-	                  + "includes node Ids which are not in the hierarchy: " + ArrayUtils.arrayToString(selectedHierarchyNodeIDs));
-	         }
-	      } else {
-	         nodes = new HashSet<EvalHierarchyNode>();
+	   List<String> deselected = new ArrayList<String>();
+	   String type;
+	   if(deselectedInstructors != null){
+		   deselected = Arrays.asList(deselectedInstructors.split(","));
+		   type = EvalAssignUser.TYPE_EVALUATEE;
+	   }else if(deselectedAssistants !=null){
+		   log.info("deselectedAssistants : "+deselectedAssistants);
+		   deselected = Arrays.asList(deselectedAssistants.split(","));
+		   type = EvalAssignUser.TYPE_ASSISTANT;
+	   }else{
+		   throw new IllegalArgumentException("There needs to be at least one Assistant or Instructor selected");
+	   }
+	  
+	      log.info("Deselected arrary:"+deselected.size());
+	      for(int i=0; i<deselected.size();i++){
+	    	  EvalAssignUser user = evaluationService.getAssignUserByEid(deselected.get(i));
+	    	  if(user != null){
+	    	  user.setStatus(EvalAssignUser.STATUS_REMOVED);
+	    	  user.setType(type);
+	    	  log.info("Setting status for:"+deselected.get(i));
+	    	  evaluationSetupService.saveUserAssignments(evaluationId, user);
+	    	  }else{
+	    		  log.info("EvalAssignUser not found for:"+deselected.get(i));
+	    	  }
 	      }
-
-	      // at least 1 node or group must be selected
-	      if (selectedGroupIDs.length == 0 
-	            && nodes.isEmpty() ) {
-	         messages.addMessage( new TargettedMessage("assigneval.invalid.selection",
-	               new Object[] {}, TargettedMessage.SEVERITY_ERROR));
-	         return "fail";
-	      }
-	      EvalEvaluation eval = evaluationService.getEvaluationById(evaluationId);
 	      return "success";
    }
 
