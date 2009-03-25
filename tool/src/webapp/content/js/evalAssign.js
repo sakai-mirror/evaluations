@@ -172,8 +172,5 @@ $(document).ready(function() {
         if ((variables.options.debug) && (window.console && window.console.log)) {
             window.console.log('INFO: ' + obj);
         }
-        else {
-            alert('INFO: ' + obj);
-        }
     }
 })($)
