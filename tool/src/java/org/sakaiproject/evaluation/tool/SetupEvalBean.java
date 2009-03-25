@@ -16,7 +16,6 @@ package org.sakaiproject.evaluation.tool;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +34,6 @@ import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalAssignHierarchy;
-import org.sakaiproject.evaluation.model.EvalAssignUser;
 import org.sakaiproject.evaluation.model.EvalEmailTemplate;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.model.EvalTemplate;
@@ -82,8 +80,6 @@ public class SetupEvalBean {
      * Set to true if we are reopening this evaluation
      */
     public boolean reOpening = false;
-   
-   public String deselectedInstructors, deselectedAssistants, evalGroupId;
 
     /**
      * the selected groups ids to bind to this evaluation when creating it
@@ -308,38 +304,6 @@ public class SetupEvalBean {
         }
         // TODO - fix this once RSF is fixed, remove all above this line and uncomment below
         //    completeCreateAction();
-   
-   public String completeSaveAssignSelection(){
-	   if (evaluationId == null) {
-	         throw new IllegalArgumentException("evaluationId and emailTemplateId cannot be null");
-	      }
-	   List<String> deselected = new ArrayList<String>();
-	   String type;
-	   if(deselectedInstructors != null){
-		   deselected = Arrays.asList(deselectedInstructors.split(","));
-		   type = EvalAssignUser.TYPE_EVALUATEE;
-	   }else if(deselectedAssistants !=null){
-		   log.info("deselectedAssistants : "+deselectedAssistants);
-		   deselected = Arrays.asList(deselectedAssistants.split(","));
-		   type = EvalAssignUser.TYPE_ASSISTANT;
-	   }else{
-		   throw new IllegalArgumentException("There needs to be at least one Assistant or Instructor selected");
-	   }
-	  
-	      log.info("Deselected arrary:"+deselected.size());
-	      for(int i=0; i<deselected.size();i++){
-	    	  EvalAssignUser user = evaluationService.getAssignUserByEid(deselected.get(i));
-	    	  if(user != null){
-	    	  user.setStatus(EvalAssignUser.STATUS_REMOVED);
-	    	  user.setType(type);
-	    	  log.info("Setting status for:"+deselected.get(i));
-	    	  evaluationSetupService.saveUserAssignments(evaluationId, user);
-	    	  }else{
-	    		  log.info("EvalAssignUser not found for:"+deselected.get(i));
-	    	  }
-	      }
-	      return "success";
-   }
 
         EvalEvaluation eval = evaluationBeanLocator.getCurrentEval();
         String destination = "controlEvals";
