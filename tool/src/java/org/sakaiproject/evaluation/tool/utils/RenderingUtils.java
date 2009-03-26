@@ -15,10 +15,17 @@
 package org.sakaiproject.evaluation.tool.utils;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.sakaiproject.evaluation.constant.EvalConstants;
+import org.sakaiproject.evaluation.model.EvalEvaluation;
+import org.sakaiproject.evaluation.tool.renderers.ItemRenderer;
+import org.sakaiproject.evaluation.utils.EvalUtils;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList;
+import org.sakaiproject.evaluation.utils.TemplateItemDataList.DataTemplateItem;
 
 
 /**
@@ -100,6 +107,58 @@ public class RenderingUtils {
             categoryMessage = "modifyitem.environment.category";
         }
         return categoryMessage;
+    }
+
+    /**
+     * Ensures all rendering calcs work the same way and generate the same general properties
+     * 
+     * @param dti the dti which holds the template item (wrap the template item if you need to)
+     * @param eval (OPTIONAL) the evaluation related to the template item to be rendered
+     * @param missingKeys (OPTIONAL) the set of missing keys which should cause the matching items to rendered with an invalid marker
+     * @param renderProperties (OPTIONAL) the existing map of rendering properties (one is created if this is null)
+     * @return the map of render properties (created if the input map is null)
+     */
+    public static Map<String,Object> makeRenderProps(DataTemplateItem dti, 
+            EvalEvaluation eval, Set<String> missingKeys, 
+            Map<String,Object> renderProperties) {
+        if (dti == null || dti.templateItem == null) {
+            throw new IllegalArgumentException("dti and dti.templateItem cannot be null");
+        }
+
+        if (renderProperties == null) {
+            renderProperties = new HashMap<String, Object>();
+        }
+
+        boolean evalRequiresItems = false;
+        if (eval != null) {
+            evalRequiresItems = ! EvalUtils.safeBool(eval.getBlankResponsesAllowed(), true);
+        }
+        if ( dti.isCompulsory() || (evalRequiresItems && dti.isRequireable()) ) {
+            renderProperties.put(ItemRenderer.EVAL_PROP_ANSWER_REQUIRED, Boolean.TRUE);
+        } else {
+            renderProperties.remove(ItemRenderer.EVAL_PROP_ANSWER_REQUIRED);
+        }
+
+        if (missingKeys != null && ! missingKeys.isEmpty()) {
+            if (missingKeys.contains(dti.getKey())) {
+                renderProperties.put(ItemRenderer.EVAL_PROP_RENDER_INVALID, Boolean.TRUE);
+            }
+        } else {
+            renderProperties.remove(ItemRenderer.EVAL_PROP_RENDER_INVALID);
+        }
+
+        // loop through and add in children render props
+        if (dti.isBlockParent()) {
+            List<DataTemplateItem> children = dti.getBlockChildren();
+            for (DataTemplateItem childDTI : children) {
+                HashMap<String,Object> childRenderProps = new HashMap<String, Object>();
+                RenderingUtils.makeRenderProps(childDTI, eval, missingKeys, childRenderProps);
+                String key = "child-"+childDTI.templateItem.getId();
+                renderProperties.put(key, childRenderProps);
+            }
+        }
+
+        return renderProperties;
     }
 
 }
