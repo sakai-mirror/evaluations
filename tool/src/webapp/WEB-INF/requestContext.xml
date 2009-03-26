@@ -33,6 +33,7 @@
         <property name="emailTemplateWBL" ref="emailTemplateWBL" />
         <property name="messages" ref="targettedMessageList" />
         <property name="locale" ref="requestLocale" />
+        <property name="selectedEvaluationUsersLocator" ref="selectedEvaluationUsersLocator"/>
     </bean>
 
     <bean id="takeEvalBean" class="org.sakaiproject.evaluation.tool.TakeEvalBean">
@@ -178,6 +179,10 @@
             ref="org.sakaiproject.evaluation.logic.EvalCommonLogic" />
         <property name="hierarchyLogic"
             ref="org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic" />
+    </bean>
+    
+    <bean id="selectedEvaluationUsersLocator" 
+    	class="org.sakaiproject.evaluation.tool.locators.SelectedEvaluationUsersLocator">
     </bean>
 
     <bean id="adhocGroupsBean"

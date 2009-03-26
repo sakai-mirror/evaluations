@@ -43,6 +43,7 @@ import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.model.EvalTemplate;
 import org.sakaiproject.evaluation.tool.locators.EmailTemplateWBL;
 import org.sakaiproject.evaluation.tool.locators.EvaluationBeanLocator;
+import org.sakaiproject.evaluation.tool.locators.SelectedEvaluationUsersLocator;
 import org.sakaiproject.evaluation.utils.ArrayUtils;
 import org.sakaiproject.evaluation.utils.EvalUtils;
 
@@ -106,10 +107,10 @@ public class SetupEvalBean {
 	 * selection value to populate {@link SetupEvalBean.selectionOptions}
 	 */
 	public String selectionInstructors, selectionAssistants;
-
-	public String[] deselectedInstructors =new String[] {};
-	public String[] deselectedAssistants = new String[] {};
-
+	/* TODO - delete these now in their own bean
+	public Map<String, String[]> deselectedInstructors = new HashMap<String, String[]>();
+	public Map<String, String[]> deselectedAssistants = new HashMap<String, String[]>();
+	*/
 	private EvalEvaluationService evaluationService;
 
 	public void setEvaluationService(EvalEvaluationService evaluationService) {
@@ -164,6 +165,12 @@ public class SetupEvalBean {
 
 	public void setLocale(Locale locale) {
 		this.locale = locale;
+	}
+	
+	
+	private SelectedEvaluationUsersLocator selectedEvalautionUsersLocator;
+	public void setSelectedEvalautionUsersLocator(SelectedEvaluationUsersLocator seul) {
+		this.selectedEvalautionUsersLocator = seul;
 	}
 
 	DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
@@ -456,20 +463,26 @@ public class SetupEvalBean {
 			evaluationSetupService.setEvalAssignments(evaluationId,
 					selectedHierarchyNodeIDs, selectedGroupIDs, append);
 		}
-
-		// Save Assistant/Instructor selections now. EVALSYS-618
-		if (deselectedInstructors != null) {
-			log.info("deselectedInstructors : " + deselectedInstructors.toString());
-			deselectUsers(deselectedInstructors);
-		}
-		if (deselectedAssistants != null) {
-			log.info("deselectedAssistants : " + deselectedAssistants.toString());
-			deselectUsers(deselectedAssistants);
+		
+		for (int i =0; i < selectedGroupIDs.length; i++) {
+			String currentId = selectedGroupIDs[i];
+			// Save Assistant/Instructor selections now. EVALSYS-618
+			String[] deselectedInstructors = selectedEvalautionUsersLocator.getDeselectedInstructors(currentId);
+			String[] deselectedAssistants = selectedEvalautionUsersLocator.getDeselectedAssistants(currentId);
+			if (deselectedInstructors != null) {
+				log.info("deselectedInstructors : " + deselectedInstructors.toString());
+				deselectUsers(deselectedInstructors);
+			}
+			if (deselectedAssistants != null) {
+				log.info("deselectedAssistants : " + deselectedAssistants.toString());
+				deselectUsers(deselectedAssistants);
+			}
 		}
 
 		return "controlEvals";
 	}
 
+	
 	// NOTE: these are the support methods
 
 	/**
