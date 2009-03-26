@@ -2,8 +2,8 @@
  * For the evalAssign view
  */
 $(document).ready(function() {
-    $('a[@rel=assignInstructorSelector]').assignSelector({type:0});
-    $('a[@rel=assignTaSelector]').assignSelector({type:1});
+    $('a[rel=assignInstructorSelector]').assignSelector({type:0});
+    $('a[rel=assignTaSelector]').assignSelector({type:1});
 });
 
 (function($) {
@@ -16,12 +16,11 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: false
-    }
+        debug: true
+    };
     /**
      * Private methods and variables
      *
-     * @param that Element to be attached to
      */
 
     var variables = {
@@ -51,54 +50,11 @@ $(document).ready(function() {
                 return !variables.get.siteId ? false : true;  //Do not simplify this. Should return true if siteId is anything other than false.
             }
         },
-        ajaxOptions:{
-            cache: false,
-            beforeSubmit: function() {
-                log("Running pre-post checks");
-                var temp = variables.get.documentFB.find('input[@type=checkbox]:checked');
-                variables.selectedPeople = temp.length > 0 ? temp.length : 0;
-                if (variables.selectedPeople == 0) {
-                    alert('Please select at least one ' + (variables.options.type == 0 ? "Lecturer." : "Tutor."));
-                    log("ERROR: No checkboxes selected. Resetting class variables now.");  //Should warn user about this.
-                    initClassVars();
-                    return false;
-                } else {
-                    return handleCheckboxes();
-                }
-                log('Submitting ajax.');
-            },
-            success: function(data) {
-                data != null ? log("Got some data!") : log("ERROR: Got NO data!");
-                var tempText = variables.that.text();
-                var index1 = tempText.indexOf('(');
-                var index2 = tempText.indexOf('/');
-                var diff = parseInt((index2 - index1) - 1);
-                var replaceText;
-                log("Found string: " + tempText + ".( is char #:" + index1 + "./ is char #:" + index2 + ". Num of digits:" + diff);
-                if (diff == 1) {
-                    replaceText = tempText.charAt(parseInt(index1 + 1));
-                } else {
-                    //replaceText = tempText.charAt(parseInt(index1+1)) ;
-                }
-                if (replaceText != null) {
-                    replaceText = "\\(" + replaceText;
-                    var sRegExInput = new RegExp(replaceText);
-                    log(variables.selectedPeople);
-                    tempText = tempText.replace(sRegExInput, "(" + variables.selectedPeople);
-                    variables.that.text(tempText);
-                    log("Replaced text is:" + tempText);
-                    $(document).trigger('close.facebox');
-                } else {
-                    log("CATASTROPHIC ERROR: replaceText cannot be null!");
-                }
-
-            }
-        },
         selectedPeople:0,
         deselectedPeopleIds: new Array(),
         initedafterRevealFacebox:0,
         that:null
-    }
+    };
 
     function init(that, options) {
         //copy options to this class
@@ -110,7 +66,12 @@ $(document).ready(function() {
                 log("WARN: Lightbox loaded, attaching listerners now...");
                 var _that = $('#facebox div.content:eq(0)');    //lightbox $document object
                 variables.get.documentFB = _that ? _that : null;
-                variables.get.documentFB.find('form:eq(0)').ajaxForm(variables.ajaxOptions);
+                //variables.get.documentFB.find('form:eq(0)').ajaxForm(variables.ajaxOptions); //No longer a form submission
+                variables.get.documentFB.find('input[@type=submit]').bind('click', function() {
+                    log("Binding submit button value");
+                    handleFormSubmit(this);
+                    return false;
+                });
                 //Make list scrollable if hieght is more than 200px
                 var tableHolder = variables.get.documentFB.find('.selectTable:eq(0)');
                 tableHolder.css({
@@ -139,32 +100,79 @@ $(document).ready(function() {
         that.bind('click', function() {
             var _url = that.attr('href');
             variables.that = that;
+            variables.set.typeOfBranch(that);
             log("Fetching URL: " + _url);
             $.facebox({ajax: _url});
             return false;
         });
     }
 
-    function handleCheckboxes(){
+    function handleCheckboxes() {
         var unChecked = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
-                    if (unChecked.length != 0) {
-                        unChecked.each(function() {
-                            var id = $(this).attr('id');
-                            variables.deselectedPeopleIds.push(id);
-                        });
-                        var field;
-                        field = variables.get.documentFB.find('input[name=el-binding]:eq(0)');
-                            if (field.val().search(/deselected/) != -1) {
-                                field.val(field.val().replace(/JSsendVarsToBean/, variables.deselectedPeopleIds.toString()));
-                                log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
-                                return true;
-                            }
+        if (unChecked.length != 0) {
+            unChecked.each(function() {
+                var id = $(this).attr('id');
+                variables.deselectedPeopleIds.push(id);
+            });
+            var field;
+            var regText = "deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
+            var sRegExInput = new RegExp(regText);
+            $('input[name=el-binding]').each(function(){
+             if ($(this).val().search(sRegExInput) != -1) {
+                 field=$(this);
+             }
+        });
+            if (field!=null) {
+                field.val("j#{setupEvalBean."+regText+"}["+variables.deselectedPeopleIds.toString()+"]");
+                log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
+                return true;
+            }else{
+                log("ERROR: Field param with part val:"+regText+" Not FOUND.");
+            }
 
-                    }
-                    else {
-                        $(document).trigger('close.facebox');
-                        return false;
-                    }
+        }
+        else {
+            $(document).trigger('close.facebox');
+        }
+        return false;
+    }
+
+    function handleFormSubmit(_that) {
+        var that = $(_that);             
+        log("Running pre-SET checks");
+        var temp = variables.get.documentFB.find('input[@type=checkbox]:checked');
+        variables.selectedPeople = temp.length > 0 ? temp.length : 0;
+        if (variables.selectedPeople == 0) {
+            alert('Please select at least one ' + (variables.options.type == 0 ? "Lecturer." : "Tutor."));
+            log("ERROR: No checkboxes selected. Resetting class variables now.");  //Should warn user about this.
+            } else {
+            if (handleCheckboxes()) {
+                var tempText = variables.that.text();
+                var index1 = tempText.indexOf('(');
+                var index2 = tempText.indexOf('/');
+                var diff = parseInt((index2 - index1) - 1);
+                var replaceText;
+                log("Found string: " + tempText + ".( is char #:" + index1 + "./ is char #:" + index2 + ". Num of digits:" + diff);
+                if (diff == 1) {
+                    replaceText = tempText.charAt(parseInt(index1 + 1));
+                } else {
+                    replaceText = tempText.charAt(parseInt(index1+1)) ;
+                }
+                if (replaceText != null) {
+                    replaceText = "\\(" + replaceText;
+                    var sRegExInput = new RegExp(replaceText);
+                    log(variables.selectedPeople);
+                    tempText = tempText.replace(sRegExInput, "(" + variables.selectedPeople);
+                    variables.that.text(tempText);
+                    log("Replaced text is:" + tempText);
+                    $(document).trigger('close.facebox');
+                } else {
+                    log("CATASTROPHIC ERROR: replaceText cannot be null!");
+                }
+
+            }
+        }
+        initClassVars();
     }
 
     // Debugging

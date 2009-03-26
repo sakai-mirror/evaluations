@@ -10,12 +10,9 @@
     <script type="text/javascript" rsf:id="scr=portal-matter" language="JavaScript"
             src="/library/js/headscripts.js"></script>
     <script type="text/javascript" language="JavaScript" src="../js/jquery/jquery.js"></script>
-    <script type="text/javascript" language="JavaScript" src="../js/rsf.js"></script>
-    <script type="text/javascript" language="JavaScript" src="../js/evalUtils.js"></script>
     <script type="text/javascript" src="../js/facebox/facebox.js"></script>
     <script type="text/javascript" src="../js/evalAssign.js"></script>
-    <script type="text/javascript" src="../js/jquery/form.js"></script>
-            <link href="../css/evaluation_base.css" type="text/css" rel="stylesheet" media="all"/>
+    <link href="../css/evaluation_base.css" type="text/css" rel="stylesheet" media="all"/>
     <link href="../js/facebox/facebox.css" type="text/css" rel="stylesheet" media="all"/>
 
 </head>
@@ -94,6 +91,7 @@
                         <th>
                             <span rsf:id="msg=assigneval.name.header">Title</span></th>
                         <th><span rsf:id="msg=assignselect.page.column.title">Instructors and TAs</span></th>
+						<th><span>Students</span></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -104,6 +102,7 @@
                             <label rsf:id="groupTitle" for="evalGroupId">group title</label></td>
                         <td><a rsf:id="select-instructors" href="#" class="addItem" rel="assignInstructorSelector">Select Instructors (0/5)</a>
                             <a rsf:id="select-tas" href="#" class="addItem" rel="assignTaSelector" style="margin-left:30px">Select TAs (0/12)</a></td>
+						<td><span rsf:id="groupMembers"></span></td>
                     </tr>
                     </tbody>
                 </table>

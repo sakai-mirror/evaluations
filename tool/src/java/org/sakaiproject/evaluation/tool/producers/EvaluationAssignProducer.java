@@ -36,10 +36,13 @@ import org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRendere
 import org.sakaiproject.evaluation.tool.viewparams.AdhocGroupParams;
 import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
 import org.sakaiproject.evaluation.utils.ComparatorsUtils;
+import org.sakaiproject.evaluation.utils.EvalUtils;
 
 import uk.org.ponder.htmlutil.HTMLUtil;
 import uk.org.ponder.rsf.components.UIBranchContainer;
+import uk.org.ponder.rsf.components.UICommand;
 import uk.org.ponder.rsf.components.UIContainer;
+import uk.org.ponder.rsf.components.UIELBinding;
 import uk.org.ponder.rsf.components.UIForm;
 import uk.org.ponder.rsf.components.UIInternalLink;
 import uk.org.ponder.rsf.components.UILink;
@@ -130,6 +133,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * this should ONLY be read from, do not change any of these fields
          */
         EvalEvaluation evaluation = evaluationService.getEvaluationById(evalViewParams.evaluationId);
+        String actionBean = "setupEvalBean.";
 
         UIInternalLink.make(tofill, "eval-settings-link",
                 UIMessage.make("evalsettings.page.title"),
@@ -142,10 +146,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         UIMessage.make(tofill, "assign-eval-edit-page-title", "assigneval.assign.page.title", new Object[] {evaluation.getTitle()});
         UIMessage.make(tofill, "assign-eval-instructions", "assigneval.assign.instructions", new Object[] {evaluation.getTitle()});
 
-        // this is a get form which does not submit to a backing bean
-        EvalViewParameters formViewParams = (EvalViewParameters) evalViewParams.copyBase();
-        formViewParams.viewID = EvaluationAssignConfirmProducer.VIEW_ID;
-
+       
         /* 
          * About this form.
          * 
@@ -164,20 +165,20 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * Also see the comments on HierarchyTreeNodeSelectRenderer. 
          * 
          */
-        UIForm form = UIForm.make(tofill, "eval-assign-form", formViewParams);
+        UIForm form = UIForm.make(tofill, "eval-assign-form");
 
         // Things for building the UISelect of Hierarchy Node Checkboxes
-        List<String> hierNodesLabels = new ArrayList<String>();
+        /*List<String> hierNodesLabels = new ArrayList<String>();
         List<String> hierNodesValues = new ArrayList<String>();
         UISelect hierarchyNodesSelect = UISelect.makeMultiple(form, "hierarchyNodeSelectHolder", 
                 new String[] {}, new String[] {}, "selectedHierarchyNodeIDs", new String[] {});
-        String hierNodesSelectID = hierarchyNodesSelect.getFullID();
+        String hierNodesSelectID = hierarchyNodesSelect.getFullID();*/
 
         // Things for building the UISelect of Eval Group Checkboxes
         List<String> evalGroupsLabels = new ArrayList<String>();
         List<String> evalGroupsValues = new ArrayList<String>();
         UISelect evalGroupsSelect = UISelect.makeMultiple(form, "evalGroupSelectHolder", 
-                new String[] {}, new String[] {}, "selectedGroupIDs", new String[] {});
+                new String[] {}, new String[] {}, actionBean + "selectedGroupIDs", new String[] {});
         String evalGroupsSelectID = evalGroupsSelect.getFullID();
 
         /*
@@ -191,7 +192,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * here and running it at the bottom of the page.
          * 
          */
-        Boolean useAdHocGroups = (Boolean) settings.get(EvalSettings.ENABLE_ADHOC_GROUPS);
+        //Boolean useAdHocGroups = (Boolean) settings.get(EvalSettings.ENABLE_ADHOC_GROUPS);
         Boolean showHierarchy = (Boolean) settings.get(EvalSettings.DISPLAY_HIERARCHY_OPTIONS);
 
         // NOTE: this is the one place where the perms should be used instead of user assignments (there are no assignments yet) -AZ
@@ -216,7 +217,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
             /*
              * Area 1. Selection GUI for Hierarchy Nodes and Evaluation Groups
-             */
+             
 
             if (showHierarchy) {
                 UIBranchContainer hierarchyArea = UIBranchContainer.make(form, "hierarchy-node-area:");
@@ -227,7 +228,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                         evalGroupsSelectID, hierNodesSelectID, evalGroupsLabels, evalGroupsValues,
                         hierNodesLabels, hierNodesValues);
             }
-
+*/
             /*
              * Area 2. display checkboxes for selecting the non-hierarchy groups
              */
@@ -236,12 +237,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             // If both the hierarchy and adhoc groups are disabled, don't hide the
             // selection area and don't make it collapsable, since it will be the
             // only thing on the screen.
-            if (! showHierarchy && ! useAdHocGroups) {
-                UIOutput.make(evalgroupArea, "evalgroups-assignment-area");
-            }
-            else {
-                addCollapseControl(evalgroupArea, "evalgroups-assignment-area", "hide-button", "show-button");
-            }
+            //if (! showHierarchy && ! useAdHocGroups) {
+              UIOutput.make(evalgroupArea, "evalgroups-assignment-area");
+            //}
+           // else {
+            //    addCollapseControl(evalgroupArea, "evalgroups-assignment-area", "hide-button", "show-button");
+            //}
 
             String[] nonAssignedEvalGroupIDs = getEvalGroupIDsNotAssignedInHierarchy(evalGroups).toArray(new String[] {});
             List<EvalGroup> unassignedEvalGroups = new ArrayList<EvalGroup>();
@@ -275,7 +276,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 selectedUsers = totalUsers;
                 if(totalUsers > 0){
                     UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {selectedUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
-                }  
+                }
+                
+                totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_TAKE_EVALUATION).size();
+                UIOutput.make(checkboxRow, "groupMembers", totalUsers+"");
+                
+                
                 count++;
             }
         } else {
@@ -284,7 +290,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         /*
          * Area 3: Selection GUI for Adhoc Groups
-         */
+         
         if (useAdHocGroups) {
             UIBranchContainer adhocGroupsArea = UIBranchContainer.make(form, "use-adhoc-groups-area:");
 
@@ -321,28 +327,44 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             UIInternalLink.make(adhocGroupsArea, "new-adhocgroup-link", UIMessage.make("assigneval.page.adhocgroups.newgrouplink"),
                     new AdhocGroupParams(ModifyAdhocGroupProducer.VIEW_ID, null, vsh.getFullURL(evalViewParams)));
         }
-
+*/
         // Add all the groups and hierarchy nodes back to the UISelect Many's. see
         // the large comment further up.
         evalGroupsSelect.optionlist = UIOutputMany.make(evalGroupsValues.toArray(new String[] {}));
         evalGroupsSelect.optionnames = UIOutputMany.make(evalGroupsLabels.toArray(new String[] {}));
 
-        hierarchyNodesSelect.optionlist = UIOutputMany.make(hierNodesValues.toArray(new String[] {}));
-        hierarchyNodesSelect.optionnames = UIOutputMany.make(hierNodesLabels.toArray(new String[] {}));
+        ///hierarchyNodesSelect.optionlist = UIOutputMany.make(hierNodesValues.toArray(new String[] {}));
+        ///hierarchyNodesSelect.optionnames = UIOutputMany.make(hierNodesLabels.toArray(new String[] {}));
 
-        // all command buttons are just HTML now so no more bindings
-        UIMessage.make(form, "back-button", "general.back.button");
-        UIMessage assignButton = UIMessage.make(form, "confirmAssignCourses", "assigneval.save.assigned.button" );
+        
+     // show submit buttons for first time evaluation creation && active or earlier
+        //String evalState = EvalUtils.getEvaluationState( evaluation, false );
+        //if ( EvalUtils.checkStateBefore(evalState, EvalConstants.EVALUATION_STATE_ACTIVE, true) ) {
+            // first time evaluation creation or still in queue
+            //UIBranchContainer showButtons = UIBranchContainer.make(tofill, "showButtons:");
+            //UIForm evalAssignForm = UIForm.make(showButtons, "evalAssignForm");
+            ///UICommand.make(evalAssignForm, "doneAssignment", UIMessage.make("evaluationassignconfirm.done.button"), 
+            ///        actionBean + "completeConfirmAction");
+            ///UIMessage.make(evalAssignForm, "cancel-button", "evaluationassignconfirm.changes.assigned.courses.button");
 
-        // Error message to be triggered by javascript if users doesn't select anything
-        // There is a 'evalgroupselect' class on each input checkbox that the JS 
-        // can check for now.
-        UIMessage assignErrorDiv = UIMessage.make(tofill, "nogroups-error", "assigneval.invalid.selection");
-        initJS.append(HTMLUtil.emitJavascriptCall("EvalSystem.initEvalAssignValidation", 
-                new String[] {form.getFullID(), assignErrorDiv.getFullID(), assignButton.getFullID()}));
+            // bind in the selected nodes and groups
+            //form.parameters.add( new UIELBinding(actionBean + "selectedGroupIDs", 
+              //      evalGroupsSelect.selected) );
+            //UCT is not using Hierarchy, so set HierarchyIds to null
+            //form.parameters.add( new UIELBinding(actionBean + "selectedHierarchyNodeIDs", 
+             //      null) );
 
-        // Setup JavaScript for the collapseable sections
-        UIVerbatim.make(tofill, "initJavaScript", initJS.toString());
+            // also bind the evaluation id
+            form.parameters.add( new UIELBinding(actionBean + "evaluationId", evalViewParams.evaluationId) );
+        //}
+            
+            form.parameters.add(new UIELBinding(actionBean+"deselectedAssistants",new String[]{}));
+            form.parameters.add(new UIELBinding(actionBean+"deselectedInstructors",new String[]{}));
+            //form.parameters.add(new UIELBinding(actionBean+"evalGroupId", "JSsendEvalGroupId"));
+            
+        UIMessage.make(form, "back-button", "evaluationassignconfirm.changes.assigned.courses.button");
+        UICommand assignButton = UICommand.make(form, "confirmAssignCourses", UIMessage.make("evaluationassignconfirm.done.button"),actionBean + "completeConfirmAction" );
+        
     }
 
     /**
@@ -378,29 +400,6 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         return evalGroupIDs;
     }
 
-
-    /**
-     * Taking the parent container and rsf:id's for the collapsed area and tags
-     * to show and hide, creates the necessary javascript.  The Javascript is
-     * appended to the instance variable holding the javascript that will be 
-     * rendered at the bottom of the page for javascript initialization.
-     * 
-     * @param tofill
-     * @param areaId
-     * @param hideId
-     * @param showId
-     */
-    private void addCollapseControl(UIContainer tofill, String areaId, String hideId,
-            String showId) {
-        UIOutput hideControl = UIOutput.make(tofill, hideId);
-        UIOutput showControl = UIOutput.make(tofill, showId);
-
-        //makeToggle: function (showId, hideId, areaId, toggleClass, initialHide) {
-        UIOutput areaDiv = UIOutput.make(tofill, areaId);
-        initJS.append(HTMLUtil.emitJavascriptCall("EvalSystem.makeToggle", 
-                new String[] { showControl.getFullID(),hideControl.getFullID(),
-                areaDiv.getFullID(),null,"true"}));
-    }
 
     /* (non-Javadoc)
      * @see uk.org.ponder.rsf.flow.ActionResultInterceptor#interceptActionResult(uk.org.ponder.rsf.flow.ARIResult, uk.org.ponder.rsf.viewstate.ViewParameters, java.lang.Object)

@@ -108,8 +108,8 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 				EvalUser user = commonLogic.getEvalUserById(userId);
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
 				UIBoundBoolean bb = UIBoundBoolean.make(row, "row-select", Boolean.TRUE);
-				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(user.username) );
-	            UIOutput.make(row, "row-number", user.username);
+				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(user.userId) );
+	            UIOutput.make(row, "row-number", user.username); 
 	            UIOutput.make(row, "row-name", user.displayName); 
 	            }
 			
@@ -132,12 +132,8 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 		UIMessage.make(form, "instruction", "assignselect.instructions");
 		UIMessage.make(form, "col-number", "assignselect.table.numbers");
 		UIMessage.make(form, "col-name", "assignselect.table.names");
-		
-		form.parameters = new ParameterList();
-		form.parameters.add(new UIELBinding(actionBeanVariable, "JSsendVarsToBean"));
-		form.parameters.add(new UIELBinding(actionBean+"evaluationId", evalId));
-         
-		UICommand.make(form, "save-item-action", UIMessage.make("assignselect.form.save"), actionBean+"completeSaveAssignSelection");
+		 
+		UIMessage.make(form, "save-item-action","assignselect.form.save" );
 		UIMessage.make(form, "cancel-button", "general.cancel.button");
 		
 		 }else{
