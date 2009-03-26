@@ -168,9 +168,9 @@ public class SetupEvalBean {
 	}
 	
 	
-	private SelectedEvaluationUsersLocator selectedEvalautionUsersLocator;
-	public void setSelectedEvalautionUsersLocator(SelectedEvaluationUsersLocator seul) {
-		this.selectedEvalautionUsersLocator = seul;
+	private SelectedEvaluationUsersLocator selectedEvaluationUsersLocator;
+	public void setSelectedEvalautionUsersLocator(SelectedEvaluationUsersLocator selectedEvaluationUsersLocator) {
+		this.selectedEvaluationUsersLocator = selectedEvaluationUsersLocator;
 	}
 
 	DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
@@ -398,8 +398,7 @@ public class SetupEvalBean {
 				throw new IllegalArgumentException(
 						"Invalid set of hierarchy node ids submitted which "
 								+ "includes node Ids which are not in the hierarchy: "
-								+ ArrayUtils
-										.arrayToString(selectedHierarchyNodeIDs));
+								+ ArrayUtils.arrayToString(selectedHierarchyNodeIDs));
 			}
 		} else {
 			nodes = new HashSet<EvalHierarchyNode>();
@@ -467,8 +466,8 @@ public class SetupEvalBean {
 		for (int i =0; i < selectedGroupIDs.length; i++) {
 			String currentId = selectedGroupIDs[i];
 			// Save Assistant/Instructor selections now. EVALSYS-618
-			String[] deselectedInstructors = selectedEvalautionUsersLocator.getDeselectedInstructors(currentId);
-			String[] deselectedAssistants = selectedEvalautionUsersLocator.getDeselectedAssistants(currentId);
+			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentId);
+			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentId);
 			if (deselectedInstructors != null) {
 				log.info("deselectedInstructors : " + deselectedInstructors.toString());
 				deselectUsers(deselectedInstructors);

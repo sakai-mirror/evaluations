@@ -3,6 +3,10 @@ package org.sakaiproject.evaluation.tool.locators;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.evaluation.tool.SetupEvalBean;
+
 import uk.org.ponder.beanutil.BeanLocator;
 /**
  * 
@@ -14,7 +18,10 @@ import uk.org.ponder.beanutil.BeanLocator;
 */
 public class SelectedEvaluationUsersLocator implements BeanLocator {
 	
+	private static Log log = LogFactory.getLog(SelectedEvaluationUsersLocator.class);
+	
 	private Map<String, EvalautionUserSelection> localStore = new HashMap<String, EvalautionUserSelection>();
+	private final String SITE_ID_PREFIX = "/SITE/";
 	
 	public Object locateBean(String name) {
 		if (localStore.containsKey(name)) {
@@ -32,7 +39,9 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 		if (localStore.containsKey(groupId)) {
 			EvalautionUserSelection thisSelection = localStore.get(groupId);
 			return thisSelection.deselectedInstructors;
-		} 
+		}else{
+			log.info("!localStore.containsKey(groupId): "+groupId);
+		}
 		return null;
 	}
 	
@@ -55,7 +64,8 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 			return id;
 		}
 		public void setId(String id) {
-			this.id = id;
+			this.id = SITE_ID_PREFIX+id;
+			log.info("Found this evalGrpId: "+this.id);
 		}
 		
 		

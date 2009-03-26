@@ -53,7 +53,10 @@ $(document).ready(function() {
         selectedPeople:0,
         deselectedPeopleIds: new Array(),
         initedafterRevealFacebox:0,
-        that:null
+        that:null,
+        deselectedLog:new Array(),
+        thatRowNumber:0 ,
+        evalGroupId:null
     };
 
     function init(that, options) {
@@ -94,12 +97,17 @@ $(document).ready(function() {
     function initClassVars() {
         variables.selectedPeople = 0;
         variables.deselectedPeopleIds = new Array();
+        variables.thatRowNumber=0;
+        variables.evalGroupId=null;
     }
 
     function initControls(that) {
         that.bind('click', function() {
             var _url = that.attr('href');
             variables.that = that;
+            variables.thatRowNumber = that.parents('tr').attr('rel');
+            var grpId = that.parents('tr').find('input[@type=checkbox]').val();
+            variables.evalGroupId = grpId==null?'':grpId.replace('/site/', '');
             variables.set.typeOfBranch(that);
             log("Fetching URL: " + _url);
             $.facebox({ajax: _url});
@@ -115,7 +123,7 @@ $(document).ready(function() {
                 variables.deselectedPeopleIds.push(id);
             });
             var field;
-            var regText = "deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
+            var regText = variables.evalGroupId+".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
             var sRegExInput = new RegExp(regText);
             $('input[name=el-binding]').each(function(){
              if ($(this).val().search(sRegExInput) != -1) {
@@ -125,6 +133,7 @@ $(document).ready(function() {
             if (field!=null) {
                 field.val("j#{setupEvalBean."+regText+"}["+variables.deselectedPeopleIds.toString()+"]");
                 log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
+                
                 return true;
             }else{
                 log("ERROR: Field param with part val:"+regText+" Not FOUND.");

@@ -52,6 +52,7 @@ import uk.org.ponder.rsf.components.UIOutputMany;
 import uk.org.ponder.rsf.components.UISelect;
 import uk.org.ponder.rsf.components.UISelectChoice;
 import uk.org.ponder.rsf.components.UIVerbatim;
+import uk.org.ponder.rsf.components.decorators.UIFreeAttributeDecorator;
 import uk.org.ponder.rsf.components.decorators.UILabelTargetDecorator;
 import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
 import uk.org.ponder.rsf.flow.ARIResult;
@@ -258,11 +259,14 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 if (count % 2 == 0) {
                     checkboxRow.decorate( new UIStyleDecorator("itemsListOddLine") ); // must match the existing CSS class
                 }
-
+                checkboxRow.decorate(new UIFreeAttributeDecorator("rel", count+"")); // table row counter for JS use in EVALSYS-618
                 evalGroupsLabels.add(evalGroup.title);
                 evalGroupsValues.add(evalGroup.evalGroupId);
 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
+                form.parameters.add(new UIELBinding(actionBean+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",new String[]{}));
+                form.parameters.add(new UIELBinding(actionBean+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedInstructors",new String[]{}));
+                
 
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
@@ -358,8 +362,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             form.parameters.add( new UIELBinding(actionBean + "evaluationId", evalViewParams.evaluationId) );
         //}
             
-            form.parameters.add(new UIELBinding(actionBean+"deselectedAssistants",new String[]{}));
-            form.parameters.add(new UIELBinding(actionBean+"deselectedInstructors",new String[]{}));
+           // form.parameters.add(new UIELBinding(actionBean+"deselectedLog",new String[]{}));
             //form.parameters.add(new UIELBinding(actionBean+"evalGroupId", "JSsendEvalGroupId"));
             
         UIMessage.make(form, "back-button", "evaluationassignconfirm.changes.assigned.courses.button");
