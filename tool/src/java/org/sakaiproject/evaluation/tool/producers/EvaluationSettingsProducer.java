@@ -344,11 +344,18 @@ public class EvaluationSettingsProducer implements ViewComponentProducer, ViewPa
 
       // retrieve the global setting for use of date only or date and time picker
       Boolean useDateTime = (Boolean) settings.get(EvalSettings.EVAL_USE_DATE_TIME);
-
+      
+      
+      
+      //the start date should be an hour in the future
+      Calendar cal = Calendar.getInstance();
+      cal.add(Calendar.HOUR, 1);
+      Date startDate = cal.getTime();
+      
       // Start Date
       UIBranchContainer showStartDate = UIBranchContainer.make(form, "showStartDate:");
       generateDateSelector(showStartDate, "startDate", evaluationOTP + "startDate", 
-            null, currentEvalState, EvalConstants.EVALUATION_STATE_ACTIVE, useDateTime);
+            startDate, currentEvalState, EvalConstants.EVALUATION_STATE_ACTIVE, useDateTime);
 
       // Due Date
       UIBranchContainer showDueDate = UIBranchContainer.make(form, "showDueDate:");
