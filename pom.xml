@@ -58,6 +58,7 @@
                 <module>impl</module>
                 <module>pack</module>
                 <module>tool</module>
+                <module>help</module>
             </modules>
         </profile>
         <profile>
