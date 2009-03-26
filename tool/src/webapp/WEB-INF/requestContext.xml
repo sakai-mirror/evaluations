@@ -33,7 +33,7 @@
         <property name="emailTemplateWBL" ref="emailTemplateWBL" />
         <property name="messages" ref="targettedMessageList" />
         <property name="locale" ref="requestLocale" />
-        <property name="selectedEvaluationUsersLocator" ref="selectedEvaluationUsersLocator"/>
+        <property name="selectedEvalautionUsersLocator" ref="selectedEvaluationUsersLocator"/>
     </bean>
 
     <bean id="takeEvalBean" class="org.sakaiproject.evaluation.tool.TakeEvalBean">
