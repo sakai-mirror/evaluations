@@ -89,8 +89,28 @@ $(document).ready(function() {
                 log("WARN: Lightbox loaded, attaching listerners now...");
                 var _that = $('#facebox div.content:eq(0)');    //lightbox $document object
                 variables.get.documentFB = _that ? _that : null;
-                //variables.get.documentFB.find('form:eq(0)').ajaxForm(variables.ajaxOptions); //No longer a form submission
-                variables.get.documentFB.find('input[@type=submit]').bind('click', function() {
+                //deselect boxes already deselected
+                var field;
+                    var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
+                    var sRegExInput = new RegExp(regText);
+                    $('input[name=el-binding]').each(function() {
+                        if ($(this).val().search(sRegExInput) != -1) {
+                            field = $(this);
+                        }
+                    });
+                var deselected = field.val().replace("j#{selectedEvaluationUsersLocator." + regText + "}[","").replace("]","").split(",");
+                if(deselected.length>0){
+                    variables.get.documentFB.find('input[@type=checkbox]:checked').each(function(){
+                        for(var i=0;i<deselected.length;i++){
+                        //console.log("checking"+deselected[i]+" ------------ "+$(this).attr('id')) ;
+                         if(deselected[i]==$(this).attr('id')){
+                             this.checked = false;
+                         }
+                    }
+                });
+                handleCheckboxes(variables.get.documentFB.find('input[@type=checkbox]').not(':checked'),1);
+                }
+                $('#facebox input[id=save-item-action]').bind('click', function() {
                     log("Binding submit button value");
                     handleFormSubmit(this);
                     return false;
@@ -169,8 +189,8 @@ $(document).ready(function() {
 
     }
 
-    function handleCheckboxes() {
-        var unChecked = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
+    function handleCheckboxes(unChecked, where) {
+        //var unChecked = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
         if (unChecked.length != 0) {
             unChecked.each(function() {
                 var id = $(this).attr('id');
@@ -187,7 +207,7 @@ $(document).ready(function() {
             if (field != null) {
                 field.val("j#{selectedEvaluationUsersLocator." + regText + "}[" + variables.deselectedPeopleIds.toString() + "]");
                 log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
-
+                variables.deselectedPeopleIds = new Array();
                 return true;
             } else {
                 log("ERROR: Field param with part val:" + regText + " Not FOUND.");
@@ -195,7 +215,10 @@ $(document).ready(function() {
 
         }
         else {
-            $(document).trigger('close.facebox');
+            if(where==1){
+                            return false;
+                        }
+                        $(document).trigger('close.facebox');
         }
         return false;
     }
@@ -203,13 +226,10 @@ $(document).ready(function() {
     function handleFormSubmit(_that) {
         var that = $(_that);
         log("Running pre-SET checks");
-        var temp = variables.get.documentFB.find('input[@type=checkbox]:checked');
-        variables.selectedPeople = temp.length > 0 ? temp.length : 0;
-        if (variables.selectedPeople == 0) {
-            alert('Please select at least one ' + (variables.options.type == 0 ? "Lecturer." : "Tutor."));
-            log("ERROR: No checkboxes selected. Resetting class variables now.");  //Should warn user about this.
-        } else {
-            if (handleCheckboxes()) {
+        var temp = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
+        var tempChecked = variables.get.documentFB.find('input[@type=checkbox]:checked');
+        variables.selectedPeople = tempChecked.length > 0 ? tempChecked.length : 0;
+          if (handleCheckboxes(temp,0)) {
                 var tempText = variables.that.text();
                 var index1 = tempText.indexOf('(');
                 var index2 = tempText.indexOf('/');
@@ -232,10 +252,9 @@ $(document).ready(function() {
                 } else {
                     log("CATASTROPHIC ERROR: replaceText cannot be null!");
                 }
-
-            }
         }
-        initClassVars();
+        initClassVars();return true;
+
     }
 
     // Debugging
