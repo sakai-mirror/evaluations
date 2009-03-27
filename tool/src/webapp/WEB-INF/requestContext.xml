@@ -516,6 +516,7 @@
         <property name="externalHierarchyLogic"
             ref="org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic" />
         <property name="viewStateHandler" ref="viewStateHandler" />
+        <property name="locale" ref="requestLocale" />
     </bean>
 	
     <bean class="org.sakaiproject.evaluation.tool.producers.EvaluationAssignSelectProducer">
@@ -523,13 +524,7 @@
             ref="org.sakaiproject.evaluation.logic.EvalCommonLogic" />
         <property name="evaluationService"
             ref="org.sakaiproject.evaluation.logic.EvalEvaluationService" />
-        <!--<property name="settings" ref="org.sakaiproject.evaluation.logic.EvalSettings" />
-        <property name="hierarchyRenderUtil"
-            ref="org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRenderer" />
-        <property name="externalHierarchyLogic"
-            ref="org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic" />
-        <property name="viewStateHandler" ref="viewStateHandler" />-->
-    </bean>
+        </bean>
 
     <!-- This renderer is only used by the EvaluationAssignProducer (right above here) -->
     <bean id="org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRenderer"

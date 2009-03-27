@@ -14,11 +14,13 @@
 
 package org.sakaiproject.evaluation.tool.producers;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -110,6 +112,11 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
     public void setCommonLogic(EvalCommonLogic bean) {
         this.commonLogic = bean;
     }
+    
+    private Locale locale;
+    public void setLocale(Locale locale) {
+        this.locale = locale;
+    }
 
     /**
      * Instance Variables for building up rendering information.
@@ -120,6 +127,8 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         // local variables used in the render logic
         String currentUserId = commonLogic.getCurrentUserId();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM, locale);
+        DateFormat dtf = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale);
 
         // render top links
         renderTopLinks(tofill, currentUserId);
@@ -146,7 +155,28 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         UIMessage.make(tofill, "assign-eval-edit-page-title", "assigneval.assign.page.title", new Object[] {evaluation.getTitle()});
         UIMessage.make(tofill, "assign-eval-instructions", "assigneval.assign.instructions", new Object[] {evaluation.getTitle()});
+        
 
+        UIMessage.make(tofill, "evalAssignInstructions", "evaluationassignconfirm.eval.assign.instructions",
+                new Object[] {df.format(evaluation.getStartDate())});
+
+        // display info about the evaluation (dates and what not)
+        UIOutput.make(tofill, "startDate", dtf.format(evaluation.getStartDate()) );
+
+        if (evaluation.getDueDate() != null) {
+            UIBranchContainer branch = UIBranchContainer.make(tofill, "showDueDate:");
+            UIOutput.make(branch, "dueDate", dtf.format(evaluation.getDueDate()) );
+        }
+
+        if (evaluation.getStopDate() != null) {
+            UIBranchContainer branch = UIBranchContainer.make(tofill, "showStopDate:");
+            UIOutput.make(branch, "stopDate", dtf.format(evaluation.getStopDate()) );
+        }
+
+        if (evaluation.getViewDate() != null) {
+            UIBranchContainer branch = UIBranchContainer.make(tofill, "showViewDate:");
+            UIOutput.make(branch, "viewDate", dtf.format(evaluation.getViewDate()) );
+        }
        
         /* 
          * About this form.
@@ -264,26 +294,25 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 evalGroupsValues.add(evalGroup.evalGroupId);
 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
-                form.parameters.add(new UIELBinding(actionBean+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",new String[]{}));
-                form.parameters.add(new UIELBinding(actionBean+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedInstructors",new String[]{}));
+                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",new String[]{}));
+                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedInstructors",new String[]{}));
                 
 
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
                 int totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE)).size();
-                int selectedUsers = totalUsers;
                 if(totalUsers > 0){
-                	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {selectedUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+                	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {totalUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) )
+                	.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
                 }
                 totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE)).size();
-                selectedUsers = totalUsers;
                 if(totalUsers > 0){
-                    UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {selectedUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
+                    UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {totalUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) )
+                    .decorate(new UIStyleDecorator("addItem total:"+totalUsers));;
                 }
                 
                 totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_TAKE_EVALUATION).size();
-                UIOutput.make(checkboxRow, "groupMembers", totalUsers+"");
                 
                 
                 count++;
@@ -365,8 +394,8 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
            // form.parameters.add(new UIELBinding(actionBean+"deselectedLog",new String[]{}));
             //form.parameters.add(new UIELBinding(actionBean+"evalGroupId", "JSsendEvalGroupId"));
             
-        UIMessage.make(form, "back-button", "evaluationassignconfirm.changes.assigned.courses.button");
-        UICommand assignButton = UICommand.make(form, "confirmAssignCourses", UIMessage.make("evaluationassignconfirm.done.button"),actionBean + "completeConfirmAction" );
+        UIMessage.make(form, "back-button", "general.back.button");
+        UICommand.make(form, "confirmAssignCourses", UIMessage.make("evaluationassignconfirm.done.button"),actionBean + "completeConfirmAction" );
         
     }
 

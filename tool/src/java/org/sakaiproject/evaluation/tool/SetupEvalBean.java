@@ -468,12 +468,12 @@ public class SetupEvalBean {
 			// Save Assistant/Instructor selections now. EVALSYS-618
 			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentId);
 			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentId);
-			if (deselectedInstructors != null) {
-				log.info("deselectedInstructors : " + deselectedInstructors.toString());
+			if (deselectedInstructors != null && deselectedInstructors.length != 0) {
+				log.info("Deselecting "+deselectedInstructors.length+" Instructors");
 				deselectUsers(deselectedInstructors);
 			}
-			if (deselectedAssistants != null) {
-				log.info("deselectedAssistants : " + deselectedAssistants.toString());
+			if (deselectedAssistants != null && deselectedAssistants.length != 0) {
+				log.info("Deselecting "+deselectedAssistants.length+" Assistants");
 				deselectUsers(deselectedAssistants);
 			}
 		}
@@ -526,23 +526,14 @@ public class SetupEvalBean {
 	 * @param deselected
 	 */
 	private void deselectUsers(String[] deselected) {
-		// TODO Auto-generated method stub
-		log.info("Deselecing array of size:" + deselected.length);
 		List<EvalAssignUser> evalUsers = evaluationService
 				.getParticipantsForEval(evaluationId, null, null, null, null,
 						null, null);
-		log.info("EvalUsers found in eval: " + evalUsers.size());
 		for (int i = 0; i < deselected.length; i++) {
 			for (EvalAssignUser user : evalUsers) {
-				log.info("Checking:" + user.getUserId() + " against deselectd: "
-						+ deselected[i]);
 				if (user.getUserId().equals(deselected[i])) {
-					log.info("Setting status for user:" + deselected[i]+ " from:"+user.getStatus());
 					user.setStatus(EvalAssignUser.STATUS_REMOVED);
-					//evaluationSetupService.saveUserAssignments(evaluationId,
-							//user);
-					log.info("NOw status for user:" + deselected[i] +" is: --- "+user.getStatus());
-				}
+					}
 			}
 
 			/*

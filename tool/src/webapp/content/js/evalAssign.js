@@ -4,6 +4,17 @@
 $(document).ready(function() {
     $('a[rel=assignInstructorSelector]').assignSelector({type:0});
     $('a[rel=assignTaSelector]').assignSelector({type:1});
+    $(':submit').bind('click', function(){
+        //Validate group Selections
+        var countChecked = $('input[@type=checkbox]:checked').get().length;
+        if(countChecked == null || countChecked == 0){
+            $('#error').fadeIn("fast");
+            return false;
+        }else{
+            $('#error').fadeOut("fast");           
+        }
+        return true;
+    });
 });
 
 (function($) {
@@ -16,7 +27,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: true
+        debug: false
     };
     /**
      * Private methods and variables
@@ -56,7 +67,16 @@ $(document).ready(function() {
         that:null,
         deselectedLog:new Array(),
         thatRowNumber:0 ,
-        evalGroupId:null
+        evalGroupId:null,
+        groupCheckBox:null,
+        css: {
+            enabled:{
+                color: ""
+            },
+            disabled:{
+                color: "#888"
+            }
+        }
     };
 
     function init(that, options) {
@@ -97,22 +117,56 @@ $(document).ready(function() {
     function initClassVars() {
         variables.selectedPeople = 0;
         variables.deselectedPeopleIds = new Array();
-        variables.thatRowNumber=0;
-        variables.evalGroupId=null;
+        variables.thatRowNumber = 0;
+        variables.evalGroupId = null;
     }
 
     function initControls(that) {
-        that.bind('click', function() {
-            var _url = that.attr('href');
-            variables.that = that;
-            variables.thatRowNumber = that.parents('tr').attr('rel');
-            var grpId = that.parents('tr').find('input[@type=checkbox]').val();
-            variables.evalGroupId = grpId==null?'':grpId.replace('/site/', '');
-            variables.set.typeOfBranch(that);
-            log("Fetching URL: " + _url);
-            $.facebox({ajax: _url});
-            return false;
+        //that.css(variables.css.disabled);
+        that.hide();
+        variables.groupCheckBox = that.parents('tr').find('input[@type=checkbox]');
+        variables.groupCheckBox.bind('click', function() {
+            if (this.checked) {
+                that
+                        .fadeIn('normal')
+                        .bind('click', function() {
+                    var _url = that.attr('href');
+                    variables.that = that;
+                    variables.thatRowNumber = that.parents('tr').attr('rel');
+                    var grpId = variables.groupCheckBox.val();
+                    variables.evalGroupId = grpId == null ? '' : grpId.replace('/site/', '');
+                    variables.set.typeOfBranch(that);
+                    log("Fetching URL: " + _url);
+                    $.facebox({ajax: _url});
+                    return false;
+                });
+            } else {
+                that.fadeOut('normal', function() {
+                    //resetting already selected Instr/Ass
+                    var grpId = variables.groupCheckBox.val();
+                    variables.evalGroupId = grpId == null ? '' : grpId.replace('/site/', '');
+                    variables.set.typeOfBranch(that);
+                    var field;
+                    var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
+                    var sRegExInput = new RegExp(regText);
+                    $('input[name=el-binding]').each(function() {
+                        if ($(this).val().search(sRegExInput) != -1) {
+                            field = $(this);
+                        }
+                    });
+                    if (field != null) {
+                        field.val("j#{selectedEvaluationUsersLocator." + regText + "}[]");
+                    }
+                    
+                    //reset dom count on selected Instr/Ass
+                    var origionalSelected = that.attr('class').replace("addItem total:", "");  //gets a String
+                    var text = that.attr('title') + " (" + origionalSelected + "/" + origionalSelected + ")";
+                    that.text(text);
+                });
+
+            }
         });
+
     }
 
     function handleCheckboxes() {
@@ -123,20 +177,20 @@ $(document).ready(function() {
                 variables.deselectedPeopleIds.push(id);
             });
             var field;
-            var regText = variables.evalGroupId+".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
+            var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
             var sRegExInput = new RegExp(regText);
-            $('input[name=el-binding]').each(function(){
-             if ($(this).val().search(sRegExInput) != -1) {
-                 field=$(this);
-             }
-        });
-            if (field!=null) {
-                field.val("j#{setupEvalBean."+regText+"}["+variables.deselectedPeopleIds.toString()+"]");
+            $('input[name=el-binding]').each(function() {
+                if ($(this).val().search(sRegExInput) != -1) {
+                    field = $(this);
+                }
+            });
+            if (field != null) {
+                field.val("j#{selectedEvaluationUsersLocator." + regText + "}[" + variables.deselectedPeopleIds.toString() + "]");
                 log('Found - ' + unChecked.length + ' - deselected people and setting form value now. New val is:' + field.val());
-                
+
                 return true;
-            }else{
-                log("ERROR: Field param with part val:"+regText+" Not FOUND.");
+            } else {
+                log("ERROR: Field param with part val:" + regText + " Not FOUND.");
             }
 
         }
@@ -147,14 +201,14 @@ $(document).ready(function() {
     }
 
     function handleFormSubmit(_that) {
-        var that = $(_that);             
+        var that = $(_that);
         log("Running pre-SET checks");
         var temp = variables.get.documentFB.find('input[@type=checkbox]:checked');
         variables.selectedPeople = temp.length > 0 ? temp.length : 0;
         if (variables.selectedPeople == 0) {
             alert('Please select at least one ' + (variables.options.type == 0 ? "Lecturer." : "Tutor."));
             log("ERROR: No checkboxes selected. Resetting class variables now.");  //Should warn user about this.
-            } else {
+        } else {
             if (handleCheckboxes()) {
                 var tempText = variables.that.text();
                 var index1 = tempText.indexOf('(');
@@ -165,7 +219,7 @@ $(document).ready(function() {
                 if (diff == 1) {
                     replaceText = tempText.charAt(parseInt(index1 + 1));
                 } else {
-                    replaceText = tempText.charAt(parseInt(index1+1)) ;
+                    replaceText = tempText.charAt(parseInt(index1 + 1));
                 }
                 if (replaceText != null) {
                     replaceText = "\\(" + replaceText;

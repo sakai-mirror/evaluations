@@ -3,10 +3,6 @@ package org.sakaiproject.evaluation.tool.locators;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.evaluation.tool.SetupEvalBean;
-
 import uk.org.ponder.beanutil.BeanLocator;
 /**
  * 
@@ -18,18 +14,16 @@ import uk.org.ponder.beanutil.BeanLocator;
 */
 public class SelectedEvaluationUsersLocator implements BeanLocator {
 	
-	private static Log log = LogFactory.getLog(SelectedEvaluationUsersLocator.class);
-	
-	private Map<String, EvalautionUserSelection> localStore = new HashMap<String, EvalautionUserSelection>();
-	private final String SITE_ID_PREFIX = "/SITE/";
+	private Map<String, EvaluationUserSelection> localStore = new HashMap<String, EvaluationUserSelection>();
 	
 	public Object locateBean(String name) {
-		if (localStore.containsKey(name)) {
-			return localStore.get(name); 
+		String checkName = "/site/" + name;
+		if (localStore.containsKey(checkName)) {
+			return localStore.get(checkName); 
 		} else {
 			//these should always exist
-			EvalautionUserSelection ret = new EvalautionUserSelection();
-			localStore.put(name, ret);
+			EvaluationUserSelection ret = new EvaluationUserSelection();
+			localStore.put(checkName, ret);
 			return ret;
 		}
 		
@@ -37,10 +31,8 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 
 	public String[] getDeselectedInstructors(String groupId) {
 		if (localStore.containsKey(groupId)) {
-			EvalautionUserSelection thisSelection = localStore.get(groupId);
+			EvaluationUserSelection thisSelection = localStore.get(groupId);
 			return thisSelection.deselectedInstructors;
-		}else{
-			log.info("!localStore.containsKey(groupId): "+groupId);
 		}
 		return null;
 	}
@@ -48,13 +40,13 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 
 	public String[] getDeselectedAssistants(String groupId) {
 		if (localStore.containsKey(groupId)) {
-			EvalautionUserSelection thisSelection = localStore.get(groupId);
+			EvaluationUserSelection thisSelection = localStore.get(groupId);
 			return thisSelection.deselectedAssistants;
 		} 
 		return null;
 	}
 	
-	private class EvalautionUserSelection {
+	public class EvaluationUserSelection {
 		
 		private String id;
 		public String[] deselectedInstructors;
@@ -64,8 +56,7 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 			return id;
 		}
 		public void setId(String id) {
-			this.id = SITE_ID_PREFIX+id;
-			log.info("Found this evalGrpId: "+this.id);
+			this.id = id;
 		}
 		
 		
