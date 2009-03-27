@@ -153,9 +153,19 @@ public class EvaluationAssignmentsProducer implements ViewComponentProducer, Vie
                // direct link to the group eval
                UILink.make(groupRow, "directGroupLink", UIMessage.make("evaluationassignconfirm.direct.link"), 
                      commonLogic.getEntityURL(AssignGroupEntityProvider.ENTITY_PREFIX, assignGroup.getId().toString()));
-               // calculate the enrollments count
-               int enrollmentCount = groupIdToEAUList.get(evalGroupId) == null ? 0 : groupIdToEAUList.get(evalGroupId).size();
-               UIOutput.make(groupRow, "enrollment", enrollmentCount + "");
+               
+               //VULA-496. Add user selection info as a result of changes in EVALSYS-660
+                 List<EvalAssignUser> selectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_LINKED, null, null);
+                 int enrollmentCountInstructors = selectedUsers == null ? 0 : selectedUsers.size();
+                 selectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_LINKED, null, null);
+                 int enrollmentCountAssistants = selectedUsers == null ? 0 : selectedUsers.size();
+                 
+                 // calculate the enrollments count
+                 int enrollmentCount = groupIdToEAUList.get(evalGroupId) == null ? 0 : groupIdToEAUList.get(evalGroupId).size();
+                 UIOutput.make(groupRow, "enrollment-instructors", enrollmentCountInstructors + "");
+                 UIOutput.make(groupRow, "enrollment-assistants", enrollmentCountAssistants + "");
+                 UIOutput.make(groupRow, "enrollment", enrollmentCount + "");
+                
             }
          }
       } else {
@@ -200,10 +210,19 @@ public class EvaluationAssignmentsProducer implements ViewComponentProducer, Vie
                      // direct link to the group eval
                      UILink.make(groupRow, "directGroupLink", UIMessage.make("evaluationassignconfirm.direct.link"), 
                            commonLogic.getEntityURL(AssignGroupEntityProvider.ENTITY_PREFIX, assignGroup.getId().toString()));
+                     
+                     //VULA-496. Add user selection info as a result of changes in EVALSYS-660
+                     List<EvalAssignUser> selectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_LINKED, null, null);
+                     int enrollmentCountInstructors = selectedUsers == null ? 0 : selectedUsers.size();
+                     selectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_LINKED, null, null);
+                     int enrollmentCountAssistants = selectedUsers == null ? 0 : selectedUsers.size();
+                     
                      // calculate the enrollments count
                      int enrollmentCount = groupIdToEAUList.get(evalGroupId) == null ? 0 : groupIdToEAUList.get(evalGroupId).size();
+                     UIOutput.make(groupRow, "enrollment-instructors", enrollmentCountInstructors + "");
+                     UIOutput.make(groupRow, "enrollment-assistants", enrollmentCountAssistants + "");
                      UIOutput.make(groupRow, "enrollment", enrollmentCount + "");
-                  }
+                     }
                }
                
             }
