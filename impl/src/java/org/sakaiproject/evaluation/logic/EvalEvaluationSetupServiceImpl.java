@@ -972,7 +972,7 @@ public class EvalEvaluationSetupServiceImpl implements EvalEvaluationSetupServic
                 changedUserAssignments.addAll( assignUserToRemove );
             }
         }
-        log.info(message);
+        log.debug(message);
         return changedUserAssignments;
     }
 
