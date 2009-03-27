@@ -1,47 +1,60 @@
 <!DOCTYPE html      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns:rsf="http://ponder.org.uk/rsf" xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Select</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<script type="text/javascript">$(document).ready(function() {$.facebox.setHeader($("#title"));});</script> 
+    <title>Select</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <script language="javascript" type="text/javascript" src="../js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.facebox.setHeader($("#title"));
+            $(".selectTable table").tablesorter({
+                sortList: [[1,1]], // Initial order by the latest (NOT earliest) closing date
+                headers: { // disable it by setting the property sorter to false
+                    0: {sorter: false}
+                }
+            });
+        });</script>
 </head>
 <body>
- <h2 rsf:id="title" class="titleHeader" id="title">Select Instructors</h2>
+<h2 rsf:id="title" class="titleHeader" id="title">Select Instructors</h2>
+
 <div>
-  <form rsf:id="form" action="modify_template" method="post" id="basic-form">
-    <h3><span rsf:id="group-title">Group: </span><span rsf:id="group-name">CHE1004X</span>
-    </h3>
-    <h4><span rsf:id="eval-title">Evaluation: </span> <span rsf:id="eval-name">Mid-term course evaluation</span>
-    </h4>
-    
-    <div rsf:id="instruction" class="instruction">Choose  the instructors to be included in the above evaluation.</div>
-    <div class="selectTable">
-      <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines " >
-        <thead>
-          <tr>
-            <th><span rsf:id="msg=assigneval.select.header">Select</span></th>
-			  <th>
-			      <span rsf:id="col-number">Staff/Student number</span>									</th>
-	          <th><span rsf:id="col-name">Name</span></th>
-		    </tr>
-          </thead>
-        <tbody>
-          <tr rsf:id="item-row:"> 
-            <td>
-              <input rsf:id="row-select" class="evalgroupselect" type="checkbox" id="evalGroupId" />									</td>
-			  <td>
-			      <span rsf:id="row-number">01419112</span>			      </td>
-	          <td><span rsf:id="row-name">Marquard,  Stephen</span></td>
-		    </tr>
-          </tbody>
-        </table>
-    </div>
-    <p class="act">
-      <input rsf:id="save-item-action" value="Save" accesskey="s" class="active" name="" type="submit" id=""/>
-      <input rsf:id="cancel-button" value="Cancel" accesskey="x" onclick="$(document).trigger('close.facebox');return false;" type="button" />
-    </p>
-  </form>
+    <form rsf:id="form" action="modify_template" method="post" id="basic-form">
+        <h3><span rsf:id="group-title">Group: </span><span rsf:id="group-name">CHE1004X</span>
+        </h3>
+        <h4><span rsf:id="eval-title">Evaluation: </span> <span rsf:id="eval-name">Mid-term course evaluation</span>
+        </h4>
+
+        <div rsf:id="instruction" class="instruction">Choose the instructors to be included in the above evaluation.
+        </div>
+        <div class="selectTable">
+            <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines ">
+                <thead>
+                <tr>
+                    <th  style="text-align:left;border-bottom:none"><span rsf:id="msg=assigneval.select.header">Select</span></th>
+                    <th  style="text-align:left;border-bottom:none">
+                        <span rsf:id="col-number">Staff/Student number</span></th>
+                    <th style="text-align:left;border-bottom:none"><span rsf:id="col-name">Name</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr rsf:id="item-row:">
+                    <td>
+                        <input rsf:id="row-select" class="evalgroupselect" type="checkbox" id="evalGroupId"/></td>
+                    <td>
+                        <span rsf:id="row-number">01419112</span></td>
+                    <td><span rsf:id="row-name">Marquard,  Stephen</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="act">
+            <input rsf:id="save-item-action" value="Save" accesskey="s" class="active" name="" type="submit" id=""/>
+            <input rsf:id="cancel-button" value="Cancel" accesskey="x"
+                   onclick="$(document).trigger('close.facebox');return false;" type="button"/>
+        </p>
+    </form>
 </div>
 </body>
 </html>

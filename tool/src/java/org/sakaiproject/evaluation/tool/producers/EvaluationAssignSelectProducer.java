@@ -98,7 +98,11 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 		UIOutput.make(form, "group-name", groupTitle);
 		UIMessage.make(form, "eval-title", "assignselect.page.evaluation");
 		UIOutput.make(form, "eval-name", evaluation.getTitle());
-		UIMessage.make(form, "instruction", "assignselect.instructions");
+		if(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)){
+			UIMessage.make(form, "instruction", "assignselect.instructions.instructor");
+		}else{
+			UIMessage.make(form, "instruction", "assignselect.instructions.assistant");
+		}
 		UIMessage.make(form, "col-number", "assignselect.table.numbers");
 		UIMessage.make(form, "col-name", "assignselect.table.names");
 		 

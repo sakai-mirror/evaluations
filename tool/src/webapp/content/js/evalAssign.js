@@ -27,7 +27,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: true
+        debug: false
     };
     /**
      * Private methods and variables
@@ -92,7 +92,6 @@ $(document).ready(function() {
                 //Set the current evalGroupID
                 var grpId = variables.get.documentFB.find("input[name=evalGroupId]").val();
                 variables.evalGroupId = grpId == null ? '' : grpId.replace('/site/', '');
-
                 //deselect boxes already deselected
                 var field;
                 var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
@@ -121,11 +120,14 @@ $(document).ready(function() {
                 });
                 //Make list scrollable if hieght is more than 200px
                 var tableHolder = variables.get.documentFB.find('.selectTable:eq(0)');
-                tableHolder.css({
+                tableHolder
+                        .css({
                     'overflow': 'auto',
                     'height': tableHolder.height() > 200 ? '200px' : (tableHolder.height() + 5) + "px"
-                });
+                }) ;
                 log("Formatting table holder hieght. Set height to:" + tableHolder.height());
+
+
             }
         });
         $(document).bind('afterClose.facebox', function() {
@@ -188,10 +190,14 @@ $(document).ready(function() {
 
     function handleCheckboxes(unChecked, where) {
         if (unChecked.length != 0) {
+            if(where==2){//deselct everyone
+                variables.deselectedPeopleIds = new Array();
+            }else{
             unChecked.each(function() {
                 var id = $(this).attr('id');
                 variables.deselectedPeopleIds.push(id);
             });
+            }
             var field;
             var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
             var sRegExInput = new RegExp(regText);
@@ -225,28 +231,21 @@ $(document).ready(function() {
         var temp = variables.get.documentFB.find('input[@type=checkbox]').not(':checked');
         var tempChecked = variables.get.documentFB.find('input[@type=checkbox]:checked');
         variables.selectedPeople = tempChecked.length > 0 ? tempChecked.length : 0;
-        if (handleCheckboxes(temp, 0)) {
-            var tempText = variables.that.text();
-            var index1 = tempText.indexOf('(');
-            var index2 = tempText.indexOf('/');
-            var diff = parseInt((index2 - index1) - 1);
-            var replaceText;
-            log("Found string: " + tempText + ".( is char #:" + index1 + "./ is char #:" + index2 + ". Num of digits:" + diff);
-            if (diff == 1) {
-                replaceText = tempText.charAt(parseInt(index1 + 1));
-            } else {
-                replaceText = tempText.charAt(parseInt(index1 + 1));
-            }
-            if (replaceText != null) {
-                replaceText = "\\(" + replaceText;
-                var sRegExInput = new RegExp(replaceText);
-                log(variables.selectedPeople);
-                tempText = tempText.replace(sRegExInput, "(" + variables.selectedPeople);
-                variables.that.text(tempText);
-                log("Replaced text is:" + tempText);
+        if(temp.length>0){
+            if (handleCheckboxes(temp, 0)) {
+                //reset dom count on selected Instr/Ass
+                var origionalSelected = variables.that.attr('class').replace("addItem total:", "");  //gets a String
+                var text = variables.that.attr('title') + " (" + variables.selectedPeople + "/" + origionalSelected + ")";
+                variables.that.text(text);
                 $(document).trigger('close.facebox');
-            } else {
-                log("CATASTROPHIC ERROR: replaceText cannot be null!");
+            }
+        }else{
+              if (handleCheckboxes(tempChecked, 2)) {
+                //reset dom count on selected Instr/Ass
+                var origionalSelected2 = variables.that.attr('class').replace("addItem total:", "");  //gets a String
+                var text2 = variables.that.attr('title') + " (" + variables.selectedPeople + "/" + origionalSelected2 + ")";
+                variables.that.text(text2);
+                $(document).trigger('close.facebox');
             }
         }
         initClassVars();

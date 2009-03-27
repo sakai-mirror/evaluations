@@ -41,6 +41,7 @@ import org.sakaiproject.evaluation.utils.ComparatorsUtils;
 import org.sakaiproject.evaluation.utils.EvalUtils;
 
 import uk.org.ponder.htmlutil.HTMLUtil;
+import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.rsf.components.UIBranchContainer;
 import uk.org.ponder.rsf.components.UICommand;
 import uk.org.ponder.rsf.components.UIContainer;
@@ -57,8 +58,10 @@ import uk.org.ponder.rsf.components.UIVerbatim;
 import uk.org.ponder.rsf.components.decorators.UIFreeAttributeDecorator;
 import uk.org.ponder.rsf.components.decorators.UILabelTargetDecorator;
 import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
+import uk.org.ponder.rsf.components.decorators.UITooltipDecorator;
 import uk.org.ponder.rsf.flow.ARIResult;
 import uk.org.ponder.rsf.flow.ActionResultInterceptor;
+import uk.org.ponder.rsf.renderer.message.MessageUtil;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
 import uk.org.ponder.rsf.viewstate.SimpleViewParameters;
@@ -117,6 +120,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
     public void setLocale(Locale locale) {
         this.locale = locale;
     }
+    
+    public MessageLocator messageLocator;
+    public void setMessageLocator(MessageLocator messageLocator) {
+        this.messageLocator = messageLocator;
+    }
+   
 
     /**
      * Instance Variables for building up rendering information.
@@ -303,13 +312,19 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
                 int totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE)).size();
                 if(totalUsers > 0){
-                	UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", new Object[] {totalUsers,totalUsers}), new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) )
-                	.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
+                			new Object[] {totalUsers,totalUsers}), 
+                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+                	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+                	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
                 }
                 totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE)).size();
                 if(totalUsers > 0){
-                    UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", new Object[] {totalUsers,totalUsers}) , new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) )
-                    .decorate(new UIStyleDecorator("addItem total:"+totalUsers));;
+                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", 
+                			new Object[] {totalUsers,totalUsers}) , 
+                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
+                    link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+                    link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.tas.page.title")));
                 }
                 
                 totalUsers = commonLogic.getUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_TAKE_EVALUATION).size();
