@@ -101,7 +101,7 @@ $(document).ready(function() {
                         field = $(this);
                     }
                 });
-                var deselected = field.val().replace("j#{selectedEvaluationUsersLocator." + regText + "}[", "").replace("]", "").split(",");
+                var deselected = field.val().replace("j#{selectedEvaluationUsersLocator." + regText + "}[", "").replace(/"/g,"").replace(/ /g,"").replace("]", "").split(",");
                 if (deselected.length > 0) {
                     variables.get.documentFB.find('input[@type=checkbox]:checked').each(function() {
                         for (var i = 0; i < deselected.length; i++) {

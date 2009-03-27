@@ -535,16 +535,6 @@ public class SetupEvalBean {
 					user.setStatus(EvalAssignUser.STATUS_REMOVED);
 					}
 			}
-
-			/*
-			 * EvalAssignUser user = evaluationService
-			 * .getAssignUserByEid(deselected.get(i)); if (evalUsers.size() > 0)
-			 * { evalUsers.get(0).setStatus(EvalAssignUser.STATUS_REMOVED);
-			 * log.info("Setting status for user:" + deselected.get(i));
-			 * evaluationSetupService.saveUserAssignments(evaluationId, user); }
-			 * else { log.info("EvalAssignUser not found for:" +
-			 * deselected.get(i)); }
-			 */
 		}
 	}
 
