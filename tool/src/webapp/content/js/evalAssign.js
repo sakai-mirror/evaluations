@@ -6,7 +6,7 @@ $(document).ready(function() {
     $('a[rel=assignTaSelector]').assignSelector({type:1});
     $(':submit').bind('click', function(){
         //Validate group Selections
-        var countChecked = $('input[@type=checkbox]:checked').get().length;
+        var countChecked = $('form[id=eval-assign-form] input[@type=checkbox]:checked').get().length;
         if(countChecked == null || countChecked == 0){
             $('#error').fadeIn("fast");
             return false;
