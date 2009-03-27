@@ -127,7 +127,19 @@ $(document).ready(function() {
                 }) ;
                 log("Formatting table holder hieght. Set height to:" + tableHolder.height());
 
-
+                //Activate Mass (De)Selector controls
+                variables.get.documentFB.find("#selectorControl .all").bind('click', function(){
+                     variables.get.documentFB.find('input[@type=checkbox]').not(':checked').each(function(){
+                          this.checked = true;
+                     });
+                    return false;
+                });
+                variables.get.documentFB.find("#selectorControl .none").bind('click', function(){
+                     variables.get.documentFB.find('input[@type=checkbox]:checked').each(function(){
+                          this.checked = false;
+                     });
+                    return false;
+                });
             }
         });
         $(document).bind('afterClose.facebox', function() {

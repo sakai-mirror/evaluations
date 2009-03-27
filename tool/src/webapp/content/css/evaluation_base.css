@@ -700,16 +700,3 @@ background-repeat : no-repeat !important;
      text-align:center;
 
 }
-/*Table sorter classes */
-thead tr .headerSortUp a {
-	background-image: url(/library/image/sakai/sortdescending.gif);
-	background-repeat: no-repeat;
-	background-position: 90% center;
-	padding-right: 25px;
-}
-thead tr .headerSortDown a {
-	background-image: url(/library/image/sakai/sortascending.gif);
-	background-repeat: no-repeat;
-	background-position: 90% center;
-	padding-right: 25px;
-}

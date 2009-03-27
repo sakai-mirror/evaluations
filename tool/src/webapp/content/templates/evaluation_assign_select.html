@@ -4,17 +4,9 @@
 <head>
     <title>Select</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <script language="javascript" type="text/javascript" src="../js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $.facebox.setHeader($("#title"));
-            $(".selectTable table").tablesorter({
-                sortList: [[1,1]], // Initial order by the latest (NOT earliest) closing date
-                headers: { // disable it by setting the property sorter to false
-                    0: {sorter: false}
-                }
-            });
-        });</script>
+            $.facebox.setHeader($("#title"));});</script>
 </head>
 <body>
 <h2 rsf:id="title" class="titleHeader" id="title">Select Instructors</h2>
@@ -28,14 +20,18 @@
 
         <div rsf:id="instruction" class="instruction">Choose the instructors to be included in the above evaluation.
         </div>
+        <div id="selectorControl">
+            <a href="#" class="all">Select All</a> |
+            <a href="#" class="none">Select None</a>
+        </div>
         <div class="selectTable">
             <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines ">
                 <thead>
                 <tr>
-                    <th  style="text-align:left;border-bottom:none"><span rsf:id="msg=assigneval.select.header">Select</span></th>
-                    <th  style="text-align:left;border-bottom:none">
+                    <th ><span rsf:id="msg=assigneval.select.header">Select</span></th>
+                    <th >
                         <span rsf:id="col-number">Staff/Student number</span></th>
-                    <th style="text-align:left;border-bottom:none"><span rsf:id="col-name">Name</span></th>
+                    <th><span rsf:id="col-name">Name</span></th>
                 </tr>
                 </thead>
                 <tbody>
