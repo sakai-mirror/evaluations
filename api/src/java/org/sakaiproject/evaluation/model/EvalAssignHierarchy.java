@@ -32,32 +32,7 @@ public class EvalAssignHierarchy implements java.io.Serializable {
 
     protected Boolean studentsViewResults;
 
-    protected transient EvalEvaluation evaluation;
-
-    // NON-PERSISTENT
-
-    /**
-     * This is should be set but is not persistent,
-     * however it will be used by the services to set the evaluation if it is not already set
-     */
-    private Long evalId;
-    public void setEvaluationId(Long evalId) {
-        // cannot set the evalId if it is already persisted
-        if (this.evaluation == null) {
-            this.evalId = evalId;
-        } else {
-            this.evalId = evaluation.getId();
-        }
-    }
-    public Long getEvaluationId() {
-        Long id = evalId;
-        if (this.evaluation != null) {
-            id = evaluation.getId();
-            this.evalId = id;
-        }
-        return id;
-    }
-
+    protected EvalEvaluation evaluation;
 
     // Constructors
 
@@ -86,7 +61,7 @@ public class EvalAssignHierarchy implements java.io.Serializable {
         this.instructorApproval = instructorApproval;
         this.instructorsViewResults = instructorsViewResults;
         this.studentsViewResults = studentsViewResults;
-        setEvaluation(evaluation);
+        this.evaluation = evaluation;
     }
 
     public Long getId() {
@@ -151,9 +126,6 @@ public class EvalAssignHierarchy implements java.io.Serializable {
 
     public void setEvaluation(EvalEvaluation evaluation) {
         this.evaluation = evaluation;
-        if (evaluation != null) {
-            this.evalId = evaluation.getId();
-        }
     }
 
 }
