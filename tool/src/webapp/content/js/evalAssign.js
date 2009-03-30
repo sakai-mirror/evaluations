@@ -197,7 +197,10 @@ $(document).ready(function() {
 
             }
         });
-
+        that.parents('tr.selectedGroup').find('input[@type=checkbox]').each(function(){
+            $(this).trigger("click");
+            this.checked = true;
+        });
     }
 
     function handleCheckboxes(unChecked, where) {

@@ -45,6 +45,8 @@ import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
 import org.sakaiproject.evaluation.utils.ComparatorsUtils;
 import org.sakaiproject.evaluation.utils.EvalUtils;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import uk.org.ponder.htmlutil.HTMLUtil;
 import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.rsf.components.UIBranchContainer;
@@ -160,6 +162,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          */
         EvalEvaluation evaluation = evaluationService.getEvaluationById(evalViewParams.evaluationId);
         String actionBean = "setupEvalBean.";
+        Boolean newEval = false;
         
         UIInternalLink.make(tofill, "eval-settings-link",
                 UIMessage.make("evalsettings.page.title"),
@@ -167,6 +170,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         if (EvalConstants.EVALUATION_STATE_PARTIAL.equals(evaluation.getState())) {
             // creating a new eval
             UIMessage.make(tofill, "eval-start-text", "starteval.page.title");
+            newEval = true;
         }
 
         UIMessage.make(tofill, "assign-eval-edit-page-title", "assigneval.assign.page.title", new Object[] {evaluation.getTitle()});
@@ -269,9 +273,15 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             // sort the list by title 
             Collections.sort(unassignedEvalGroups, new ComparatorsUtils.GroupComparatorByTitle());
 			
-            
-            
-			                
+            List<String> assignGroupsIds = new ArrayList<String>();
+            if(! newEval){
+            	Map<Long, List<EvalAssignGroup>> selectedGroupsMap = evaluationService.getAssignGroupsForEvals(new Long[] {evalViewParams.evaluationId}, true, null);
+            	List<EvalAssignGroup> assignGroups = selectedGroupsMap.get(evalViewParams.evaluationId);
+            	for(EvalAssignGroup assGroup: assignGroups){
+            		assignGroupsIds.add(assGroup.getEvalGroupId());
+            	}
+            }
+                           
             int count = 0;
             for (EvalGroup evalGroup : unassignedEvalGroups) {
                 UIBranchContainer checkboxRow = UIBranchContainer.make(evalgroupArea, "groups:", count+"");
@@ -283,7 +293,9 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 //keep deselected user info as a result of changes in EVALSYS-660
                 Set<String> deselectedInsructorIds = new HashSet<String>();
                 Set<String> deselectedAssistantIds = new HashSet<String>();
-                if (! EvalConstants.EVALUATION_STATE_PARTIAL.equals(evaluation.getState())) {
+                
+                
+                if (! newEval) {
                 //Get saved selection settings for this eval
             	List<EvalAssignUser> deselectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, null, EvalAssignUser.STATUS_REMOVED, null, null);
                 //check for already deselected users that match this groupId
@@ -297,7 +309,15 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 		
                 	}
                 	}
+               
+                //Assign attribute to row to help JS set checkbox selection to true
+                if(assignGroupsIds.contains(evalGroup.evalGroupId)){
+                	checkboxRow.decorate(new UIStyleDecorator("selectedGroup"));
                 }
+                 
+                }
+                
+                
                 evalGroupsLabels.add(evalGroup.title);
                 evalGroupsValues.add(evalGroup.evalGroupId);
 
@@ -338,7 +358,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         evalGroupsSelect.optionlist = UIOutputMany.make(evalGroupsValues.toArray(new String[] {}));
         evalGroupsSelect.optionnames = UIOutputMany.make(evalGroupsLabels.toArray(new String[] {}));
-
+        
         form.parameters.add( new UIELBinding(actionBean + "evaluationId", evalViewParams.evaluationId) );
         
         UIMessage.make(form, "back-button", "general.back.button");
