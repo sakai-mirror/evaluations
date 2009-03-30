@@ -527,8 +527,8 @@ public class SetupEvalBean {
 	 */
 	private void deselectUsers(String[] deselected, String type) {
 		List<EvalAssignUser> evalUsers = evaluationService
-				.getParticipantsForEval(evaluationId, null, null, null, null,
-						type, null);
+				.getParticipantsForEval(evaluationId, null, null, type, null,
+						null, null);
 		for (int i = 0; i < deselected.length; i++) {
 			for (EvalAssignUser user : evalUsers) {
 				if (user.getUserId().equals(deselected[i])) {
