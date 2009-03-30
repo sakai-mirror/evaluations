@@ -175,31 +175,15 @@ $(document).ready(function() {
                     return false;
                 });
             } else {
-                that.fadeOut('normal', function() {
-                    variables.set.typeOfBranch(that);
-                    var field;
-                    var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
-                    var sRegExInput = new RegExp(regText);
-                    $('input[name=el-binding]').each(function() {
-                        if ($(this).val().search(sRegExInput) != -1) {
-                            field = $(this);
-                        }
-                    });
-                    if (field != null) {
-                        field.val("j#{selectedEvaluationUsersLocator." + regText + "}[]");
-                    }
-
-                    //reset dom count on selected Instr/Ass
-                    var origionalSelected = that.attr('class').replace("addItem total:", "");  //gets a String
-                    var text = that.attr('title') + " (" + origionalSelected + "/" + origionalSelected + ")";
-                    that.text(text);
-                });
+                that.fadeOut('fast');
 
             }
         });
         that.parents('tr.selectedGroup').find('input[@type=checkbox]').each(function(){
-            $(this).trigger("click");
+            //$(this).trigger("click");
             this.checked = true;
+            that.fadeIn('fast');
+            
         });
     }
 
