@@ -161,11 +161,7 @@ $(document).ready(function() {
     function initControls(that) {
         that.hide();
         variables.groupCheckBox = that.parents('tr').find('input[@type=checkbox]');
-        variables.groupCheckBox.bind('click', function() {
-            if (this.checked) {
-                that
-                        .fadeIn('normal')
-                        .bind('click', function() {
+        that.bind('click', function() {
                     var _url = that.attr('href');
                     variables.that = that;
                     variables.thatRowNumber = that.parents('tr').attr('rel');
@@ -174,6 +170,9 @@ $(document).ready(function() {
                     $.facebox({ajax: _url});
                     return false;
                 });
+        variables.groupCheckBox.bind('click', function() {
+            if (this.checked) {
+                that.fadeIn('fast');
             } else {
                 that.fadeOut('fast');
 
@@ -185,6 +184,7 @@ $(document).ready(function() {
             that.fadeIn('fast');
             
         });
+
     }
 
     function handleCheckboxes(unChecked, where) {
