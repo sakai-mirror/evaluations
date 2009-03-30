@@ -348,9 +348,12 @@ public class EvaluationSettingsProducer implements ViewComponentProducer, ViewPa
       
       
       //the start date should be an hour in the future
-      Calendar cal = Calendar.getInstance();
-      cal.add(Calendar.HOUR, 1);
-      Date startDate = cal.getTime();
+      Date startDate = null;
+      if (evaluation.getStartDate() == null) {
+    	  Calendar cal = Calendar.getInstance();
+    	  cal.add(Calendar.HOUR, 1);
+    	  startDate = cal.getTime();
+      } 
       
       // Start Date
       UIBranchContainer showStartDate = UIBranchContainer.make(form, "showStartDate:");
