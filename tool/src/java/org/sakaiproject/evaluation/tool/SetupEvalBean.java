@@ -16,7 +16,6 @@ package org.sakaiproject.evaluation.tool;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -470,11 +469,11 @@ public class SetupEvalBean {
 			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentId);
 			if (deselectedInstructors != null && deselectedInstructors.length != 0) {
 				log.info("Deselecting "+deselectedInstructors.length+" Instructors");
-				deselectUsers(deselectedInstructors);
+				deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE);
 			}
 			if (deselectedAssistants != null && deselectedAssistants.length != 0) {
 				log.info("Deselecting "+deselectedAssistants.length+" Assistants");
-				deselectUsers(deselectedAssistants);
+				deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT);
 			}
 		}
 
@@ -524,11 +523,12 @@ public class SetupEvalBean {
 	 * evaluation
 	 * 
 	 * @param deselected
+	 * @param type either {@link EvalAssignUser.TYPE_EVALUATEE} or {@link EvalAssignUser.TYPE_ASSISTANT}
 	 */
-	private void deselectUsers(String[] deselected) {
+	private void deselectUsers(String[] deselected, String type) {
 		List<EvalAssignUser> evalUsers = evaluationService
 				.getParticipantsForEval(evaluationId, null, null, null, null,
-						null, null);
+						type, null);
 		for (int i = 0; i < deselected.length; i++) {
 			for (EvalAssignUser user : evalUsers) {
 				if (user.getUserId().equals(deselected[i])) {
