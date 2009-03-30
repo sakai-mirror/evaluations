@@ -119,7 +119,7 @@ public class EvaluationAssignmentsProducer implements ViewComponentProducer, Vie
 
       // show modify assignments link as long as the eval is active or earlier
       String evalState = evaluationService.updateEvaluationState(evaluationId);
-      if (EvalUtils.checkStateBefore(evalState, EvalConstants.EVALUATION_STATE_ACTIVE, true)) {
+      if (EvalUtils.checkStateBefore(evalState, EvalConstants.EVALUATION_STATE_ACTIVE, false)) {
          UIInternalLink.make(tofill, "modifyAssignmentsLink", UIMessage.make("evaluationassignments.add.assigns.link"), 
                new EvalViewParameters(EvaluationAssignProducer.VIEW_ID, evaluationId) );
       }
