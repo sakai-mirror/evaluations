@@ -203,7 +203,7 @@ public interface EvalEvaluationService {
      * @param assignTypeConstant (OPTIONAL) a constant to indicate which types of assignment participants to include,
      * use the TYPE_* constants from {@link EvalAssignUser}, default (null) is to include all types of assignments
      * @param assignStatusConstant (OPTIONAL) a constant to indicate which status of assignment participants to include,
-     * use the STATUS_* constants from {@link EvalAssignUser}, to include users with any status use {@link #STATUS_ANY}, 
+     * use the STATUS_* constants from {@link EvalAssignUser}, to include users with any status use {@link EvalEvaluationService#STATUS_ANY}, 
      * default (null) is to include {@link EvalAssignUser#STATUS_LINKED} and {@link EvalAssignUser#STATUS_UNLINKED},
      * @param includeConstant (OPTIONAL) a constant to indicate what users should be retrieved, 
      * EVAL_INCLUDE_* from {@link EvalConstants}, default (null) is {@link EvalConstants#EVAL_INCLUDE_ALL},

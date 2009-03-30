@@ -16,6 +16,7 @@ package org.sakaiproject.evaluation.tool;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -463,18 +464,12 @@ public class SetupEvalBean {
 		}
 		
 		for (int i =0; i < selectedGroupIDs.length; i++) {
-			String currentId = selectedGroupIDs[i];
+			String currentGroupId = selectedGroupIDs[i];
 			// Save Assistant/Instructor selections now. EVALSYS-618
-			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentId);
-			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentId);
-			if (deselectedInstructors != null && deselectedInstructors.length != 0) {
-				log.info("Deselecting "+deselectedInstructors.length+" Instructors");
-				deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE);
-			}
-			if (deselectedAssistants != null && deselectedAssistants.length != 0) {
-				log.info("Deselecting "+deselectedAssistants.length+" Assistants");
-				deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT);
-			}
+			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentGroupId);
+			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
+			deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId);
+			deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId);
 		}
 
 		return "controlEvals";
@@ -524,17 +519,19 @@ public class SetupEvalBean {
 	 * 
 	 * @param deselected
 	 * @param type either {@link EvalAssignUser.TYPE_EVALUATEE} or {@link EvalAssignUser.TYPE_ASSISTANT}
+	 * @param currentGroupId 
 	 */
-	private void deselectUsers(String[] deselected, String type) {
+	private void deselectUsers(String[] deselected, String type, String currentGroupId) {
 		List<EvalAssignUser> evalUsers = evaluationService
-				.getParticipantsForEval(evaluationId, null, null, type, null,
+				.getParticipantsForEval(evaluationId, null, new String[]{currentGroupId}, type, EvalEvaluationService.STATUS_ANY,
 						null, null);
-		for (int i = 0; i < deselected.length; i++) {
-			for (EvalAssignUser user : evalUsers) {
-				if (user.getUserId().equals(deselected[i])) {
+		List<String> deselectedList = Arrays.asList(deselected);
+		for (EvalAssignUser user : evalUsers) {
+				if (deselectedList.contains(user.getUserId())) {
 					user.setStatus(EvalAssignUser.STATUS_REMOVED);
-					}
-			}
+				}else{
+					user.setStatus(EvalAssignUser.STATUS_LINKED);
+				}
 		}
 	}
 
