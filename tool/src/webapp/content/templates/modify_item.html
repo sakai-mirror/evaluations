@@ -13,7 +13,8 @@ $(document).ready(function() {
         //SakaiProject.fckeditor.initializeEditor("show-item-expert::expert-desc", siteId);
     if($.facebox.defaults.objToUpdate == "block"){
 		$('#facebox .content .navPanel').hide();	
-		$('#facebox .content fieldset').hide();
+		$('#nonBlockSettings').hide();
+		$('#nonBlockSettings2').hide();
         $('div[@id=show-item-scale::]').hide();
 	}
 	$.facebox.grow();
@@ -185,6 +186,7 @@ $(document).ready(function() {
 
 			<fieldset rsf:id="showItemDisplayHints:" class="visibleFS evalEditorSmall">
 				<legend rsf:id="item-display-hint-header">Display Setting Hints</legend>
+				<div id="nonBlockSettings">
 				<div rsf:id="item-display-hint-instruction" class="instruction">these optional settings allow the item author to provide hints as to how this item should be displayed</div>
 
 				<p rsf:id="show-scale-display:" class="longtext">
@@ -219,12 +221,14 @@ $(document).ready(function() {
                     <input rsf:id="item-comment" type="checkbox" id="item-comment" />
                     <label rsf:id="item-comment-header" for="showItemComment:::item-comment">Include comment box</label>
                 </p>
-
-               <p rsf:id="showItemCompulsory:" class="checkbox">
+				</div>
+				
+				<!-- Compulsary non/compulsary should be shown in block editing -->
+				    <p rsf:id="showItemCompulsory:" class="checkbox">
                     <input rsf:id="item-compulsory" type="checkbox" id="item-compulsory" />
                     <label rsf:id="item-compulsory-header" for="showItemCompulsory:::item-compulsory">Must be answered</label>
-                </p>
-                
+                	</p>
+                <div id="nonBlockSettings2">
 				<div rsf:id="showItemCategory:">
 					<b rsf:id="item-category-header">Category:</b>
 
@@ -238,7 +242,10 @@ $(document).ready(function() {
 						<label rsf:id="item-category-label" for="item-category-radio">Evaluatee/Instructor</label>
 					</span>
 				</div>
-
+				</div>
+				
+						
+				
 				<div class="cleaner">&nbsp;</div>
 			</fieldset>
 			<div class="act">
