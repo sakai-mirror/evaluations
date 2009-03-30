@@ -416,6 +416,7 @@
         $('#facebox table').attr('width', 700);
         $('#facebox .body').css('width',660);
         $('#facebox .header').eq(0).show();
+		$.facebox.defaults.objToUpdate = null;
       })
         $(document).trigger('afterClose.facebox');
         return false
