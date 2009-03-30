@@ -6,10 +6,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <script type="text/javascript">
         $(document).ready(function() {
-            $.facebox.setHeader($("#title"));});</script>
+            $.facebox.setHeader($("#title"));
+            $("#facebox .header .titleHeader").show();
+        });</script>
 </head>
 <body>
-<h2 rsf:id="title" class="titleHeader" id="title">Select Instructors</h2>
+<h2 rsf:id="title" class="titleHeader" id="title" style="display:none;">Select Instructors</h2>
 
 <div>
     <form rsf:id="form" action="modify_template" method="post" id="basic-form">
