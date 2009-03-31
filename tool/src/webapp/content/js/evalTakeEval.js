@@ -7,7 +7,7 @@ $(document).ready(function() {
     var assSel = $('div[@rel=evalassistantSelector]');
     instrSel.evalSelector({type:0});
     assSel.evalSelector({type:1});
-    $(':submit').bind('click', function() {
+    $('[id=form-branch::submitEvaluation]').bind('click', function() {
         if (instrSel.find('input[type=checkbox]').length != 0) {
             var selectedInstrDomArray = instrSel.find('input:checked').get();
             if (selectedInstrDomArray.length > 0) {
@@ -276,7 +276,7 @@ $(document).ready(function() {
                             showQuestions();
                             initClassVars();
                             this.checked = false;
-                        }
+                      }
                     }
                 });
                 checkSavedPeople(elemId, this,'','checkbox');
@@ -310,7 +310,7 @@ $(document).ready(function() {
                     variables.questionsToShow = new Array();
                     variables.questionsToShow.push(elemId);
                     //log("Added item " + elemId + " to array. Now Array has this number of elements: " + variables.questionsToShow.length);
-                    showQuestions('noFrameExpand');
+                    showQuestions();
                     initClassVars();
                 }else{
                     //Reset active person
@@ -331,8 +331,8 @@ $(document).ready(function() {
         renderSelections('assistant');
     }
 
-    function showQuestions(iframe) {
-        hideQuestions(iframe);
+    function showQuestions() {
+        hideQuestions(0);
         //log("Showing " + variables.questionsToShow.length + " items in dom.");
         $.each(variables.questionsToShow, function(i, item) {
             var tempFound = 0;
@@ -342,7 +342,7 @@ $(document).ready(function() {
                 }
             });
             if (tempFound == 0) {
-                var str = 'div[name=' + item + ']';
+                var str = 'div[name=' + item + '].'+variables.get.typeOfBranch()+'Branch';
                 $(str).slideDown('normal', function() {
                     frameGrow($(str).css('height'));
                     //log("Revealing: " + item)
@@ -355,9 +355,8 @@ $(document).ready(function() {
         var temp = new Array();
         temp = (all && all == 1) ? variables.get.shownQuestions() : variables.questionsToHide;
         $.each(temp, function(i, item) {
-            var str = 'div[@name=' + item + ']';
+            var str = 'div[name=' + item + '].'+variables.get.typeOfBranch()+'Branch';
             $(str).slideUp('normal', function() {
-                frameShrink($(str).css('height'));
                 //log("WARN: Hiding " + item + " in dom.");
                 clearFieldsFor($(this));
             });
@@ -408,12 +407,7 @@ $(document).ready(function() {
 			$(frame).height(parent.document.body.scrollHeight + parseInt(height.replace('px',''))+20);
 		}catch(e){}
 }
-
-    function frameShrink(height){
-	  		var frame = parent.document.getElementById(window.name);
-			$(frame).height(parent.document.body.scrollHeight - parseInt(height.replace('px','')));
-	}
-
+    
     // Debugging
     function log($obj) {
         if (variables.options.debug) {
