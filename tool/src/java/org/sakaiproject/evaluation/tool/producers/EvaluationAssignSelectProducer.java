@@ -40,7 +40,7 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
     public void setCommonLogic(EvalCommonLogic bean) {
         this.commonLogic = bean;
     }
-    private EvalEvaluationService evaluationService;
+    private EvalEvaluationService evaluationService; 
     public void setEvaluationService(EvalEvaluationService evaluationService) {
         this.evaluationService = evaluationService;
     }
@@ -64,7 +64,7 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			selectType = evalParameters.evalCategory;
 			Set<String> users;
 			if(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)){
-				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_INSTRUCTOR_ROLE);
+				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
 				actionBeanVariable = actionBeanVariable+"deselectedInstructors";
 			}else if(EvalAssignGroup.SELECTION_TYPE_ASSISTANT.equals(selectType)){
 				users = commonLogic.getUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);	

@@ -258,11 +258,6 @@ public class EvalConstants {
      * http://bugs.sakaiproject.org/jira/browse/EVALSYS-345
      */
     public final static String PERM_ASSISTANT_ROLE = "section.role.ta";
-    /**
-     * Permission: User is marked as an Instructor in a section/course
-     */
-    public final static String PERM_INSTRUCTOR_ROLE = "section.role.instructor" ;// OR PERM_BE_EVALUATED;
-
 
     /**
      * EvalUser class: Unknown type

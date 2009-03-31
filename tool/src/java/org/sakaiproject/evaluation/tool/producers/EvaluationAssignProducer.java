@@ -297,18 +297,17 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 if (! newEval) {
                 //Get saved selection settings for this eval
-            	List<EvalAssignUser> deselectedUsers = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, null, EvalAssignUser.STATUS_REMOVED, null, null);
-                //check for already deselected users that match this groupId
-                for(EvalAssignUser deselectedUser:deselectedUsers){
-                	if(evalGroup.evalGroupId.equals(deselectedUser.getEvalGroupId())){
-                		if(EvalAssignUser.TYPE_EVALUATEE.equals(deselectedUser.getType())){
-                			deselectedInsructorIds.add(deselectedUser.getUserId());
-                		}else if(EvalAssignUser.TYPE_ASSISTANT.equals(deselectedUser.getType())){
-                			deselectedAssistantIds.add(deselectedUser.getUserId());
-                		}
-                		
-                	}
-                	}
+                	EvalConstants
+            	List<EvalAssignUser> deselectedInsructors = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_REMOVED, null, null);
+                List<EvalAssignUser> deselectedAssistants = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_REMOVED, null, null);
+               
+            	//check for already deselected users that match this groupId
+                for(EvalAssignUser deselectedUser:deselectedInsructors){
+                	deselectedInsructorIds.add(deselectedUser.getUserId());
+                }
+                for(EvalAssignUser deselectedUser:deselectedAssistants){
+                	deselectedAssistantIds.add(deselectedUser.getUserId());
+                }
                
                 //Assign attribute to row to help JS set checkbox selection to true
                 if(assignGroupsIds.contains(evalGroup.evalGroupId)){
@@ -330,7 +329,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
-                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_INSTRUCTOR_ROLE));
+                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_BE_EVALUATED));
                 if(totalUsers > 0){
                 	int currentUsers = deselectedInsructorIds.size()>=0?(totalUsers-deselectedInsructorIds.size()):totalUsers;
                 	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
