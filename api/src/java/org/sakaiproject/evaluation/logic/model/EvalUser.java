@@ -15,7 +15,10 @@
 package org.sakaiproject.evaluation.logic.model;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 
 
@@ -25,8 +28,10 @@ import org.sakaiproject.evaluation.constant.EvalConstants;
  *
  * @author Aaron Zeckoski (aaronz@vt.edu)
  */
-public class EvalUser implements Serializable {
+public class EvalUser implements Serializable, Comparable<EvalUser> {
 
+	private static Log log = LogFactory.getLog(EvalUser.class);
+	
     public static final String USER_TYPE_UNKNOWN = EvalConstants.USER_TYPE_UNKNOWN;
     public static final String USER_TYPE_ANONYMOUS = EvalConstants.USER_TYPE_ANONYMOUS;
     public static final String USER_TYPE_EXTERNAL = EvalConstants.USER_TYPE_EXTERNAL;
@@ -133,5 +138,19 @@ public class EvalUser implements Serializable {
             return false;
         return true;
     }
+
+	public int compareTo(EvalUser evalUser) {
+		return 0;
+	}
+	
+  public static Comparator<EvalUser> displayNameComparator = new Comparator<EvalUser>() {
+	    public int compare(EvalUser evalUser1, EvalUser evalUser2) {
+	    String name1 = ((EvalUser) evalUser1).displayName.toUpperCase();
+	    String name2 = ((EvalUser) evalUser2).displayName.toUpperCase();
+	    log.info("Comparing these two: "+ name1 +" and "+ name2);
+	    return name1.compareTo(name2);
+	    }
+	  };
+
 
 }

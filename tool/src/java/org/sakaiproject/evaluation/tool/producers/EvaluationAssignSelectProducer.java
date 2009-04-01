@@ -5,7 +5,9 @@
 package org.sakaiproject.evaluation.tool.producers;
 
 import java.security.InvalidParameterException;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.sakaiproject.evaluation.constant.EvalConstants;
@@ -47,8 +49,7 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 
 	public void fillComponents(UIContainer tofill, ViewParameters viewparams,
 			ComponentChecker checker) {
-		// TODO Auto-generated method stub		
-		String groupTitle = "", evalGroupId = "", selectType = "";
+		String groupTitle = "", evalGroupId = "", selectType = "";  //Hold values passed via URL. selectType refers to what type of role is being show eg. Instructor or Assistant
 		Long evalId;
 		EvalViewParameters evalParameters;
 		
@@ -72,15 +73,19 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			}else{
 				throw new InvalidParameterException("Cannot handle this selection type: "+selectType);
 			}
-			for(Iterator<String> selector = users.iterator(); selector.hasNext();){
-				String userId = selector.next();
-				EvalUser user = commonLogic.getEvalUserById(userId);
+			
+			//Get users
+			List<EvalUser> evalUsers = commonLogic.getEvalUsersByIds(users.toArray(new String[users.size()]));
+			//Sort the users list by displayName
+			Collections.sort(evalUsers, EvalUser.displayNameComparator);
+			
+			for(EvalUser evalUser : evalUsers){
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
 				UIBoundBoolean bb = UIBoundBoolean.make(row, "row-select", Boolean.TRUE);
-				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(user.userId) );
-	            UIOutput.make(row, "row-number", user.username); 
-	            UIOutput.make(row, "row-name", user.displayName); 
-	            }
+				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(evalUser.userId) );
+	            UIOutput.make(row, "row-number", evalUser.username); 
+	            UIOutput.make(row, "row-name", evalUser.displayName);
+			}
 			
 		 /**
          * This is the evaluation we are working with on this page,
@@ -88,11 +93,8 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
          */
         EvalEvaluation evaluation = evaluationService.getEvaluationById(evalId);
         
-        
-		
-		//do a check for the Header
-		UIMessage.make(tofill, "title", (EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)? "assignselect.instructors.page.title" : "assignselect.tas.page.title"));
-		
+        //do a check for the Header
+		UIMessage.make(tofill, "title", (EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType) ? "assignselect.instructors.page.title" : "assignselect.tas.page.title"));
 		
 		UIMessage.make(form, "group-title", "assignselect.page.group");
 		UIOutput.make(form, "group-name", groupTitle);
@@ -118,5 +120,4 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 		// TODO Auto-generated method stub
 		return new EvalViewParameters();
 	}
-
 }
