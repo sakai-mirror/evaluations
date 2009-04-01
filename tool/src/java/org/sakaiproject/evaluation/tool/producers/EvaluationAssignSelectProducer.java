@@ -6,7 +6,6 @@ package org.sakaiproject.evaluation.tool.producers;
 
 import java.security.InvalidParameterException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +31,7 @@ import uk.org.ponder.rsf.viewstate.ViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParamsReporter;
 
 public class EvaluationAssignSelectProducer implements ViewComponentProducer, ViewParamsReporter{
-
+	
 	public static final String VIEW_ID = "evaluation_assign_select";
 
 	public String getViewID() {
@@ -77,15 +76,15 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			//Get users
 			List<EvalUser> evalUsers = commonLogic.getEvalUsersByIds(users.toArray(new String[users.size()]));
 			//Sort the users list by displayName
-			Collections.sort(evalUsers, EvalUser.displayNameComparator);
+			Collections.sort(evalUsers, EvalUser.lastNameComparator);
 			
 			for(EvalUser evalUser : evalUsers){
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
 				UIBoundBoolean bb = UIBoundBoolean.make(row, "row-select", Boolean.TRUE);
 				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(evalUser.userId) );
 	            UIOutput.make(row, "row-number", evalUser.username); 
-	            UIOutput.make(row, "row-name", evalUser.displayName);
-			}
+	            UIOutput.make(row, "row-name", evalUser.firstName == "" ? evalUser.displayName : (evalUser.lastName +", "+ evalUser.firstName));
+	        }
 			
 		 /**
          * This is the evaluation we are working with on this page,
