@@ -76,14 +76,14 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			//Get users
 			List<EvalUser> evalUsers = commonLogic.getEvalUsersByIds(users.toArray(new String[users.size()]));
 			//Sort the users list by displayName
-			Collections.sort(evalUsers, EvalUser.lastNameComparator);
+			Collections.sort(evalUsers, EvalUser.nameComparator);
 			
 			for(EvalUser evalUser : evalUsers){
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
 				UIBoundBoolean bb = UIBoundBoolean.make(row, "row-select", Boolean.TRUE);
 				bb.decorators = new DecoratorList( new UIIDStrategyDecorator(evalUser.userId) );
 	            UIOutput.make(row, "row-number", evalUser.username); 
-	            UIOutput.make(row, "row-name", evalUser.firstName == "" ? evalUser.displayName : (evalUser.lastName +", "+ evalUser.firstName));
+	            UIOutput.make(row, "row-name", evalUser.sortName);
 	        }
 			
 		 /**

@@ -42,27 +42,22 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
      * The string which is the username (eid) for this user
      * or default text "------" if it cannot be found
      */
-    public String username = "------";
+    public String username;
     /**
      * The email address for this user if they have one,
      * null if they do not have an email address
      */
     public String email;
     /**
-     * The displayable full name of this user
+     * The displayable name of this user
      * or default text "--------" if it cannot be found
      */
-    public String displayName = "--------";
+    public String displayName;
     /**
-     * The displayable firstName name of this user
-     * or default text "--------" if it cannot be found
+     * The sort name of this user
+     * or defaults to username if it cannot be found
      */
-    public String firstName = "--------";
-    /**
-     * The displayable lastName name of this user
-     * or default text "--------" if it cannot be found
-     */
-    public String lastName = "--------";
+    public String sortName;
     /**
      * The type of this user (use the USER_TYPE constants in {@link EvalConstants})
      */
@@ -81,14 +76,10 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
      * @param email email address for this user if they have one
      */
     public EvalUser(String userId, String type, String email) {
-        this.userId = userId;
-        this.email = email;
-        this.type = type;
+        this(userId, type, email, null, null, null);
     }
 
     /**
-     * Full constructor
-     * 
      * @param userId the internal user id (not username)
      * @param type the type of this user (use the USER_TYPE constants in {@link EvalConstants})
      * @param email email address for this user if they have one
@@ -96,13 +87,8 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
      * @param displayName the user display name or default text "--------" if it cannot be found
      */
     public EvalUser(String userId, String type, String email, String username, String displayName) {
-        this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.displayName = displayName;
-        this.type = type;
+        this(userId, type, email, username, displayName, null);
     }
-
 
     /**
      * Full constructor
@@ -112,15 +98,33 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
      * @param email email address for this user if they have one
      * @param username the login name (eid) for the user or default text "------" if it cannot be found
      * @param displayName the user display name or default text "--------" if it cannot be found
+     * @param sortName the name to use when sorting users or defaults to username if none set
      */
-    public EvalUser(String userId, String type, String email, String username, String displayName, String firstName, String lastName) {
+    public EvalUser(String userId, String type, String email, String username, String displayName, String sortName) {
+        if (userId == null || "".equals(userId)) {
+            throw new IllegalArgumentException("userId cannot be null");
+        }
+        if (type == null || "".equals(type)) {
+            throw new IllegalArgumentException("type cannot be null");
+        }
         this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.displayName = displayName;
         this.type = type;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.email = email;
+        if (username != null && ! "".equals(username)) {
+            this.username = username;
+        } else {
+            this.username = "------";
+        }
+        if (displayName != null && ! "".equals(displayName)) {
+            this.displayName = displayName;
+        } else {
+            this.displayName = "--------";
+        }
+        if (sortName != null && ! "".equals(sortName)) {
+            this.sortName = sortName;
+        } else {
+            this.sortName = username != null ? username : userId;
+        }
     }
 
     @Override
@@ -165,17 +169,15 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
         return true;
     }
 
-	public int compareTo(EvalUser evalUser) {
-		return 0;
-	}
 	
-  public static Comparator<EvalUser> lastNameComparator = new Comparator<EvalUser>() {
+  public static Comparator<EvalUser> nameComparator = new Comparator<EvalUser>() {
 	    public int compare(EvalUser evalUser1, EvalUser evalUser2) {
-	    String name1 = ((EvalUser) evalUser1).lastName.toUpperCase();
-	    String name2 = ((EvalUser) evalUser2).lastName.toUpperCase();
+	    String name1 = ((EvalUser) evalUser1).sortName.toUpperCase();
+	    String name2 = ((EvalUser) evalUser2).sortName.toUpperCase();
 	    return name1.compareTo(name2);
 	    }
 	  };
 
-
-}
+public int compareTo(EvalUser arg0) {
+	return 0;
+}}
