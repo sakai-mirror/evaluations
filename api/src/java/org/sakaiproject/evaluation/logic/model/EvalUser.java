@@ -26,7 +26,7 @@ import org.sakaiproject.evaluation.constant.EvalConstants;
  *
  * @author Aaron Zeckoski (aaronz@vt.edu)
  */
-public class EvalUser implements Serializable, Comparable<EvalUser> {
+public class EvalUser implements Serializable {
 
     public static final String USER_TYPE_UNKNOWN = EvalConstants.USER_TYPE_UNKNOWN;
     public static final String USER_TYPE_ANONYMOUS = EvalConstants.USER_TYPE_ANONYMOUS;
@@ -169,15 +169,11 @@ public class EvalUser implements Serializable, Comparable<EvalUser> {
         return true;
     }
 
-	
-  public static Comparator<EvalUser> nameComparator = new Comparator<EvalUser>() {
-	    public int compare(EvalUser evalUser1, EvalUser evalUser2) {
-	    String name1 = ((EvalUser) evalUser1).sortName.toUpperCase();
-	    String name2 = ((EvalUser) evalUser2).sortName.toUpperCase();
-	    return name1.compareTo(name2);
-	    }
-	  };
+    public static class SortNameComparator implements Comparator<EvalUser> {
+        public static final long serialVersionUID = 31L;
+        public int compare(EvalUser o1, EvalUser o2) {
+            return o1.sortName.compareTo(o2.sortName);
+        }
+    }
 
-public int compareTo(EvalUser arg0) {
-	return 0;
-}}
+}
