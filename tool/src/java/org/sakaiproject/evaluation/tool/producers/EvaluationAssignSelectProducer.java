@@ -76,7 +76,7 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
 			//Get users
 			List<EvalUser> evalUsers = commonLogic.getEvalUsersByIds(users.toArray(new String[users.size()]));
 			//Sort the users list by displayName
-			Collections.sort(evalUsers, EvalUser.nameComparator);
+			Collections.sort(evalUsers, new EvalUser.SortNameComparator());
 			
 			for(EvalUser evalUser : evalUsers){
 				UIBranchContainer row = UIBranchContainer.make(form, "item-row:");
