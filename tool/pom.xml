@@ -19,7 +19,7 @@
 
     <properties>
         <sakairsf.sakai.version>2.2.x</sakairsf.sakai.version>
-        <rsfutil.version>0.8-SNAPSHOT</rsfutil.version>
+        <rsfutil.version>0.7.4</rsfutil.version>
     </properties>
     <packaging>war</packaging>
 
@@ -157,6 +157,13 @@
             </exclusions>
             <!--properties:  war.bundle: true -->
         </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -209,5 +216,9 @@
         <!-- java source -->
         <sourceDirectory>src/java</sourceDirectory>
         <!-- other resources for the jar - the message bundles -->
+
+        <!-- unit testing -->
+        <testSourceDirectory>src/test</testSourceDirectory>
+
     </build>
 </project>

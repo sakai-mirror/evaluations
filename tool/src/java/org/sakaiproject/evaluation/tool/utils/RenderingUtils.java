@@ -46,6 +46,9 @@ public class RenderingUtils {
      * @return the AnswersMean object which holds the answers count and the mean
      */
     public static AnswersMean calculateMean(int[] responseArray) {
+        if (responseArray == null) {
+            throw new IllegalArgumentException("responseArray cannot be null");
+        }
         int responseCount = responseArray.length - 1; // remove the NA count from the end
         int totalAnswers = 0;
         int totalValue = 0;
@@ -56,7 +59,10 @@ public class RenderingUtils {
             totalAnswers += responseArray[i];
             totalValue += (weight * responseArray[i]);
         }
-        double weightedAverage = (double)totalValue / (double)totalAnswers; // (double)totalWeight;
+        double weightedAverage = 0.0d;
+        if (totalAnswers > 0) {
+            weightedAverage = (double)totalValue / (double)totalAnswers; // (double)totalWeight;
+        }
         return new AnswersMean(totalAnswers, weightedAverage);
     }
 
@@ -90,6 +96,7 @@ public class RenderingUtils {
             this.mean = mean;
             this.meanText = df.format(mean);
         }
+
     }
 
     /**
