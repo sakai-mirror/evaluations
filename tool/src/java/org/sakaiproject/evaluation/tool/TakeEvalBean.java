@@ -48,6 +48,25 @@ public class TakeEvalBean {
     public String[] selectioninstructorIds;
     public String[] selectionassistantIds;
 
+    /**
+     * A {@link Map} of the selection settings to inject into Eval and set further Selection Options
+     * eg.for {@link EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR} and
+     * {@link EvalAssignGroup.SELECTION_TYPE_ASSISTANT}
+     * 
+     * @return selectionOptions {@link Map} of selection constant => ids
+     */
+    private Map<String, String[]> setSelectionOptions() {
+        Map<String, String[]> selectionOptions = new HashMap<String, String[]>();
+        if (selectioninstructorIds != null) {
+            selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, selectioninstructorIds);
+        }
+        if (selectionassistantIds != null) {
+            selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, selectionassistantIds);
+        }
+        // avoid null return
+        return selectionOptions == null ? new HashMap<String, String[]>(0) : selectionOptions;
+    }
+
     private ResponseBeanLocator responseBeanLocator;
     public void setResponseBeanLocator(ResponseBeanLocator responseBeanLocator) {
         this.responseBeanLocator = responseBeanLocator;
@@ -66,14 +85,7 @@ public class TakeEvalBean {
     public String submitEvaluation() {
         log.debug("submit evaluation");
         try {
-        	Map<String, String[]> selectionOptions = new HashMap<String, String[]>();
-            if (selectioninstructorIds != null) {
-                selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, selectioninstructorIds);
-                }
-            if (selectionassistantIds != null) {
-                selectionOptions.put(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, selectionassistantIds); 
-            }
-            responseBeanLocator.saveAll(eval, evalGroupId, startDate, selectionOptions);
+            responseBeanLocator.saveAll(eval, evalGroupId, startDate, setSelectionOptions());
         } catch (ResponseSaveException e) {
             String messageKey = "unknown.caps";
             if (ResponseSaveException.TYPE_MISSING_REQUIRED_ANSWERS.equals(e.type)) {
