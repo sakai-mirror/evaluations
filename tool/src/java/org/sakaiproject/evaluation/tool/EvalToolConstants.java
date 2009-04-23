@@ -161,7 +161,7 @@ public class EvalToolConstants {
      * Evaluation/Email Settings: Page pulldown constants for reminder interval
      */
     public static final String[] REMINDER_EMAIL_DAYS_VALUES = new String[] {
-        "0", "1", "2", "3", "4", "5", "6", "7", "-1" };
+        "0", "1", "2", "3", "4", "5", "6", "7" };
 
     public static final String[] REMINDER_EMAIL_DAYS_LABELS = { 
         "evalsettings.reminder.days.0", 
@@ -171,8 +171,7 @@ public class EvalToolConstants {
         "evalsettings.reminder.days.4", 
         "evalsettings.reminder.days.5", 
         "evalsettings.reminder.days.6",
-        "evalsettings.reminder.days.7",
-        "evalsettings.reminder.days.-1"
+        "evalsettings.reminder.days.7"
     };
 
     /**
