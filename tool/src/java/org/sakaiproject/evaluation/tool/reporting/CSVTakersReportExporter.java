@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,11 +63,15 @@ public class CSVTakersReportExporter implements ReportExporter {
         String[] userIds = ownersOfResponses(responses, groupIdSet);
         List<EvalUser> users = commonLogic.getEvalUsersByIds(userIds);
         log.debug("users.size(): " + users.size());
-        String[] row = new String[1];
+        
+        Collections.sort(users, new EvalUser.SortNameComparator());
+        String[] row = new String[2];
 
         try {
-            for (EvalUser user : users) {
-                row[0] = user.email;
+            for (EvalUser user : users) { 
+                row[0] = user.sortName;
+            	row[1] = user.email;
+
                 writer.writeNext(row);
             }
             writer.close();
