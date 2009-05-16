@@ -493,9 +493,9 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                 throw new IllegalStateException("Invalid selection option ("
                                         + selectValue + "): do not know how to handle this.");
                             }
-                         }else{
-                        	 //handle case where there are selections set but no users in the roles.
-                        	form.parameters.add(new UIELBinding(selectionOTP, "none"));
+                        } else {
+                       	    // handle case where there are selections set but no users in the roles.
+                            form.parameters.add(new UIELBinding(selectionOTP, "none"));
                         }
                     }
                 }
