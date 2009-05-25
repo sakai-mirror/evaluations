@@ -450,7 +450,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                         }
                         // We render the selection controls if there are at least two
                         // Instructors/TAs
-                        if (selectUserIds.size() > 0) {
+                        if (selectUserIds.size() > 1) {
                            if (selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
                                 // nothing special to do in all case
                         	   //form.parameters.add(new UIELBinding(selectionOTP, "all"));
@@ -493,8 +493,13 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                 throw new IllegalStateException("Invalid selection option ("
                                         + selectValue + "): do not know how to handle this.");
                             }
-                        } else {
-                       	    // handle case where there are selections set but no users in the roles.
+                        } else  if (selectUserIds.size() == 1) {
+                       	    // handle case where there are selections set but ONLY 1 user in the role.
+                        	for (String userId : selectUserIds) {
+                        		form.parameters.add(new UIELBinding(selectionOTP, userId));
+                                }
+                        }else{
+                        	// handle case where there are selections set but no users in the roles.
                             form.parameters.add(new UIELBinding(selectionOTP, "none"));
                         }
                     }
@@ -576,7 +581,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
 				new UIFreeAttributeDecorator(new String[] { "name", "class" },
 						new String[] { user.userId, associateType.toLowerCase() + "Branch" }));
 		if (!EvalAssignGroup.SELECTION_OPTION_ALL.equals(selectionOption)
-				&& instructorIds.size() > 0) {
+				&& instructorIds.size() > 1) {
 			Map<String, String> cssHide = new HashMap<String, String>();
 			cssHide.put("display", "none");
 			categorySectionBranch.decorators.add(new UICSSDecorator(cssHide));
