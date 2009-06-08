@@ -242,9 +242,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         // get the groups that this user is allowed to assign evals to
         List<EvalGroup> evalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION);
+        
+        // get the current eval group id (ie: site id) that the user is in now //TODO:use this id to filter current site and move it to the top of the list in UI
+        String currentEvalGroupId = commonLogic.getCurrentEvalGroup();
 
         // for backwards compatibility we will pull the list of groups the user is being evaluated in as well and merge it in
-        List<EvalGroup> beEvalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED);
+        List<EvalGroup> beEvalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED);  //TODO: Filter site types in this method
         for (EvalGroup evalGroup : beEvalGroups) {
             if (! evalGroups.contains(evalGroup)) {
                 evalGroups.add(evalGroup);
@@ -272,6 +275,20 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             }
             // sort the list by title 
             Collections.sort(unassignedEvalGroups, new ComparatorsUtils.GroupComparatorByTitle());
+            
+            //Move current site to top of this list
+            EvalGroup currentGroup = null;
+            int count2 = 0, found = 0;
+            for ( EvalGroup group : unassignedEvalGroups ){
+            	if ( group.evalGroupId.equals(currentEvalGroupId)){
+            		currentGroup = group;
+            		found = count2; // Save current group's list index so later we can remove it
+            	}
+            	count2 ++;
+            }
+            unassignedEvalGroups.remove(found);		
+            unassignedEvalGroups.add(0, currentGroup);
+            
 			
             List<String> assignGroupsIds = new ArrayList<String>();
             if(! newEval){
