@@ -104,6 +104,7 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
     private static final String ANON_USER_PREFIX = "Anon_User_";
 
     private static final String ADMIN_USER_ID = "admin";
+    private static final String SITE_TERM = "trm";
 
     /**
      * Add presedence:bulk to mark emails as a type of bulk mail
@@ -526,22 +527,45 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
                 }
             }
         }
-
+        
         return count;
     }
 
     /* (non-Javadoc)
      * @see org.sakaiproject.evaluation.logic.externals.ExternalEvalGroups#getEvalGroupsForUser(java.lang.String, java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public List<EvalGroup> getEvalGroupsForUser(String userId, String permission) {
         log.debug("userId: " + userId + ", permission: " + permission);
 
-        List<EvalGroup> l = new ArrayList<EvalGroup>();
+        return getEvalGroups(userId, permission, false, null);
+    }
+    
+    /* (non-Javadoc)
+     * @see org.sakaiproject.evaluation.logic.externals.ExternalEvalGroups#getEvalGroupsForUser(java.lang.String, java.lang.String)
+     */
+    public List<EvalGroup> getFilteredEvalGroupsForUser(String userId, String permission, String currentSiteId) {
+    	log.debug("userId: " + userId + ", permission: " + permission + ", current site: " + currentSiteId);
+
+        return getEvalGroups(userId, permission, true, currentSiteId);
+    }
+    
+    @SuppressWarnings("unchecked")
+	private List<EvalGroup>getEvalGroups(String userId, String permission, boolean filterSites, String currentSiteId) {
+    	List<EvalGroup> l = new ArrayList<EvalGroup>();
 
         // get the groups from Sakai
         Set<String> authzGroupIds = 
             authzGroupService.getAuthzGroupsIsAllowed(userId, permission, null);
+        
+        Site currentSite = null;
+        if ( filterSites && currentSiteId != null ){
+	        try {
+				currentSite = siteService.getSite(currentSiteId);
+			} catch (IdUnusedException e1) {
+				// invalid site Id returned
+	            throw new RuntimeException("Could not get site from siteId:" + currentSiteId);
+			}
+        }
         Iterator<String> it = authzGroupIds.iterator();
         while (it.hasNext()) {
             String authzGroupId = it.next();
@@ -555,8 +579,18 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
                         String siteId = r.getId();
                         try {
                             Site site = siteService.getSite(siteId);
-                            l.add(new EvalGroup(r.getReference(), site.getTitle(), 
+                            if (filterSites && currentSite != null){
+                            	//only add sites that have the same term and type as the current one
+                            	if ( site.getType().equals(currentSite.getType()) 
+                            			&& site.getProperties().getProperty(SITE_TERM).equals(currentSite.getProperties().getProperty(SITE_TERM))
+                            			){
+                            		l.add(new EvalGroup(r.getReference(), site.getTitle(), 
+                                            getContextType(r.getType())));
+                            	}
+                            }else{
+                            	l.add(new EvalGroup(r.getReference(), site.getTitle(), 
                                     getContextType(r.getType())));
+                            }
                         } catch (IdUnusedException e) {
                             // invalid site Id returned
                             throw new RuntimeException("Could not get site from siteId:" + siteId);

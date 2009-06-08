@@ -79,6 +79,17 @@ public interface ExternalEvalGroups {
 	 * @return a List of {@link EvalGroup} objects
 	 */
 	public List<EvalGroup> getEvalGroupsForUser(String userId, String permission);
+	
+	/**
+	 * Get a list of all eval groups that a user has a specific permission in that are of the same as this site
+	 * (use {@link #countEvalGroupsForUser(String, String)} if you just need the number)
+	 * 
+	 * @param userId the internal user id (not username)
+	 * @param permission a permission string constant
+	 * @param currentSiteId the site id of the site to use as a filtering measure
+	 * @return a List of {@link EvalGroup} objects
+	 */
+	public List<EvalGroup> getFilteredEvalGroupsForUser(String userId, String permission, String currentSiteId);
 
 	/**
 	 * Get a count of all contexts that a user has a specific permission in

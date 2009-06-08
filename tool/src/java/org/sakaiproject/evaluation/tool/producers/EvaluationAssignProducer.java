@@ -27,6 +27,10 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.entity.api.EntityProducer;
+import org.sakaiproject.entitybroker.EntityReference;
+import org.sakaiproject.entitybroker.EntityView;
+import org.sakaiproject.entitybroker.entityprovider.EntityProvider;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
@@ -239,15 +243,18 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         Boolean showHierarchy = (Boolean) settings.get(EvalSettings.DISPLAY_HIERARCHY_OPTIONS);
 
         // NOTE: this is the one place where the perms should be used instead of user assignments (there are no assignments yet) -AZ
+        
+        // get the current eval group id (ie: reference site id) that the user is in now
+        String currentEvalGroupId = commonLogic.getCurrentEvalGroup();
+        // get the current eval group id (ie: site id) that the user is in now
+        String currentSiteId = EntityReference.getIdFromRef(currentEvalGroupId);
 
         // get the groups that this user is allowed to assign evals to
-        List<EvalGroup> evalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION);
+        //TODO: Filter site types. EVALSYS-762
+        List<EvalGroup> evalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION, currentSiteId);  
         
-        // get the current eval group id (ie: site id) that the user is in now //TODO:use this id to filter current site and move it to the top of the list in UI
-        String currentEvalGroupId = commonLogic.getCurrentEvalGroup();
-
         // for backwards compatibility we will pull the list of groups the user is being evaluated in as well and merge it in
-        List<EvalGroup> beEvalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED);  //TODO: Filter site types in this method
+        List<EvalGroup> beEvalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED, currentSiteId);  
         for (EvalGroup evalGroup : beEvalGroups) {
             if (! evalGroups.contains(evalGroup)) {
                 evalGroups.add(evalGroup);
@@ -276,7 +283,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             // sort the list by title 
             Collections.sort(unassignedEvalGroups, new ComparatorsUtils.GroupComparatorByTitle());
             
-            //Move current site to top of this list
+            //Move current site to top of this list EVALSYS-762.
             EvalGroup currentGroup = null;
             int count2 = 0, found = 0;
             for ( EvalGroup group : unassignedEvalGroups ){

@@ -566,4 +566,10 @@ public Set<String[]> getUsersByRole(String evalGroupId, String perm) {
 	return null;
 }
 
+public List<EvalGroup> getFilteredEvalGroupsForUser(String arg0, String arg1,
+		String arg2) {
+	// TODO Auto-generated method stub
+	return null;
+}
+
 }
