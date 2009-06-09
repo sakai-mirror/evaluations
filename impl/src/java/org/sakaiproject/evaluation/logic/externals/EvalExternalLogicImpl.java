@@ -106,7 +106,7 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
     private static final String ANON_USER_PREFIX = "Anon_User_";
 
     private static final String ADMIN_USER_ID = "admin";
-    private static final String SITE_TERM = "trm";
+    private static final String SITE_TERM = "term";
 
     /**
      * Add presedence:bulk to mark emails as a type of bulk mail
@@ -572,7 +572,7 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         boolean isCurrentSiteTermDefined = true;
         if ( currentSite != null && currentSite.getProperties() != null ){
 			try {
-				currentSiteTerm = currentSite.getProperties().getLongProperty("term");
+				currentSiteTerm = currentSite.getProperties().getLongProperty(SITE_TERM);
 			} catch (EntityPropertyNotDefinedException e) {
 				isCurrentSiteTermDefined = false;
 			} catch (EntityPropertyTypeException e) {
@@ -598,14 +598,14 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
                             	//only process sites that have the same type as the current one, if type is not stipulated simply add all sites
                             	if ( currentSite.getType().equals(site.getType()) ){
                             		//We only check terms if current site has term defined, otherwise just add this site to the list
-	                                if ( isCurrentSiteTermDefined && site.getProperties() !=null){
+                            		if ( isCurrentSiteTermDefined && site.getProperties() !=null){
 		                                long siteTerm = 0l;
 										try {
 											siteTerm = site.getProperties().getLongProperty(SITE_TERM);
 										} catch (EntityPropertyNotDefinedException e) {} catch (EntityPropertyTypeException e) {}
 										//add this site to list only if it has the same term as the current site
 		                                if ( currentSiteTerm == siteTerm ){
-											l.add(new EvalGroup(r.getReference(), site.getTitle(), getContextType(r.getType())));
+		                                	l.add(new EvalGroup(r.getReference(), site.getTitle(), getContextType(r.getType())));
 		                                }
 			                        }else{
 			                        	l.add(new EvalGroup(r.getReference(), site.getTitle(), getContextType(r.getType())));
