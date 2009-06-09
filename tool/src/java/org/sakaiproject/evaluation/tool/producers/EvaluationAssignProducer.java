@@ -14,7 +14,6 @@
 
 package org.sakaiproject.evaluation.tool.producers;
 
-import java.security.InvalidParameterException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,10 +26,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.sakaiproject.entity.api.EntityProducer;
 import org.sakaiproject.entitybroker.EntityReference;
-import org.sakaiproject.entitybroker.EntityView;
-import org.sakaiproject.entitybroker.entityprovider.EntityProvider;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
@@ -38,20 +34,12 @@ import org.sakaiproject.evaluation.logic.EvalSettings;
 import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
-import org.sakaiproject.evaluation.model.EvalAdhocGroup;
 import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalAssignUser;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
-import org.sakaiproject.evaluation.tool.SetupEvalBean;
-import org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRenderer;
-import org.sakaiproject.evaluation.tool.viewparams.AdhocGroupParams;
 import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
 import org.sakaiproject.evaluation.utils.ComparatorsUtils;
-import org.sakaiproject.evaluation.utils.EvalUtils;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
-import uk.org.ponder.htmlutil.HTMLUtil;
 import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.rsf.components.UIBranchContainer;
 import uk.org.ponder.rsf.components.UICommand;
@@ -59,26 +47,22 @@ import uk.org.ponder.rsf.components.UIContainer;
 import uk.org.ponder.rsf.components.UIELBinding;
 import uk.org.ponder.rsf.components.UIForm;
 import uk.org.ponder.rsf.components.UIInternalLink;
-import uk.org.ponder.rsf.components.UILink;
 import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
 import uk.org.ponder.rsf.components.UIOutputMany;
 import uk.org.ponder.rsf.components.UISelect;
 import uk.org.ponder.rsf.components.UISelectChoice;
-import uk.org.ponder.rsf.components.UIVerbatim;
 import uk.org.ponder.rsf.components.decorators.UIFreeAttributeDecorator;
 import uk.org.ponder.rsf.components.decorators.UILabelTargetDecorator;
 import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
 import uk.org.ponder.rsf.components.decorators.UITooltipDecorator;
 import uk.org.ponder.rsf.flow.ARIResult;
 import uk.org.ponder.rsf.flow.ActionResultInterceptor;
-import uk.org.ponder.rsf.renderer.message.MessageUtil;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
 import uk.org.ponder.rsf.viewstate.SimpleViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParamsReporter;
-import uk.org.ponder.rsf.viewstate.ViewStateHandler;
 
 /**
  * View for assigning an evaluation to groups and hierarchy nodes. 
@@ -104,24 +88,9 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         this.evaluationService = evaluationService;
     }
 
-    private EvalSettings settings;
-    public void setSettings(EvalSettings settings) {
-        this.settings = settings;
-    }
-
-    private HierarchyTreeNodeSelectRenderer hierUtil;
-    public void setHierarchyRenderUtil(HierarchyTreeNodeSelectRenderer util) {
-        hierUtil = util;
-    }
-
     private ExternalHierarchyLogic hierarchyLogic;
     public void setExternalHierarchyLogic(ExternalHierarchyLogic logic) {
         this.hierarchyLogic = logic;
-    }
-
-    private ViewStateHandler vsh;
-    public void setViewStateHandler(ViewStateHandler vsh) {
-        this.vsh = vsh;
     }
 
     private EvalCommonLogic commonLogic;
@@ -139,12 +108,6 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         this.messageLocator = messageLocator;
     }
    
-
-    /**
-     * Instance Variables for building up rendering information.
-     */
-    private StringBuilder initJS = new StringBuilder();
-
     public void fillComponents(UIContainer tofill, ViewParameters viewparams, ComponentChecker checker) {
 
         // local variables used in the render logic
@@ -234,14 +197,10 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * 
          * What's happening here is that we have 4 areas: hierarchy, groups, 
          * new adhoc groups, and existing adhoc groups that can be hidden and selected
-         * which a checkbox for each one.  I'm not using the UIInitBlock at the moment
-         * because it doesn't seem to take arrays for the javascript arguments (and keep 
-         * them as javascript arrays).  So we are just putting the javascript initialization
-         * here and running it at the bottom of the page.
+         * which a checkbox for each one.
          * 
          */
-        Boolean showHierarchy = (Boolean) settings.get(EvalSettings.DISPLAY_HIERARCHY_OPTIONS);
-
+       
         // NOTE: this is the one place where the perms should be used instead of user assignments (there are no assignments yet) -AZ
         
         // get the current eval group id (ie: reference site id) that the user is in now
