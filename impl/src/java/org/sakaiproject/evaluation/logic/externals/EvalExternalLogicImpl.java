@@ -563,19 +563,24 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         if ( filterSites && currentSiteId != null ){
 	        try {
 				currentSite = siteService.getSite(currentSiteId);
-				log.info("Comparing against site with id: "+ currentSiteId);
 			} catch (IdUnusedException e1) {
 				// invalid site Id returned
 	            throw new RuntimeException("Could not get site from siteId:" + currentSiteId);
 			}
         }
         long currentSiteTerm = 0l;
-		try {
-			currentSiteTerm = currentSite.getProperties().getLongProperty("term");
-		} catch (EntityPropertyNotDefinedException e) {
-		} catch (EntityPropertyTypeException e) {
-		}
-        log.info("currentSiteTerm: " + currentSiteTerm) ;
+        boolean isCurrentSiteTermDefined = true;
+        if ( currentSite != null && currentSite.getProperties() != null ){
+			try {
+				currentSiteTerm = currentSite.getProperties().getLongProperty("term");
+			} catch (EntityPropertyNotDefinedException e) {
+				isCurrentSiteTermDefined = false;
+			} catch (EntityPropertyTypeException e) {
+				isCurrentSiteTermDefined = false;
+			}
+        }else{
+        	isCurrentSiteTermDefined = false;
+        }
         Iterator<String> it = authzGroupIds.iterator();
         while (it.hasNext()) {
             String authzGroupId = it.next();
@@ -589,28 +594,26 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
                         String siteId = r.getId();
                         try {
                             Site site = siteService.getSite(siteId);
-                            if (filterSites && currentSite != null){
-                            	//only add sites that have the same term and type as the current one
-                            	if ( site.getType().equals(currentSite.getType()) ){
-	                                if(site.getProperties() !=null){
+                            if (filterSites && currentSite != null && currentSite.getType() != null){
+                            	//only process sites that have the same type as the current one, if type is not stipulated simply add all sites
+                            	if ( currentSite.getType().equals(site.getType()) ){
+                            		//We only check terms if current site has term defined, otherwise just add this site to the list
+	                                if ( isCurrentSiteTermDefined && site.getProperties() !=null){
 		                                long siteTerm = 0l;
 										try {
-											siteTerm = site.getProperties().getLongProperty("term");
-										} catch (EntityPropertyNotDefinedException e) {
-										} catch (EntityPropertyTypeException e) {
-										}
-		                                if ( currentSiteTerm == siteTerm )
-											l.add(new EvalGroup(r.getReference(), site.getTitle(),
-		                                    getContextType(r.getType())));
-				                        }
-	                                }else{
-											 log.debug("NO properties found for: " + site.getId());
-										 }
-			                    }else{
-
-                            	l.add(new EvalGroup(r.getReference(), site.getTitle(), 
-                                    getContextType(r.getType())));
-                            }
+											siteTerm = site.getProperties().getLongProperty(SITE_TERM);
+										} catch (EntityPropertyNotDefinedException e) {} catch (EntityPropertyTypeException e) {}
+										//add this site to list only if it has the same term as the current site
+		                                if ( currentSiteTerm == siteTerm ){
+											l.add(new EvalGroup(r.getReference(), site.getTitle(), getContextType(r.getType())));
+		                                }
+			                        }else{
+			                        	l.add(new EvalGroup(r.getReference(), site.getTitle(), getContextType(r.getType())));
+			                        }
+                                }
+		                    }else{
+		                    	l.add(new EvalGroup(r.getReference(), site.getTitle(),  getContextType(r.getType())));
+                          }
                         } catch (IdUnusedException e) {
                             // invalid site Id returned
                             throw new RuntimeException("Could not get site from siteId:" + siteId);
