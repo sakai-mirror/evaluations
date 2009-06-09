@@ -46,6 +46,8 @@ import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.email.api.EmailService;
 import org.sakaiproject.entity.api.EntityManager;
+import org.sakaiproject.entity.api.EntityPropertyNotDefinedException;
+import org.sakaiproject.entity.api.EntityPropertyTypeException;
 import org.sakaiproject.entity.api.Reference;
 import org.sakaiproject.entitybroker.EntityBroker;
 import org.sakaiproject.entitybroker.EntityReference;
@@ -561,11 +563,19 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         if ( filterSites && currentSiteId != null ){
 	        try {
 				currentSite = siteService.getSite(currentSiteId);
+				log.info("Comparing against site with id: "+ currentSiteId);
 			} catch (IdUnusedException e1) {
 				// invalid site Id returned
 	            throw new RuntimeException("Could not get site from siteId:" + currentSiteId);
 			}
         }
+        long currentSiteTerm = 0l;
+		try {
+			currentSiteTerm = currentSite.getProperties().getLongProperty("term");
+		} catch (EntityPropertyNotDefinedException e) {
+		} catch (EntityPropertyTypeException e) {
+		}
+        log.info("currentSiteTerm: " + currentSiteTerm) ;
         Iterator<String> it = authzGroupIds.iterator();
         while (it.hasNext()) {
             String authzGroupId = it.next();
@@ -581,13 +591,23 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
                             Site site = siteService.getSite(siteId);
                             if (filterSites && currentSite != null){
                             	//only add sites that have the same term and type as the current one
-                            	if ( site.getType().equals(currentSite.getType()) 
-                            			&& site.getProperties().getProperty(SITE_TERM).equals(currentSite.getProperties().getProperty(SITE_TERM))
-                            			){
-                            		l.add(new EvalGroup(r.getReference(), site.getTitle(), 
-                                            getContextType(r.getType())));
-                            	}
-                            }else{
+                            	if ( site.getType().equals(currentSite.getType()) ){
+	                                if(site.getProperties() !=null){
+		                                long siteTerm = 0l;
+										try {
+											siteTerm = site.getProperties().getLongProperty("term");
+										} catch (EntityPropertyNotDefinedException e) {
+										} catch (EntityPropertyTypeException e) {
+										}
+		                                if ( currentSiteTerm == siteTerm )
+											l.add(new EvalGroup(r.getReference(), site.getTitle(),
+		                                    getContextType(r.getType())));
+				                        }
+	                                }else{
+											 log.debug("NO properties found for: " + site.getId());
+										 }
+			                    }else{
+
                             	l.add(new EvalGroup(r.getReference(), site.getTitle(), 
                                     getContextType(r.getType())));
                             }
