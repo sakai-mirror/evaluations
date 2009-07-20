@@ -34,6 +34,7 @@
         <property name="messages" ref="targettedMessageList" />
         <property name="locale" ref="requestLocale" />
         <property name="selectedEvalautionUsersLocator" ref="selectedEvaluationUsersLocator"/>
+    	<property name="assignGroupSelectionSettings" ref="assignGroupSelectionSettings"/>
     </bean>
 
     <bean id="takeEvalBean" class="org.sakaiproject.evaluation.tool.TakeEvalBean">
@@ -183,6 +184,10 @@
     
     <bean id="selectedEvaluationUsersLocator" 
     	class="org.sakaiproject.evaluation.tool.locators.SelectedEvaluationUsersLocator">
+    </bean>
+
+    <bean id="assignGroupSelectionSettings" 
+    	class="org.sakaiproject.evaluation.tool.locators.AssignGroupSelectionSettings">
     </bean>
 
     <bean id="adhocGroupsBean"

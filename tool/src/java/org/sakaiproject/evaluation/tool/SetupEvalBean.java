@@ -19,10 +19,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ import org.sakaiproject.evaluation.model.EvalAssignUser;
 import org.sakaiproject.evaluation.model.EvalEmailTemplate;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
 import org.sakaiproject.evaluation.model.EvalTemplate;
+import org.sakaiproject.evaluation.tool.locators.AssignGroupSelectionSettings;
 import org.sakaiproject.evaluation.tool.locators.EmailTemplateWBL;
 import org.sakaiproject.evaluation.tool.locators.EvaluationBeanLocator;
 import org.sakaiproject.evaluation.tool.locators.SelectedEvaluationUsersLocator;
@@ -171,6 +174,12 @@ public class SetupEvalBean {
 	private SelectedEvaluationUsersLocator selectedEvaluationUsersLocator;
 	public void setSelectedEvalautionUsersLocator(SelectedEvaluationUsersLocator selectedEvaluationUsersLocator) {
 		this.selectedEvaluationUsersLocator = selectedEvaluationUsersLocator;
+	}
+	
+	private AssignGroupSelectionSettings assignGroupSelectionSettings;
+	public void setAssignGroupSelectionSettings(
+			AssignGroupSelectionSettings assignGroupSelectionSettings) {
+		this.assignGroupSelectionSettings = assignGroupSelectionSettings;
 	}
 
 	DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
@@ -463,13 +472,27 @@ public class SetupEvalBean {
 					selectedHierarchyNodeIDs, selectedGroupIDs, append);
 		}
 		
-		for (int i =0; i < selectedGroupIDs.length; i++) {
-			String currentGroupId = selectedGroupIDs[i];
+		Map<Long, List<EvalAssignGroup>> evalAssignGroupMap = evaluationService.getAssignGroupsForEvals(new Long[] {evaluationId}, true, false);
+		List<EvalAssignGroup> evalAssignGroups = new ArrayList<EvalAssignGroup>();
+		
+		Iterator<Entry<Long, List<EvalAssignGroup>>> selector = evalAssignGroupMap.entrySet().iterator();
+		while ( selector.hasNext() ) {
+        	Entry<Long, List<EvalAssignGroup>> pairs = selector.next();
+        	evalAssignGroups = pairs.getValue();
+		}
+		
+		for (EvalAssignGroup assignGroup : evalAssignGroups) {
+			String currentGroupId = assignGroup.getEvalGroupId();
 			// Save Assistant/Instructor selections now. EVALSYS-618
 			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentGroupId);
 			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
 			deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId);
 			deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId);
+			// Save selection settings for assign group
+			String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
+			String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
+			assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor);
+			assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant);
 		}
 
 		return "controlEvals";
