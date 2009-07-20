@@ -700,3 +700,6 @@ background-repeat : no-repeat !important;
      text-align:center;
 
 }
+.previewEvalNote {
+    padding:5px; margin:10px; border: 1px solid rgb(255, 204, 0); background: rgb(255, 255, 204); width:97%
+}
