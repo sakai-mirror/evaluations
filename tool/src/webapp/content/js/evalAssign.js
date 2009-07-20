@@ -213,8 +213,8 @@ $(document).ready(function() {
     function handleFormSubmit(_that) {
         var that = $(_that);
         log("Running pre-SET checks");
-        var temp = variables.get.documentFB.find('.selectTable input[@type=checkbox]').not(':checked');
-        var tempChecked = variables.get.documentFB.find('.selectTable input[@type=checkbox]:checked');
+        var temp = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]').not(':checked');
+        var tempChecked = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]:checked');
         variables.selectedPeople = tempChecked.length > 0 ? tempChecked.length : 0;
         if(temp.length>0){
             if (handleCheckboxes(temp, 0)) {

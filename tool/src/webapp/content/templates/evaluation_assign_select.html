@@ -9,18 +9,31 @@
             $.facebox.setHeader($("#title"));
             $("#facebox .header .titleHeader").show();
 			//Activate Mass (De)Selector controls
-                $("#selectorControl .all").bind('click', function(){
-                     $('.selectTable input[@type=checkbox]').not(':checked').each(function(){
+            $("#selectorControl").bind('click', function(){
+				if (this.checked) {
+					$('.selectTable tbody input[@type=checkbox]').not(':checked').each(function(){
+						this.checked = true;
+					});
+				}else{
+					$('.selectTable tbody input[@type=checkbox]:checked').each(function(){
+                      this.checked = false;
+                 	});
+				}
+			});
+            //bind individual checkbox to toggle main selector
+            $(".selectTable tbody input[@type=checkbox]").bind('click', function(){
+				if (this.checked) {
+                    if($('.selectTable tbody input[@type=checkbox]').not(':checked').length === 0){
+                       $('#selectorControl').each(function(){
                           this.checked = true;
-                     });
-                    return false;
-                });
-                $("#selectorControl .none").bind('click', function(){
-                     $('.selectTable input[@type=checkbox]:checked').each(function(){
-                          this.checked = false;
-                     });
-                    return false;
-                });
+                        });
+                    }
+				}else{
+					$('#selectorControl').each(function(){
+                      this.checked = false;
+                 	});
+				}
+			});
         });</script>
 </head>
 <body>
@@ -28,17 +41,48 @@
 
 <div>
     <form rsf:id="form" action="modify_template" method="post" id="basic-form">
-        <div rsf:id="instruction" class="instruction">Choose the instructors to be included in the above evaluation.
+		<div rsf:id="selectInstructorTA:">
+            <div rsf:id="select-instructions" class="instruction">
+                    These options control which Instructor and Teaching Assistant questions are repeated in the evaluation.
+            </div>
+            <!-- Instructors Options -->
+            <span rsf:id="selectionRadioInstructors" />
+            <div rsf:id="selectInstructorsChoice:">
+              <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio" value="radio" checked="checked" />
+              <label rsf:id="radioLabel" for="radio" >Respondents evaluate all instructors included in the evaluation</label>
+            </div>
+            <div rsf:id="selectInstructorsChoice:">
+               <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio2" value="radio2" />
+               <label rsf:id="radioLabel" for="radio2">Respondents select one instructor to evaluate</label>
+            </div>
+            <div rsf:id="selectInstructorsChoice:">
+              <input rsf:id="radioValue" type="radio" name="instructorSelection" id="radio3" value="radio3"/>
+              <label rsf:id="radioLabel" for="radio3">Respondents may select multiple instructors to evaluate</label>
+            </div>
+			<!-- TA Options -->
+            <span rsf:id="selectionRadioTAs" />                  
+            <div rsf:id="selectTAsChoice:">
+              <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio4" value="radio4" checked="checked" />
+              <label rsf:id="radioLabel" for="radio4">Respondents evaluate all TAs included in the evaluation</label>
+            </div>
+            <div rsf:id="selectTAsChoice:">
+              <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio5" value="radio5" />
+              <label rsf:id="radioLabel" for="radio5">Respondents select one TA to evaluate</label>
+            </div>
+            <div rsf:id="selectTAsChoice:">
+              <input rsf:id="radioValue"  type="radio" name="assistantSelection" id="radio6" value="radio6" />
+              <label rsf:id="radioLabel" for="radio6">Respondents may select multiple TAs to evaluate</label>
+            </div>
         </div>
-        <div id="selectorControl">
-            <a href="#" class="all">Select All</a> |
-            <a href="#" class="none">Select None</a>
-        </div>
+        <div rsf:id="instruction" class="instruction clear">Choose the instructors to be included in the above evaluation.</div>
         <div class="selectTable">
-            <table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines ">
+        	<table border="0" cellspacing="0" cellpadding="3" style="width:90%" class="listHier lines nolines ">
                 <thead>
                 <tr>
-                    <th ><span rsf:id="msg=assigneval.select.header">Select</span></th>
+                    <th>
+                    	<input type="checkbox" id="selectorControl" checked="checked"/>
+						<span rsf:id="msg=assigneval.select.header">Select</span>
+					</th>
                     <th >
                         <span rsf:id="col-number">Staff/Student number</span></th>
                     <th><span rsf:id="col-name">Name</span></th>
