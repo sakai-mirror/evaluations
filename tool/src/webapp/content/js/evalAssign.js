@@ -123,7 +123,7 @@ $(document).ready(function() {
                 tableHolder
                         .css({
                     'overflow': 'auto',
-                    'height': tableHolder.height() > 200 ? '200px' : (tableHolder.height() + 5) + "px"
+                    'height': tableHolder.height() > 200 ? '205px' : (tableHolder.height() + 10) + "px"
                 }) ;
                 log("Formatting table holder hieght. Set height to:" + tableHolder.height());
             }
