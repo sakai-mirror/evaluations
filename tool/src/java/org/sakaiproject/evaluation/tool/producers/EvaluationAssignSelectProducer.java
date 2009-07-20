@@ -93,12 +93,10 @@ public class EvaluationAssignSelectProducer implements ViewComponentProducer, Vi
         EvalEvaluation evaluation = evaluationService.getEvaluationById(evalId);
         
         //do a check for the Header
-		UIMessage.make(tofill, "title", (EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType) ? "assignselect.instructors.page.title" : "assignselect.tas.page.title"));
+		UIMessage.make(tofill, "title", (EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType) ? "assignselect.instructors.page.title" : "assignselect.tas.page.title"),
+				new Object[] {groupTitle, evaluation.getTitle()});
+		System.out.println(groupTitle);
 		
-		UIMessage.make(form, "group-title", "assignselect.page.group");
-		UIOutput.make(form, "group-name", groupTitle);
-		UIMessage.make(form, "eval-title", "assignselect.page.evaluation");
-		UIOutput.make(form, "eval-name", evaluation.getTitle());
 		if(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR.equals(selectType)){
 			UIMessage.make(form, "instruction", "assignselect.instructions.instructor");
 		}else{
