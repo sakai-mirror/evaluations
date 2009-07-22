@@ -35,6 +35,7 @@ import org.sakaiproject.evaluation.logic.EvalEvaluationService;
 import org.sakaiproject.evaluation.logic.EvalEvaluationSetupService;
 import org.sakaiproject.evaluation.logic.exceptions.BlankRequiredFieldException;
 import org.sakaiproject.evaluation.logic.exceptions.InvalidDatesException;
+import org.sakaiproject.evaluation.logic.externals.EvalExternalLogic;
 import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
 import org.sakaiproject.evaluation.model.EvalAssignGroup;
@@ -169,7 +170,6 @@ public class SetupEvalBean {
 	public void setLocale(Locale locale) {
 		this.locale = locale;
 	}
-	
 	
 	private SelectedEvaluationUsersLocator selectedEvaluationUsersLocator;
 	public void setSelectedEvalautionUsersLocator(SelectedEvaluationUsersLocator selectedEvaluationUsersLocator) {
@@ -473,13 +473,7 @@ public class SetupEvalBean {
 		}
 		
 		Map<Long, List<EvalAssignGroup>> evalAssignGroupMap = evaluationService.getAssignGroupsForEvals(new Long[] {evaluationId}, true, false);
-		List<EvalAssignGroup> evalAssignGroups = new ArrayList<EvalAssignGroup>();
-		
-		Iterator<Entry<Long, List<EvalAssignGroup>>> selector = evalAssignGroupMap.entrySet().iterator();
-		while ( selector.hasNext() ) {
-        	Entry<Long, List<EvalAssignGroup>> pairs = selector.next();
-        	evalAssignGroups = pairs.getValue();
-		}
+		List<EvalAssignGroup> evalAssignGroups = evalAssignGroupMap.get(evaluationId);
 		
 		for (EvalAssignGroup assignGroup : evalAssignGroups) {
 			String currentGroupId = assignGroup.getEvalGroupId();
@@ -488,13 +482,19 @@ public class SetupEvalBean {
 			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
 			deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId);
 			deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId);
-			// Save selection settings for assign group
+			// set selection settings for assign group
 			String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
 			String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
-			assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor);
-			assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant);
+			if( settingInstructor != null || !"".equals(settingInstructor )){
+				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor );
+			}
+			if( settingAssistant != null || !"".equals(settingAssistant )){
+				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant );
+			}
+			//Save selection settings
+			evaluationSetupService.saveAssignGroup(assignGroup, commonLogic.getCurrentUserId());
 		}
-
+		
 		return "controlEvals";
 	}
 

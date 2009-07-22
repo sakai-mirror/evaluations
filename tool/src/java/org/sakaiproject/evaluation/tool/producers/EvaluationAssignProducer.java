@@ -257,11 +257,17 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             
 			
             List<String> assignGroupsIds = new ArrayList<String>();
+            String groupSelectionOTP = "assignGroupSelectionSettings.";
             if(! newEval){
             	Map<Long, List<EvalAssignGroup>> selectedGroupsMap = evaluationService.getAssignGroupsForEvals(new Long[] {evalViewParams.evaluationId}, true, null);
             	List<EvalAssignGroup> assignGroups = selectedGroupsMap.get(evalViewParams.evaluationId);
             	for(EvalAssignGroup assGroup: assignGroups){
             		assignGroupsIds.add(assGroup.getEvalGroupId());
+            		
+            		//Add group selection settings to form to support EVALSYS-778
+            		Map<String, String> selectionOptions = assGroup.getSelectionOptions();
+                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".instructor", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR)));
+                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".assistant", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_ASSISTANT)));
             	}
             }
                            
@@ -296,6 +302,10 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 	checkboxRow.decorate(new UIStyleDecorator("selectedGroup"));
                 }
                  
+                }else{
+                	//add blank selection options for this group for use by evalAssign.js
+                	form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroup.evalGroupId.replaceAll("/site/", "") + ".instructor", ""));
+                    form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroup.evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
                 }
                 
                 
@@ -306,8 +316,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
                 form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
                 
-
-
+                
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
