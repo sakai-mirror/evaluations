@@ -4,43 +4,6 @@
 <head>
     <title>Select</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            //set initial state of select all box
-            if($('.selectTable tbody input[@type=checkbox]').not(':checked').length === 0){
-               $('#selectorControl').each(function(){
-                  this.checked = true;
-                });
-            }
-            $.facebox.setHeader($("#title"));
-            $("#facebox .header .titleHeader").show();
-			//Activate Mass (De)Selector controls
-            $("#selectorControl").bind('click', function(){
-				if (this.checked) {
-					$('.selectTable tbody input[@type=checkbox]').not(':checked').each(function(){
-						this.checked = true;
-					});
-				}else{
-					$('.selectTable tbody input[@type=checkbox]:checked').each(function(){
-                      this.checked = false;
-                 	});
-				}
-			});
-            //bind individual checkbox to toggle main selector
-            $(".selectTable tbody input[@type=checkbox]").bind('click', function(){
-				if (this.checked) {
-                    if($('.selectTable tbody input[@type=checkbox]').not(':checked').length === 0){
-                       $('#selectorControl').each(function(){
-                          this.checked = true;
-                        });
-                    }
-				}else{
-					$('#selectorControl').each(function(){
-                      this.checked = false;
-                 	});
-				}
-			});
-        });</script>
 </head>
 <body>
 <h2 class="titleHeader" id="title" style="display:none;" rsf:id="title">Select Instructors from ABC123 for Eval Name</h2>

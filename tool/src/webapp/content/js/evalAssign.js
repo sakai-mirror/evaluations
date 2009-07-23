@@ -131,6 +131,45 @@ $(document).ready(function() {
                     });
                 }
 
+                /**
+                 *  Excecute this as soon as lightbox DON is loaded
+                 */
+
+                //set initial state of select all box
+                if(variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]').not(':checked').length === 0){
+                   $('#selectorControl').each(function(){
+                      this.checked = true;
+                    });
+                }
+                $.facebox.setHeader($("#title"));
+                $("#facebox .header .titleHeader").show();
+                //Activate Mass (De)Selector controls
+                $("#selectorControl").bind('click', function(){
+                    if (this.checked) {
+                        $('.selectTable tbody input[@type=checkbox]').not(':checked').each(function(){
+                            this.checked = true;
+                        });
+                    }else{
+                        $('.selectTable tbody input[@type=checkbox]:checked').each(function(){
+                          this.checked = false;
+                        });
+                    }
+                });
+                //bind individual checkbox to toggle main selector
+                $(".selectTable tbody input[@type=checkbox]").bind('click', function(){
+                    if (this.checked) {
+                        if($('.selectTable tbody input[@type=checkbox]').not(':checked').length === 0){
+                           $('#selectorControl').each(function(){
+                              this.checked = true;
+                            });
+                        }
+                    }else{
+                        $('#selectorControl').each(function(){
+                          this.checked = false;
+                        });
+                    }
+                });
+
                 $('#facebox input[id=save-item-action]').bind('click', function() {
                     log("Binding submit button value");
                     handleFormSubmit(this);
