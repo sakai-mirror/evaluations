@@ -485,10 +485,14 @@ public class SetupEvalBean {
 			// set selection settings for assign group
 			String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
 			String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
-			if( settingInstructor != null || !"".equals(settingInstructor )){
+			if( settingInstructor == null || "".equals(settingInstructor)){
+				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, EvalAssignGroup.SELECTION_OPTION_ALL );
+			}else{
 				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor );
 			}
-			if( settingAssistant != null || !"".equals(settingAssistant )){
+			if( settingAssistant == null || "".equals(settingAssistant)){
+				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, EvalAssignGroup.SELECTION_OPTION_ALL );
+			}else{
 				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant );
 			}
 			//Save selection settings

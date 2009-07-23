@@ -8,10 +8,10 @@ $(document).ready(function() {
         //Validate group Selections
         var countChecked = $('form[id=eval-assign-form] input[@type=checkbox]:checked').get().length;
         if (countChecked == null || countChecked == 0) {
-            $('#error').fadeIn("fast");
+            $('#error').fadeIn(0);
             return false;
         } else {
-            $('#error').fadeOut("fast");
+            $('#error').fadeOut(0);
         }
         return true;
     });
@@ -27,7 +27,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: false
+        debug: true
     };
     /**
      * Private methods and variables
@@ -93,9 +93,8 @@ $(document).ready(function() {
                 var grpId = variables.get.documentFB.find("input[name=evalGroupId]").val();
                 variables.evalGroupId = grpId == null ? '' : grpId.replace('/site/', '');
                 //deselect boxes already deselected
-                var field;
-                var regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants");
-                var sRegExInput = new RegExp(regText);
+                var field, regText = variables.evalGroupId + ".deselected" + (variables.options.type == 0 ? "Instructors" : "Assistants"),
+                sRegExInput = new RegExp(regText);
                 $('input[name=el-binding]').each(function() {
                     if ($(this).val().search(sRegExInput) != -1) {
                         field = $(this);
@@ -105,13 +104,33 @@ $(document).ready(function() {
                 if (deselected.length > 0) {
                     variables.get.documentFB.find('input[@type=checkbox]:checked').each(function() {
                         for (var i = 0; i < deselected.length; i++) {
-                            if (deselected[i] == $(this).attr('id')) {
+                            if ( deselected[i] == $(this).attr('id')) {
                                 this.checked = false;
                             }
                         }
                     });
-                    handleCheckboxes(variables.get.documentFB.find('input[@type=checkbox]').not(':checked'), 1);
+                    handleCheckboxes(variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]').not(':checked'), 1);
                 }
+
+                //check proper radiobox depending on selcetion option already saved in the DOM
+                regText = variables.evalGroupId + (variables.options.type === 0 ? ".instructor" : ".assistant"),
+                sRegExInput = new RegExp(regText);
+                $('input[name=el-binding]').each(function() {
+                    if ($(this).val().search(sRegExInput) != -1) {
+                        field = $(this);
+                    }
+                });
+                var selectionSaved = field.val().replace("j#{assignGroupSelectionSettings." + regText + "}", "");
+                log("selectionSaved value: " + selectionSaved);
+                if (selectionSaved.toString().length > 0) {
+                    variables.get.documentFB.find('input[@type=radio]').each(function() {
+                        if ( selectionSaved === $(this).val()) {
+                            this.checked = true;
+                        }
+
+                    });
+                }
+
                 $('#facebox input[id=save-item-action]').bind('click', function() {
                     log("Binding submit button value");
                     handleFormSubmit(this);
@@ -210,11 +229,30 @@ $(document).ready(function() {
         return false;
     }
 
+    function handleRadioButton(selection){
+         if (variables.evalGroupId !== null){
+            var field, regText = variables.evalGroupId + (variables.options.type === 0 ? ".instructor" : ".assistant"),
+            sRegExInput = new RegExp(regText);
+            $('input[name=el-binding]').each(function() {
+                if ($(this).val().search(sRegExInput) != -1) {
+                    field = $(this);
+                }
+            });
+            if (field !== null) {
+                field.val("j#{assignGroupSelectionSettings." + regText + "}" + selection );
+                log('Selection setting is: ' + selection);
+                return true;
+            } else {
+                log("ERROR: Field param with part val:" + regText + " Not FOUND.");
+            }
+         }
+    }
+
     function handleFormSubmit(_that) {
-        var that = $(_that);
         log("Running pre-SET checks");
-        var temp = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]').not(':checked');
-        var tempChecked = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]:checked');
+        var that = $(_that), temp = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]').not(':checked'),
+        tempChecked = variables.get.documentFB.find('.selectTable tbody input[@type=checkbox]:checked'),
+        selectionChosen = variables.get.documentFB.find('input[@type=radio]:checked');
         variables.selectedPeople = tempChecked.length > 0 ? tempChecked.length : 0;
         if(temp.length>0){
             if (handleCheckboxes(temp, 0)) {
@@ -232,6 +270,10 @@ $(document).ready(function() {
                 variables.that.text(text2);
                 $(document).trigger('close.facebox');
             }
+        }
+        //save selection setting to DOM
+        if (selectionChosen.length > 0){
+            handleRadioButton(selectionChosen.val());
         }
         initClassVars();
         return true;
