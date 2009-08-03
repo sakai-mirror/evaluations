@@ -58,6 +58,8 @@ import org.sakaiproject.evaluation.utils.TemplateItemDataList.DataTemplateItem;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList.HierarchyNodeGroup;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList.TemplateItemGroup;
 
+import com.sun.java_cup.internal.assoc;
+
 import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.messageutil.TargettedMessage;
 import uk.org.ponder.messageutil.TargettedMessageList;
@@ -392,6 +394,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                         evaluationService, authoringService, hierarchyLogic, null);
                 Set<String> instructorIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
                 Set<String> assistantIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_ASSISTANT);
+                List<String> associatedTypes = tidl.getAssociateTypes();
                 
                 // SELECTION Code - EVALSYS-618
                 Boolean selectionsEnabled = (Boolean) evalSettings
@@ -450,7 +453,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                         }
                         // We render the selection controls if there are at least two
                         // Instructors/TAs
-                        if (selectUserIds.size() > 1) {
+                        if (selectUserIds.size() > 1 && associatedTypes.contains(selectKey) ) {
                            if (selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
                                 // nothing special to do in all case
                         	   //form.parameters.add(new UIELBinding(selectionOTP, "all"));
@@ -493,7 +496,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                 throw new IllegalStateException("Invalid selection option ("
                                         + selectValue + "): do not know how to handle this.");
                             }
-                        } else  if (selectUserIds.size() == 1) {
+                        } else  if (selectUserIds.size() == 1  && associatedTypes.contains(selectKey) ) {
                        	    // handle case where there are selections set but ONLY 1 user in the role.
                         	for (String userId : selectUserIds) {
                         		form.parameters.add(new UIELBinding(selectionOTP, userId));
