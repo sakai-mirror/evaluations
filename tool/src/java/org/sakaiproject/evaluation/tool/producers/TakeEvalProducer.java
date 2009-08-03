@@ -439,10 +439,11 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
 								new UIIDStrategyDecorator(
 										"selectedPeopleInResponse"));
 					}
-                    for (Iterator<String> selector = selectorType.keySet().iterator(); selector.hasNext();) {
-                        // FIXME findbugs says that getting keys like this is inefficient, use Map.Entry
-                        String selectKey = (String) selector.next();
-                        String selectValue = (String) selectorType.get(selectKey);
+                    Iterator<Map.Entry<String, String>> selector = selectorType.entrySet().iterator();
+                    while (selector.hasNext()) {
+                        Map.Entry<String, String> pairs = selector.next();
+                    	String selectKey = (String) pairs.getKey();
+                        String selectValue = (String) pairs.getValue();
                         String uiTag = "select-" + selectKey;
                         String selectionOTP = "#{takeEvalBean.selection" + selectKey + "Ids}";
                         Set<String> selectUserIds = new HashSet<String>();
