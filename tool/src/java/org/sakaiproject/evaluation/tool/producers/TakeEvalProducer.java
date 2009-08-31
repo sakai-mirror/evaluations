@@ -19,17 +19,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalAuthoringService;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
@@ -58,13 +57,10 @@ import org.sakaiproject.evaluation.utils.TemplateItemDataList.DataTemplateItem;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList.HierarchyNodeGroup;
 import org.sakaiproject.evaluation.utils.TemplateItemDataList.TemplateItemGroup;
 
-import com.sun.java_cup.internal.assoc;
-
 import uk.org.ponder.messageutil.MessageLocator;
 import uk.org.ponder.messageutil.TargettedMessage;
 import uk.org.ponder.messageutil.TargettedMessageList;
 import uk.org.ponder.rsf.components.ELReference;
-import uk.org.ponder.rsf.components.UIBoundBoolean;
 import uk.org.ponder.rsf.components.UIBranchContainer;
 import uk.org.ponder.rsf.components.UICommand;
 import uk.org.ponder.rsf.components.UIContainer;
@@ -413,13 +409,13 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                     Map<String, String> selectorType = new HashMap<String, String>();
                     instructorSelectionOption = EvalUtils.getSelectionSetting(
                             EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, assignGroup, null);
-                    selectorType.put(SELECT_KEY_INSTRUCTOR, instructorSelectionOption);
+                    selectorType.put(EvalConstants.ITEM_CATEGORY_INSTRUCTOR, instructorSelectionOption);
                     Boolean assistantsEnabled = (Boolean) evalSettings
                             .get(EvalSettings.ENABLE_ASSISTANT_CATEGORY);
                     if (assistantsEnabled) {
                         assistantSelectionOption = EvalUtils.getSelectionSetting(
                                 EvalAssignGroup.SELECTION_TYPE_ASSISTANT, assignGroup, null);
-                        selectorType.put(SELECT_KEY_ASSISTANT, assistantSelectionOption);
+                        selectorType.put(EvalConstants.ITEM_CATEGORY_ASSISTANT, assistantSelectionOption);
                     }
                     if (response != null) {
 						// emit currently selected people into hidden element
@@ -442,14 +438,15 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                     Iterator<Map.Entry<String, String>> selector = selectorType.entrySet().iterator();
                     while (selector.hasNext()) {
                         Map.Entry<String, String> pairs = selector.next();
-                    	String selectKey = (String) pairs.getKey();
+                        String selectKey = (String) pairs.getKey();
+                        String selectKeyLowerCaps = selectKey.toLowerCase();
                         String selectValue = (String) pairs.getValue();
-                        String uiTag = "select-" + selectKey;
-                        String selectionOTP = "#{takeEvalBean.selection" + selectKey + "Ids}";
+                        String uiTag = "select-" + selectKeyLowerCaps;
+                        String selectionOTP = "#{takeEvalBean.selection" + selectKeyLowerCaps + "Ids}";
                         Set<String> selectUserIds = new HashSet<String>();
-                        if (selectKey.equals(SELECT_KEY_INSTRUCTOR)) {
+                        if (selectKeyLowerCaps.equals(SELECT_KEY_INSTRUCTOR)) {
                             selectUserIds = instructorIds;
-                        } else if (selectKey.equals(SELECT_KEY_ASSISTANT)) {
+                        } else if (selectKeyLowerCaps.equals(SELECT_KEY_ASSISTANT)) {
                             selectUserIds = assistantIds;
                         }
                         // We render the selection controls if there are at least two
