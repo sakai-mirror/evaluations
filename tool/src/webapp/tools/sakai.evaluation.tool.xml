@@ -5,8 +5,8 @@
         title="Evaluation System"
         description="For running evaluations/feedback and surveys.">
      <category name="course" />
-     <!-- 
      <category name="project" />
+     <!-- 
      <category name="myworkspace" />
      -->
   </tool>
