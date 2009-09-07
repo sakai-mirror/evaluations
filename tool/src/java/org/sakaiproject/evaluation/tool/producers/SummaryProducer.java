@@ -44,6 +44,7 @@ import uk.org.ponder.rsf.components.UIForm;
 import uk.org.ponder.rsf.components.UIInternalLink;
 import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
+import uk.org.ponder.rsf.components.UIBranchContainer;
 import uk.org.ponder.rsf.components.decorators.UITooltipDecorator;
 import uk.org.ponder.rsf.flow.jsfnav.NavigationCase;
 import uk.org.ponder.rsf.flow.jsfnav.NavigationCaseReporter;
@@ -150,7 +151,7 @@ public class SummaryProducer implements ViewComponentProducer, DefaultView, Navi
         if (beginEvaluation) {
             UIInternalLink.make(tofill, "control-evaluations-link", UIMessage.make("controlevaluations.page.title"), new SimpleViewParameters(
                     ControlEvaluationsProducer.VIEW_ID));
-            UIMessage.make(tofill, "instructor-instructions", "summary.instructor.instruction");
+            UIBranchContainer.make(tofill, "instructor-instructions:");
         }
 
         /*
