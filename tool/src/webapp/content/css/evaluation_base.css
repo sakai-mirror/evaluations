@@ -703,3 +703,8 @@ background-repeat : no-repeat !important;
 .previewEvalNote {
     padding:5px; margin:10px; border: 1px solid rgb(255, 204, 0); background: rgb(255, 255, 204); width:97%
 }
+
+.infoItem{
+	padding-left: 2em;
+	background: transparent url(/library/image/sakai/information.png) center left no-repeat
+}
