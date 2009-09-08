@@ -273,6 +273,10 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                            
             int count = 0;
             for (EvalGroup evalGroup : unassignedEvalGroups) {
+            	if(evalGroup != null){
+            		
+            	String evalGroupId = evalGroup.evalGroupId;
+            	
                 UIBranchContainer checkboxRow = UIBranchContainer.make(evalgroupArea, "groups:", count+"");
                 if (count % 2 == 0) {
                     checkboxRow.decorate( new UIStyleDecorator("itemsListOddLine") ); // must match the existing CSS class
@@ -286,8 +290,8 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 if (! newEval) {
                 //Get saved selection settings for this eval
-            	List<EvalAssignUser> deselectedInsructors = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_REMOVED, null, null);
-                List<EvalAssignUser> deselectedAssistants = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroup.evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_REMOVED, null, null);
+            	List<EvalAssignUser> deselectedInsructors = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_REMOVED, null, null);
+                List<EvalAssignUser> deselectedAssistants = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_REMOVED, null, null);
                
             	//check for already deselected users that match this groupId
                 for(EvalAssignUser deselectedUser:deselectedInsructors){
@@ -298,34 +302,34 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 }
                
                 //Assign attribute to row to help JS set checkbox selection to true
-                if(assignGroupsIds.contains(evalGroup.evalGroupId)){
+                if(assignGroupsIds.contains(evalGroupId)){
                 	checkboxRow.decorate(new UIStyleDecorator("selectedGroup"));
                 }
                  
                 }else{
                 	//add blank selection options for this group for use by evalAssign.js
-                	form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroup.evalGroupId.replaceAll("/site/", "") + ".instructor", ""));
-                    form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroup.evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
+                	form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".instructor", ""));
+                    form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
                 }
                 
                 
                 evalGroupsLabels.add(evalGroup.title);
-                evalGroupsValues.add(evalGroup.evalGroupId);
+                evalGroupsValues.add(evalGroupId);
 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
-                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
-                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroup.evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
+                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
+                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
                 
                 
                 // get title from the map since it is faster
                 UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
-                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_BE_EVALUATED));
+                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, (EvalConstants.PERM_BE_EVALUATED));
                 if(totalUsers > 0){
                 	int currentUsers = deselectedInsructorIds.size()>=0?(totalUsers-deselectedInsructorIds.size()):totalUsers;
                 	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
                 			new Object[] {currentUsers,totalUsers}), 
-                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
                 	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
                 	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
                 }
@@ -341,6 +345,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 
                 count++;
+            }
             }
         } else {
             // TODO tell user there are no groups to assign to
