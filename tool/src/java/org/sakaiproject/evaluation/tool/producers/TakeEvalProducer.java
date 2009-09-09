@@ -16,10 +16,12 @@ package org.sakaiproject.evaluation.tool.producers;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -385,11 +387,18 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
 
                 // BEGIN the complex task of rendering the evaluation items
 
+                // keep the assign users for this eval to use later for sorting purposes
+                List<EvalAssignUser> evalAssignUsersAllSelected = evaluationService
+    				.getParticipantsForEval(evaluationId, null, new String[] { evalGroupId }, null, EvalEvaluationService.STATUS_ANY, null, null);
+                
+
                 // make the TI data structure
                 TemplateItemDataList tidl = new TemplateItemDataList(evaluationId, evalGroupId,
                         evaluationService, authoringService, hierarchyLogic, null);
-                Set<String> instructorIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
-                Set<String> assistantIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_ASSISTANT);
+                Set<String> instructorIdsUnsorted = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
+                Set<String> instructorIds = getSortedUserIdsFromUsers(evalAssignUsersAllSelected, instructorIdsUnsorted, evalGroupId, EvalAssignUser.TYPE_EVALUATEE);
+                Set<String> assistantIdsUnsorted = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_ASSISTANT);
+                Set<String> assistantIds = getSortedUserIdsFromUsers(evalAssignUsersAllSelected, assistantIdsUnsorted, evalGroupId, EvalAssignUser.TYPE_ASSISTANT);
                 List<String> associatedTypes = tidl.getAssociateTypes();
                 
                 // SELECTION Code - EVALSYS-618
@@ -467,7 +476,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                     EvalUser user = commonLogic.getEvalUserById(userId);
                                     assValues.add(user.userId);
                                     assLabels.add(user.displayName);
-                                     UIBranchContainer row = UIBranchContainer.make(showSwitchGroup, uiTag + "-multiple-row:");
+                                    UIBranchContainer row = UIBranchContainer.make(showSwitchGroup, uiTag + "-multiple-row:");
                                     UISelectChoice choice = UISelectChoice.make(row, uiTag + "-multiple-box", assSelectID, assLabels.size()-1);
                                     UISelectLabel lb = UISelectLabel.make(row, uiTag + "-multiple-label", assSelectID, assLabels.size()-1);
                                     UILabelTargetDecorator.targetLabel(lb, choice);
@@ -480,6 +489,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                 value.add("default");
                                 label.add(messageLocator.getMessage("takeeval.selection.dropdown"));
                                 List<EvalUser> users = commonLogic.getEvalUsersByIds(selectUserIds.toArray(new String[selectUserIds.size()]));
+                                
                                 for (EvalUser user : users) {
                                     value.add(user.userId);
                                     label.add(user.displayName);
@@ -719,7 +729,26 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
         bindings[2] = currAnswerOTP + "comment";
         return bindings;
     }
-
+    
+	private Set<String> getSortedUserIdsFromUsers( List<EvalAssignUser> userList, Set<String> userIds, String evalGroupId, String associatedType){
+    	List<EvalAssignUser> usersInList = new ArrayList<EvalAssignUser>();
+    	Set<String> sortedIds = new LinkedHashSet<String>();
+    	if( userIds != null && evalGroupId != null && associatedType != null){
+	    	for( EvalAssignUser evalAssignUser : userList ){
+    			if( userIds.contains(evalAssignUser.getUserId()) && evalAssignUser.getEvalGroupId().equals(evalGroupId) && evalAssignUser.getType().equals(associatedType)){
+	    			usersInList.add(evalAssignUser);
+	    		}
+	    	}
+    	}
+    	if( usersInList.size() > 0 ){
+	    	// sort according to saved selection ordering
+	    	Collections.sort(usersInList, new EvalAssignUser.AssignComparatorByOrder());
+	    	for( EvalAssignUser user : usersInList ){
+	    		sortedIds.add( user.getUserId() );
+	    	}
+    	}
+    	return sortedIds;
+    }
 
 
     /* (non-Javadoc)
