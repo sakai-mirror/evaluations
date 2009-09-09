@@ -29,6 +29,23 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 		
 	}
 
+	public String[] getOrderingForInstructors(String groupId) {
+		if (localStore.containsKey(groupId)) {
+			EvaluationUserSelection thisSelection = localStore.get(groupId);
+			return thisSelection.orderingInstructors;
+		}
+		return null;
+	}
+	
+
+	public String[] getOrderingForAssistants(String groupId) {
+		if (localStore.containsKey(groupId)) {
+			EvaluationUserSelection thisSelection = localStore.get(groupId);
+			return thisSelection.orderingAssistants;
+		} 
+		return null;
+	}
+	
 	public String[] getDeselectedInstructors(String groupId) {
 		if (localStore.containsKey(groupId)) {
 			EvaluationUserSelection thisSelection = localStore.get(groupId);
@@ -51,6 +68,10 @@ public class SelectedEvaluationUsersLocator implements BeanLocator {
 		private String id;
 		public String[] deselectedInstructors;
 		public String[] deselectedAssistants;
+		
+		// Save ordering for selected roles EVALSYS-822
+		public String[] orderingInstructors;
+		public String[] orderingAssistants;
 		
 		public String getId() {
 			return id;

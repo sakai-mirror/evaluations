@@ -735,7 +735,7 @@ public class EvalUtils {
         if (assignGroup == null && eval == null) {
             throw new IllegalArgumentException("assignGroup and eval cannot both be null");
         }
-        
+
         String selectionSetting = EvalAssignGroup.SELECTION_OPTION_ALL;
         if (assignGroup != null) {
             Map<String, String> m = assignGroup.getSelectionOptions();
@@ -743,13 +743,16 @@ public class EvalUtils {
             if (s != null) {
                 selectionSetting = s;
             }
+            System.out.println("ASSIGN: for group - " + selectionSetting);
         } else if (eval != null) {
             Map<String, String> m = eval.getSelectionOptions();
             String s = m.get(selectionTypeConstant);
             if (s != null) {
                 selectionSetting = s;
             }
+            System.out.println("ASSIGN: for eval - " + selectionSetting);
         }
+        
         return selectionSetting;
     }
 

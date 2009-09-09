@@ -316,9 +316,15 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 evalGroupsLabels.add(evalGroup.title);
                 evalGroupsValues.add(evalGroupId);
 
+                String evalUsersLocator = "selectedEvaluationUsersLocator.";
+                
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
-                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
-                form.parameters.add(new UIELBinding("selectedEvaluationUsersLocator."+evalGroupId.replaceAll("/site/", "")+".deselectedAssistants",deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
+                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
+                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedAssistants", deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
+                
+                //add ordering bindings
+                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingInstructors", new String[]{} ));
+                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingAssistants", new String[]{} ));
                 
                 
                 // get title from the map since it is faster

@@ -313,11 +313,35 @@ $(document).ready(function() {
         //save selection setting to DOM
         if (selectionChosen.length > 0){
             handleRadioButton(selectionChosen.val());
+            handleListOrdering(tempChecked);
         }
         initClassVars();
         return true;
 
     }
+
+    var handleListOrdering = function(selected){
+        log("Handling ordering");
+        var regText = variables.evalGroupId + ".ordering" + (variables.options.type === 0 ? "Instructors" : "Assistants"),
+        sRegExInput = new RegExp(regText),
+        selectedOrderedUserIds = [];
+            $('input[name=el-binding]').each(function() {
+                if ($(this).val().search(sRegExInput) != -1) {
+                    field = $(this);
+                }
+            });
+            if (field !== null) {
+                // extract userIds from selected objects list
+                for(var i=0; i < selected.length; i++){
+                    selectedOrderedUserIds.push( $(selected[i]).attr("id") );
+                }
+                field.val("j#{selectedEvaluationUsersLocator." + regText + "}[" + selectedOrderedUserIds.toString() + "]");
+                log('Found - ' + selected.length + ' - selected people and setting ordering form value now. New val is:' + field.val());
+                return true;
+            } else {
+                log("ERROR: Field param with part val:" + regText + " Not FOUND.");
+            }
+    };
 
     // Debugging
     function log(obj) {

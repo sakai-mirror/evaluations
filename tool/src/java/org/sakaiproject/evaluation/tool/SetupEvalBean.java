@@ -475,13 +475,19 @@ public class SetupEvalBean {
 		Map<Long, List<EvalAssignGroup>> evalAssignGroupMap = evaluationService.getAssignGroupsForEvals(new Long[] {evaluationId}, true, false);
 		List<EvalAssignGroup> evalAssignGroups = evalAssignGroupMap.get(evaluationId);
 		
+		// Query DB only once to get all EvalAssignUsers
+		List<EvalAssignUser> evalUsers = evaluationService
+			.getParticipantsForEval(evaluationId, null, null, null, EvalEvaluationService.STATUS_ANY, null, null);
+		
 		for (EvalAssignGroup assignGroup : evalAssignGroups) {
 			String currentGroupId = assignGroup.getEvalGroupId();
 			// Save Assistant/Instructor selections now. EVALSYS-618
 			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentGroupId);
 			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
-			deselectUsers(deselectedInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId);
-			deselectUsers(deselectedAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId);
+			String[] orderingInstructors = selectedEvaluationUsersLocator.getOrderingForInstructors(currentGroupId);
+			String[] orderingAssistants = selectedEvaluationUsersLocator.getOrderingForAssistants(currentGroupId);
+			updateEvalAssignUsers(deselectedInstructors, orderingInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId, evalUsers);
+			updateEvalAssignUsers(deselectedAssistants, orderingAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId, evalUsers);
 			// set selection settings for assign group
 			String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
 			String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
@@ -545,20 +551,29 @@ public class SetupEvalBean {
 	 * evaluation
 	 * 
 	 * @param deselected
+	 * @param ordering 
 	 * @param type either {@link EvalAssignUser.TYPE_EVALUATEE} or {@link EvalAssignUser.TYPE_ASSISTANT}
 	 * @param currentGroupId 
+	 * @param evalUsers 
 	 */
-	private void deselectUsers(String[] deselected, String type, String currentGroupId) {
-		List<EvalAssignUser> evalUsers = evaluationService
-				.getParticipantsForEval(evaluationId, null, new String[]{currentGroupId}, type, EvalEvaluationService.STATUS_ANY,
-						null, null);
+	private void updateEvalAssignUsers(String[] deselected, String[] ordering, String type, String currentGroupId, List<EvalAssignUser> evalUsers) {
 		List<String> deselectedList = Arrays.asList(deselected);
+		List<String> orderingList = Arrays.asList(ordering);
 		for (EvalAssignUser user : evalUsers) {
-				if (deselectedList.contains(user.getUserId())) {
+			// only update users for this group with this permission type
+			String userId = user.getUserId();
+			if(currentGroupId.equals( user.getEvalGroupId().toString() ) && type.equals( user.getType()) ){
+				if (deselectedList.contains( userId )) {
 					user.setStatus(EvalAssignUser.STATUS_REMOVED);
 				}else{
 					user.setStatus(EvalAssignUser.STATUS_LINKED);
 				}
+				// set users' selection order
+				if (orderingList.contains( userId )){
+					int listOrder = orderingList.indexOf(userId) + 1;
+					user.setListOrder( listOrder );
+				}
+			}
 		}
 	}
 

@@ -47,7 +47,7 @@ public class AssignGroupEntityProviderImpl implements AssignGroupEntityProvider,
 	 * @see org.sakaiproject.entitybroker.entityprovider.CoreEntityProvider#entityExists(java.lang.String)
 	 */
 	public boolean entityExists(String id) {
-		log.warn("NOTE: checking if assign group exists: " + id);
+		log.debug("NOTE: checking if assign group exists: " + id);
 		Long assignGroupId;
 		try {
 			assignGroupId = new Long(id);
