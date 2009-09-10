@@ -27,7 +27,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: true
+        debug: false
     };
     /**
      * Private methods and variables
