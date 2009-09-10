@@ -387,18 +387,11 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
 
                 // BEGIN the complex task of rendering the evaluation items
 
-                // keep the assign users for this eval to use later for sorting purposes
-                List<EvalAssignUser> evalAssignUsersAllSelected = evaluationService
-    				.getParticipantsForEval(evaluationId, null, new String[] { evalGroupId }, null, EvalEvaluationService.STATUS_ANY, null, null);
-                
-
                 // make the TI data structure
                 TemplateItemDataList tidl = new TemplateItemDataList(evaluationId, evalGroupId,
                         evaluationService, authoringService, hierarchyLogic, null);
-                Set<String> instructorIdsUnsorted = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
-                Set<String> instructorIds = getSortedUserIdsFromUsers(evalAssignUsersAllSelected, instructorIdsUnsorted, evalGroupId, EvalAssignUser.TYPE_EVALUATEE);
-                Set<String> assistantIdsUnsorted = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_ASSISTANT);
-                Set<String> assistantIds = getSortedUserIdsFromUsers(evalAssignUsersAllSelected, assistantIdsUnsorted, evalGroupId, EvalAssignUser.TYPE_ASSISTANT);
+                Set<String> instructorIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_INSTRUCTOR);
+                Set<String> assistantIds = tidl.getAssociateIds(EvalConstants.ITEM_CATEGORY_ASSISTANT);
                 List<String> associatedTypes = tidl.getAssociateTypes();
                 
                 // SELECTION Code - EVALSYS-618
@@ -572,13 +565,13 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
      * Render each group header
      * @param categorySectionBranch the parent container
      * @param associateType Assistant or Instructor value
-     * @param associateId userIds for Assistants
-     * @param instructorIds userIds for Instructors
+     * @param associateId userId for Assistant or Instructor
+     * @param associateIds userIds for Assistants or Instructors
      * @param selectionOption Selection setting for this user
      * @param savedSelections
      */
 	private void showHeaders(UIBranchContainer categorySectionBranch, String associateType, String associateId,
-			Set<String> instructorIds, String selectionOption, Map<String, String[]> savedSelections) {
+			Set<String> associateIds, String selectionOption, Map<String, String[]> savedSelections) {
 		EvalUser user = commonLogic.getEvalUserById(associateId);
 		UIMessage header = UIMessage.make(categorySectionBranch,
 				"categoryHeader", "takeeval." + associateType.toLowerCase()
@@ -592,7 +585,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
 				new UIFreeAttributeDecorator(new String[] { "name", "class" },
 						new String[] { user.userId, associateType.toLowerCase() + "Branch" }));
 		if (!EvalAssignGroup.SELECTION_OPTION_ALL.equals(selectionOption)
-				&& instructorIds.size() > 1) {
+				&& associateIds.size() > 1) {
 			Map<String, String> cssHide = new HashMap<String, String>();
 			cssHide.put("display", "none");
 			categorySectionBranch.decorators.add(new UICSSDecorator(cssHide));
@@ -729,28 +722,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
         bindings[2] = currAnswerOTP + "comment";
         return bindings;
     }
-    
-	private Set<String> getSortedUserIdsFromUsers( List<EvalAssignUser> userList, Set<String> userIds, String evalGroupId, String associatedType){
-    	List<EvalAssignUser> usersInList = new ArrayList<EvalAssignUser>();
-    	Set<String> sortedIds = new LinkedHashSet<String>();
-    	if( userIds != null && evalGroupId != null && associatedType != null){
-	    	for( EvalAssignUser evalAssignUser : userList ){
-    			if( userIds.contains(evalAssignUser.getUserId()) && evalAssignUser.getEvalGroupId().equals(evalGroupId) && evalAssignUser.getType().equals(associatedType)){
-	    			usersInList.add(evalAssignUser);
-	    		}
-	    	}
-    	}
-    	if( usersInList.size() > 0 ){
-	    	// sort according to saved selection ordering
-	    	Collections.sort(usersInList, new EvalAssignUser.AssignComparatorByOrder());
-	    	for( EvalAssignUser user : usersInList ){
-	    		sortedIds.add( user.getUserId() );
-	    	}
-    	}
-    	return sortedIds;
-    }
-
-
+   
     /* (non-Javadoc)
      * @see uk.org.ponder.rsf.viewstate.ViewParamsReporter#getViewParameters()
      */
