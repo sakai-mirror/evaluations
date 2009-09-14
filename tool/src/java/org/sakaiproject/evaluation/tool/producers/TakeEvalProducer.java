@@ -456,7 +456,6 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                         if (selectUserIds.size() > 1 && associatedTypes.contains(selectKey) ) {
                            if (selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
                                 // nothing special to do in all case
-                        	   //form.parameters.add(new UIELBinding(selectionOTP, "all"));
                             } else if (EvalAssignGroup.SELECTION_OPTION_MULTIPLE.equals(selectValue)) {
                                 UIBranchContainer showSwitchGroup = UIBranchContainer.make(
                                         form, uiTag + "-multiple:");
@@ -499,9 +498,13 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                             }
                         } else  if (selectUserIds.size() == 1  && associatedTypes.contains(selectKey) ) {
                        	    // handle case where there are selections set but ONLY 1 user in the role.
-                        	for (String userId : selectUserIds) {
-                        		form.parameters.add(new UIELBinding(selectionOTP, userId));
-                                }
+                        	if (selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
+                                // nothing special to do in all case
+                            } else{
+	                        	for (String userId : selectUserIds) {
+	                            	form.parameters.add(new UIELBinding(selectionOTP, userId));
+	                        	}
+                            }
                         }else{
                         	// handle case where there are selections set but no users in the roles.
                             form.parameters.add(new UIELBinding(selectionOTP, "none"));
