@@ -263,7 +263,7 @@ public class EvalConstants {
      * this is using the permission which was defined by the Sakai sections stuff
      * http://bugs.sakaiproject.org/jira/browse/EVALSYS-345
      */
-    public final static String PERM_ASSISTANT_ROLE = "realm.upd";
+    public final static String PERM_ASSISTANT_ROLE = "section.role.ta";
 
     /**
      * EvalUser class: Unknown type
