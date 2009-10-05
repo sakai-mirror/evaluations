@@ -52,6 +52,8 @@ import uk.org.ponder.rsf.components.UIOutput;
 import uk.org.ponder.rsf.components.UIOutputMany;
 import uk.org.ponder.rsf.components.UISelect;
 import uk.org.ponder.rsf.components.UISelectChoice;
+import uk.org.ponder.rsf.components.decorators.UIDecorator;
+import uk.org.ponder.rsf.components.decorators.UIDisabledDecorator;
 import uk.org.ponder.rsf.components.decorators.UIFreeAttributeDecorator;
 import uk.org.ponder.rsf.components.decorators.UILabelTargetDecorator;
 import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
@@ -277,6 +279,9 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             		
             	String evalGroupId = evalGroup.evalGroupId;
             	
+            	int numEvaluatorsInSite = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_TAKE_EVALUATION);
+            	boolean hasEvaluators = numEvaluatorsInSite > 0;
+            	            	
                 UIBranchContainer checkboxRow = UIBranchContainer.make(evalgroupArea, "groups:", count+"");
                 if (count % 2 == 0) {
                     checkboxRow.decorate( new UIStyleDecorator("itemsListOddLine") ); // must match the existing CSS class
@@ -319,6 +324,10 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 String evalUsersLocator = "selectedEvaluationUsersLocator.";
                 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
+                
+                if (! hasEvaluators){
+                	choice.decorate( new UIDisabledDecorator() );
+                }
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedAssistants", deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
                 
@@ -326,29 +335,34 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingInstructors", new String[]{} ));
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingAssistants", new String[]{} ));
                 
-                
                 // get title from the map since it is faster
-                UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
+	            UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
+	                
+                if( hasEvaluators ){
+	                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
+	                if(totalUsers > 0){
+	                	int currentUsers = deselectedInsructorIds.size() >= 0 ? ( totalUsers-deselectedInsructorIds.size() ) : totalUsers;
+	                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
+	                			new Object[] {currentUsers,totalUsers}), 
+	                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+	                	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+	                	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
+	                }
+	                totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);
+	                if(totalUsers > 0){
+	                	int currentUsers = deselectedAssistantIds.size() >= 0 ? ( totalUsers-deselectedAssistantIds.size() ) : totalUsers;
+	                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", 
+	                			new Object[] {currentUsers,totalUsers}) , 
+	                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
+	                    link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+	                    link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.tas.page.title")));
+	                }
+                }else{
+                	title.decorate( new UIStyleDecorator("instruction") );
+                	UIMessage.make(checkboxRow, "select-no", "assigneval.cannot.assign");
+                }
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
-                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, (EvalConstants.PERM_BE_EVALUATED));
-                if(totalUsers > 0){
-                	int currentUsers = deselectedInsructorIds.size()>=0?(totalUsers-deselectedInsructorIds.size()):totalUsers;
-                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
-                			new Object[] {currentUsers,totalUsers}), 
-                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
-                	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
-                	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
-                }
-                totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, (EvalConstants.PERM_ASSISTANT_ROLE));
-                if(totalUsers > 0){
-                	int currentUsers = deselectedAssistantIds.size()>=0?(totalUsers-deselectedAssistantIds.size()):totalUsers;
-                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", 
-                			new Object[] {currentUsers,totalUsers}) , 
-                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
-                    link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
-                    link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.tas.page.title")));
-                }
-                
+	                
                 
                 count++;
             }
