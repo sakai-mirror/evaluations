@@ -108,32 +108,34 @@ public class ModifyTemplateProducer implements ViewComponentProducer, ViewParams
                     new SimpleViewParameters(SummaryProducer.VIEW_ID));
 
             if (userAdmin) {
-                UIInternalLink.make(topLinks, "administrate-link", 
-                        UIMessage.make("administrate.page.title"),
-                        new SimpleViewParameters(AdministrateProducer.VIEW_ID));
-                UIInternalLink.make(topLinks, "control-scales-link",
-                        UIMessage.make("controlscales.page.title"),
-                        new SimpleViewParameters(ControlScalesProducer.VIEW_ID));
+            	UIInternalLink.make(topLinks, "administrate-link", 
+            			UIMessage.make("administrate.page.title"),
+            			new SimpleViewParameters(AdministrateProducer.VIEW_ID));
             }
 
             if (createTemplate) {
-                UIInternalLink.make(topLinks, "control-templates-link",
-                        UIMessage.make("controltemplates.page.title"), 
-                        new SimpleViewParameters(ControlTemplatesProducer.VIEW_ID));
-                if (!((Boolean)settings.get(EvalSettings.DISABLE_ITEM_BANK))) {
-                    UIInternalLink.make(topLinks, "control-items-link",
-                            UIMessage.make("controlitems.page.title"), 
-                            new SimpleViewParameters(ControlItemsProducer.VIEW_ID));
-                }
-            } else {
-                throw new SecurityException("User attempted to access " + 
-                        VIEW_ID + " when they are not allowed");
-            }
+            		UIInternalLink.make(topLinks, "control-templates-link",
+            				UIMessage.make("controltemplates.page.title"), 
+            				new SimpleViewParameters(ControlTemplatesProducer.VIEW_ID));
+            		if (!((Boolean)settings.get(EvalSettings.DISABLE_ITEM_BANK))) {
+            			UIInternalLink.make(topLinks, "control-items-link",
+            					UIMessage.make("controlitems.page.title"), 
+            					new SimpleViewParameters(ControlItemsProducer.VIEW_ID));
+            		}
+            	} else {
+            		throw new SecurityException("User attempted to access " + 
+            				VIEW_ID + " when they are not allowed");
+            	}
 
-            if (beginEvaluation) {
-                UIInternalLink.make(topLinks, "control-evaluations-link",
-                        UIMessage.make("controlevaluations.page.title"),
-                        new SimpleViewParameters(ControlEvaluationsProducer.VIEW_ID));
+            	if (beginEvaluation) {
+            		UIInternalLink.make(topLinks, "control-evaluations-link",
+            				UIMessage.make("controlevaluations.page.title"),
+            				new SimpleViewParameters(ControlEvaluationsProducer.VIEW_ID));
+            	}
+            	if (userAdmin) {
+            		UIInternalLink.make(topLinks, "control-scales-link",
+            				UIMessage.make("controlscales.page.title"),
+            				new SimpleViewParameters(ControlScalesProducer.VIEW_ID));
             }
         }
 

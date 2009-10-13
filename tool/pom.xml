@@ -34,6 +34,11 @@
             <groupId>org.sakaiproject.entitybroker</groupId>
             <artifactId>entitybroker-api</artifactId>
         </dependency>
+		
+	    <dependency>
+	      <groupId>org.sakaiproject.entitybroker</groupId>
+	      <artifactId>entitybroker-utils</artifactId>
+	    </dependency>
 
         <!-- Servlet dependency -->
         <dependency>

@@ -25,4 +25,7 @@ import org.sakaiproject.evaluation.model.EvalTemplateItem;
  */
 public interface TemplateItemEntityProvider extends EntityProvider {
    public final static String ENTITY_PREFIX = "eval-templateitem";
+   
+   //Custom actions
+   public final static String CUSTOM_TEMPLATE_ITEMS_REORDER = "template-items-reorder";
 }

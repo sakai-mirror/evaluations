@@ -14,11 +14,16 @@
 
 package org.sakaiproject.evaluation.logic.entity;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
 import org.sakaiproject.entitybroker.DeveloperHelperService;
 import org.sakaiproject.entitybroker.EntityReference;
+import org.sakaiproject.entitybroker.EntityView;
 import org.sakaiproject.entitybroker.entityprovider.CoreEntityProvider;
+import org.sakaiproject.entitybroker.entityprovider.annotations.EntityCustomAction;
+import org.sakaiproject.entitybroker.entityprovider.capabilities.ActionsExecutable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.AutoRegisterEntityProvider;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.Deleteable;
 import org.sakaiproject.entitybroker.entityprovider.capabilities.Outputable;
@@ -34,7 +39,7 @@ import org.sakaiproject.evaluation.model.EvalTemplateItem;
  * @author Aaron Zeckoski (aaron@caret.cam.ac.uk)
  */
 public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvider,
-        CoreEntityProvider, AutoRegisterEntityProvider, Resolvable, Outputable, Deleteable {
+        CoreEntityProvider, AutoRegisterEntityProvider, Resolvable, Outputable, Deleteable, ActionsExecutable {
 
     private EvalAuthoringService authoringService;
     public void setAuthoringService(EvalAuthoringService authoringService) {
@@ -50,10 +55,12 @@ public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvide
     public void setCommonLogic(EvalCommonLogic commonLogic) {
         this.commonLogic = commonLogic;
     }
-
+    
     public String getEntityPrefix() {
         return ENTITY_PREFIX;
     }
+    
+    private final static String key_ordered_Ids = "orderedIds";
 
     public boolean entityExists(String id) {
         boolean exists = false;
@@ -117,5 +124,25 @@ public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvide
         }
         return id;
     }
+    
+  //Custom action to handle /eval-templateitem/block-reorder
+	@EntityCustomAction(action=CUSTOM_TEMPLATE_ITEMS_REORDER,viewKey=EntityView.VIEW_NEW)
+	public void saveTemplateItemsOrdering(EntityView view, Map<String, Object> params) {
+		Object ids = params.get(key_ordered_Ids);
+		String currentUserId = commonLogic.getCurrentUserId();
+		Map<Long, Integer> orderedMap = new HashMap<Long, Integer>();
+		
+		if ( ids != null ){
+			String orderedChildIds = ids.toString();
+			List<String> orderedChildIdList = Arrays.asList(orderedChildIds.split(","));
+	        for( String itemId : orderedChildIdList ){
+				int itemPosition = orderedChildIdList.indexOf( itemId ) + 1;
+				orderedMap.put( Long.parseLong(itemId), itemPosition);
+			}
+			authoringService.saveTemplateItemOrder(orderedMap, currentUserId);
+		}else{
+			throw new IllegalArgumentException("No ordered Ids to process.");
+		}
+	}
 
 }

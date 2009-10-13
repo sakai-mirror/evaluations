@@ -13,18 +13,21 @@
 <script type="text/javascript" language="JavaScript" src="../js/jquery/form.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/jquery/jquery-ui-core-drag-sort-1.5.2.min.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/jquery/jquery-ui-all-effects-1.6rc4.packed.js"></script>
+<script type="text/javascript" language="JavaScript" src="../js/fluid/Fluid.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/facebox/facebox.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/evalUtils.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/blockUtils.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/reorderUtils.js"></script>
+<script type="text/javascript" language="JavaScript" src="../js/eval.template.utils.js"></script>        
 <script type="text/javascript" language="JavaScript" src="../js/facebox/evalAjax.js"></script>
 <script type="text/javascript" language="JavaScript" src="/library/editor/FCKeditor/fckeditor.js"></script>
 <script type="text/javascript" language="JavaScript" src="../js/SakaiRSFWidgets.js"></script>
-<script>
-		function triggerSort(num){
-			EvalSystem.decorateReorderSelects("", num);
-		}
-		</script>
+<script type="text/javascript" language="JavaScript" src="../js/eval.template.facebox.js"></script>
+    <script type="text/javascript" language="JavaScript" src="../js/eval.template.loader.js"></script>
+    <script type="text/javascript" language="JavaScript" src="../js/eval.template.loader.events.js"></script>
+    <script type="text/javascript" language="JavaScript" src="../js/eval.template.sort.js"></script>
+    <script type="text/javascript" language="JavaScript" src="../js/eval.template.order.js"></script>
+    <script type="text/javascript" language="JavaScript" src="../js/eval.template.data.js"></script>
 </head><body>
 <div class="portletBody">
   <div class="navIntraTool"> <a rsf:id="administrate-link" href="administrate.html">Administrate</a> <a rsf:id="summary-link" href="summary.html">Summary</a> <a rsf:id="control-evaluations-link" href="control_evaluations.html">My Evaluations</a> <a rsf:id="control-templates-link" href="control_templates.html">My Templates</a> <a rsf:id="control-items-link" href="control_items.html">My Items</a> <a rsf:id="control-scales-link" href="control_scales.html">My Scales</a> </div>
@@ -43,9 +46,9 @@
     <span rsf:id="site-id" id="site-id" style="display:none">Site Id</span>
     <div class="navPanel  highlightPanel">
       <h3 class="viewNav"> <span rsf:id="template-title-header" style="font-weight:bold;">Template Title:</span> <span rsf:id="title" class="highlight" id="">Title</span> </h3>
-      <div class="listNav itemAction"> <a href="modify_template.html" rsf:id="modify_title_desc_link" rel="facebox">Edit Template Title/Description</a> | <a rsf:id="preview_eval_link" href="preview_eval.html" target="_blank" >View a preview</a> | <span rsf:id="preview-template-direct-link"><a rsf:id="payload-component" href="preview_eval.html" target="_blank">link</a></span> | <a href="evaluation_start.html" rsf:id="begin_eval_link" id="begin_eval_link">Begin an evaluation using this template</a> <span rsf:id="begin-eval-dummylink" id="begin-eval-dummylink" style="color:gray;"></span></div>
+      <div class="listNav itemAction"> <a href="modify_template.html" rsf:id="modify_title_desc_link" rel="faceboxGrid">Edit Template Title/Description</a> | <a rsf:id="preview_eval_link" href="preview_eval.html" target="_blank" >View a preview</a> | <span rsf:id="preview-template-direct-link"><a rsf:id="payload-component" href="preview_eval.html" target="_blank">link</a></span> | <a href="evaluation_start.html" rsf:id="begin_eval_link" id="begin_eval_link">Begin an evaluation using this template</a> <span rsf:id="begin-eval-dummylink" id="begin-eval-dummylink" style="color:gray;"></span></div>
     </div>
-    <div rsf:id="description-switch:" class="textPanel"> <span rsf:id="description" class="templateDesc">Template description goes here, this would be notes for other admins or yourself, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus in pede in ligula bibendum tincidunt. Quisque in dui a tellus ultricies posuere. Donec consectetuer, nunc quis luctus dignissim, velit purus consequat eros, eu euismod nibh justo ac purus. Ut sed justo. Cras aliquet massa ut lacus. Vestibulum feugiat vehicula pede. Morbi rhoncus quam in elit. Etiam egestas, metus a volutpat lobortis, erat dui laoreet libero, nec pulvinar sem mi ac felis.</span> </div>
+    <div rsf:id="description-switch:" class="textPanel"> <span rsf:id="description" id="">Template description goes here, this would be notes for other admins or yourself, Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus in pede in ligula bibendum tincidunt. Quisque in dui a tellus ultricies posuere. Donec consectetuer, nunc quis luctus dignissim, velit purus consequat eros, eu euismod nibh justo ac purus. Ut sed justo. Cras aliquet massa ut lacus. Vestibulum feugiat vehicula pede. Morbi rhoncus quam in elit. Etiam egestas, metus a volutpat lobortis, erat dui laoreet libero, nec pulvinar sem mi ac felis.</span> </div>
     <div class="navPanel">
     <div rsf:id="template-owner" style="display:none;" class="templateOwner">Owner</div>
       <div class="listNav">
@@ -79,7 +82,8 @@
         <div id="itemTable">
           <div id="itemList" class="itemList">
             <div rsf:id="item-row:" class="itemRow" id="item-row::0:">
-              <input rsf:id="hidden-item-num" type="hidden" name="hidden-item-num" value="0" id="item-row::0:hidden-item-num" />
+                <input rsf:id="hidden-item-num" type="hidden" name="hidden-item-num" value="0" id="item-row::0:hidden-item-num" />
+                <input rsf:id="template-item-id" type="hidden" name="template-item-id" value="0"/>
              <div class="itemLine2"> <span class="checkPlaceholder" rsf:id="check-placeholder">&nbsp;</span>
                 <label rsf:id="block-check-branch" class="itemCheckbox" for="cb0">
                 <input rsf:id="block-checkbox" type="checkbox" onclick="javascript: countCheckBox();"
@@ -94,16 +98,20 @@
 
 <h4 rsf:id="item-text-hidden:" class="itemText" style="display:none"> <span rsf:id="item-text-long">Item Text - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus in pede in ligula bibendum tincidunt. Quisque in dui a tellus ultricies posuere.</span><a rsf:id="item-text-hidden-control" href="#" class="less">less</a></h4>
 
-                <div class="scaleDesc textPanelFooter"> <span> <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a> &nbsp; 
-                <a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a>
+                <div class="scaleDesc textPanelFooter"> <span>
+                <span rsf:id="item-results-sharing"> Results Sharing </span> 
+                <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a> &nbsp; 
+								<img rsf:id="item-hierarchy" alt="Hierarchy ID:" src="/library/image/silk/text_linespacing.png"/>
+				<a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a>
                 <a rsf:id="remove-row-item-unblock"href="remove_question.html" rel="unblock">Ungroup</a> </span>
                  
                 </div>
                 <div class="cleaner">&nbsp;</div>
               </div>
-                            <div rsf:id="block-children:" class="itemLine3">
+                            <div rsf:id="block-children:" id="block-children:" class="itemLine3">
                	<div id="itemTableBlock" class="itemTableBlock">
-             			<a class="addItem" rel="faceboxAddGroupItems" href="#">Add existing item to this group</a>  &nbsp;&nbsp; | &nbsp;
+             			<a rsf:id="msg=modifytemplate.group.add.newitem" class="addItem" rel="faceboxAddNewGroupItem" href="#">Add new item</a>
+                       <a rsf:id="msg=modifytemplate.group.add.existingitem" class="dropItem addItem" rel="faceboxAddGroupItems" href="#">Add existing item</a>  &nbsp;&nbsp; | &nbsp;
 					 <span  rsf:id="modifyblock-items-list-instructions" class="instruction">Drag and drop to rearrange the blocked items</span>
 				<div rsf:id="itemRowBlock:" id="itemRowBlock::1:" class="itemRowBlock inlineEditable" style="padding:.2em;width:99%">
 							<input type="hidden" rsf:id="hidden-item-id" name="hidden-item-id" value="0" id="itemRowBlock::1:hidden-item-id" />
@@ -111,21 +119,19 @@
 							<span rsf:id="item-block-text" class="text">Child item text here</span>
 							
 							<span class="itemRight">
-                            
 								&nbsp;
 								<a rsf:id="modify-row-item" href="modify_scaled.html" rel="childEdit"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a>
-								&nbsp;
-								<a rsf:id="child-remove-item" href="remove_question.html" rel="childRemove"><img border="0" alt="Remove" src="/library/image/sakai/cross.png"/></a>
+                                <a rsf:id="child-remove-item" href="remove_question.html" rel="childRemove"><img border="0" alt="Remove" src="/library/image/sakai/cross.png"/></a>
+                                <a rsf:id="child-ungroup-item" href="remove_question.html" rel="childUngroup">Ungroup</a>
 <span rsf:id="remove-row-item-disabled" >Remove</span>
-     
-							</span>						</div>
+     					   </span>						</div>
 					</div>   
                  </div>
             </div>
             
             <div rsf:id="item-row:" class="itemRow" id="item-row::1:">
               <input rsf:id="hidden-item-num" type="hidden" name="hidden-item-num" value="1" id="item-row::1:hidden-item-num" />
-             
+                <input rsf:id="template-item-id" type="hidden" name="template-item-id" value="0"/>
               <div class="itemLine2"> <span class="checkPlaceholder" rsf:id="check-placeholder">&nbsp;</span>
                 <label rsf:id="block-check-branch" class="itemCheckbox" for="cb1">
                 <input rsf:id="block-checkbox" type="checkbox" onclick="javascript: countCheckBox();"
@@ -138,13 +144,19 @@
                 </select>
                 <h4 rsf:id="item-text" class="itemText"> Item Text - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus in pede in ligula bibendum tincidunt. Quisque in dui a tellus ultricies posuere. <a class="more">more</a> </h4>
                 
-                <div class="scaleDesc textPanelFooter"> <span class="itemType"> <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a> &nbsp; <a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a> </span>
+                <div class="scaleDesc textPanelFooter"> <span class="itemType">
+                <span rsf:id="item-results-sharing"> Results Sharing </span> 
+                <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a>
+				&nbsp;
+								<img rsf:id="item-hierarchy" alt="Hierarchy ID:" src="/library/image/silk/text_linespacing.png"/>
+								 &nbsp; <a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a> </span>
                 </div>
                 <div class="cleaner">&nbsp;</div>
               </div>
-                            <div rsf:id="block-children:" class="itemLine3">
-              <div id="itemTableBlock" class="itemTableBlock">
-             			<a class="addItem" rel="faceboxAddGroupItems" href="#">Add existing item to this group</a>  &nbsp;&nbsp; | &nbsp; 
+                            <div rsf:id="block-children:" id="block-children:" class="itemLine3">
+               <div id="itemTableBlock" class="itemTableBlock">
+             			<a rsf:id="msg=modifytemplate.group.add.newitem" class="addItem" rel="faceboxAddNewGroupItem" href="#">Add new item</a>
+                   <a rsf:id="msg=modifytemplate.group.add.existingitem" class="dropItem addItem" rel="faceboxAddGroupItems" href="#">Add existing item</a>  &nbsp;&nbsp; | &nbsp;
 					 <span rsf:id="modifyblock-items-list-instructions" class="instruction">Drag and drop to rearrange the blocked items</span>
 				<div rsf:id="itemRowBlock:" id="itemRowBlock::1:" class="itemRowBlock inlineEditable" style="padding:.2em;width:99%">
 							<input type="hidden" rsf:id="hidden-item-id" name="hidden-item-id" value="0" id="itemRow::1:hidden-item-id" />
@@ -155,10 +167,11 @@
 								
 								&nbsp;
 								<a rsf:id="modify-row-item" href="modify_scaled.html" rel="childEdit"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a>
-								&nbsp;
-								<a rsf:id="child-remove-item" href="remove_question.html" rel="childRemove"><img border="0" alt="Remove" src="/library/image/sakai/cross.png"/></a>
-<span rsf:id="remove-row-item-disabled" >Remove</span>	
-    
+								
+                                <a rsf:id="child-remove-item" href="remove_question.html" rel="childRemove"><img border="0" alt="Remove" src="/library/image/sakai/cross.png"/></a>
+                                <a rsf:id="child-ungroup-item" href="remove_question.html" rel="childUngroup">Ungroup</a>                                
+<span rsf:id="remove-row-item-disabled" >Remove</span>
+    							
 				</span>						</div>
 					</div>   
                  </div>           
@@ -166,7 +179,7 @@
             <div rsf:id="item-row:" class="itemRow" id="item-row::2:">
               <input rsf:id="hidden-item-num" type="hidden" name="hidden-item-num" value="2" id="item-row::2:hidden-item-num" />
               <input rsf:id="hidden-item-id" type="hidden" name="hidden-item-id" value="2" id="item-row::2:hidden-item-id" />
-             
+                <input rsf:id="template-item-id" type="hidden" name="template-item-id" value="0"/>
               <div class="itemLine2"> <span class="checkPlaceholder" rsf:id="check-placeholder">&nbsp;</span>
                 <label rsf:id="block-check-branch" class="itemCheckbox" for="cb2">
                 <input rsf:id="block-checkbox" type="checkbox" onclick="javascript: countCheckBox();"
@@ -178,10 +191,14 @@
                   <option value="3" selected="selected">3</option>
                 </select>
                 <span rsf:id="item-text" class="itemText"> Item Text - Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Vivamus in pede in ligula bibendum tincidunt. Quisque in dui a tellus ultricies posuere. </span>
-                <div class="scaleDesc textPanelFooter"> <span class="itemType"> <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a> &nbsp; 
-                <a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a>
+                <div class="scaleDesc textPanelFooter">
+                	<span rsf:id="item-results-sharing"> Results Sharing </span> 
+					 <span class="itemType"> <span rsf:id="item-classification" class="itemClassification lighthighlight">Item Classification</span> <span rsf:id="scale-display" class="scaleDisplay">- Scale Display Setting</span> <span rsf:id="item-category" class="lighthighlight">(Tutor)</span></span> <span> <a href="preview_item.html" class="preview" rel="faceboxGrid" rsf:id="preview-row-item"><img src="/library/image/silk/zoom.png" alt="Preview" border="0" /></a> &nbsp; <a rsf:id="modify-row-item" href="modify_scaled.html" rel="faceboxGrid"><img src="/library/image/silk/pencil.png" alt="Edit" border="0" /></a> &nbsp; 
+                &nbsp;
+								<img rsf:id="item-hierarchy" alt="Hierarchy ID:" src="/library/image/silk/text_linespacing.png"/>
+				<a rsf:id="remove-row-item"href="remove_question.html" rel="remove"><img src="/library/image/sakai/cross.png" alt="Remove" border="0" /></a>
                 <a rsf:id="remove-row-item-unblock" href="remove_question.html" rel="unblock">Ungroup</a>
-                 </span>
+                 </span>  
                 </div>
                 <div class="cleaner">&nbsp;</div>
               </div>
@@ -189,9 +206,7 @@
           </div>
         </div>
       </form>
-      <script rsf:id="decorateSelects">
-					   EvalSystem.decorateReorderSelects("", 3);
-					</script>
+
       <span rsf:id="total-rows" class="totalRows" style="display:none"></span>
       <div>
         <div class="itemOperations" id="blockInputs">
