@@ -451,6 +451,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                         } else if (selectKeyLowerCaps.equals(SELECT_KEY_ASSISTANT)) {
                             selectUserIds = assistantIds;
                         }
+
                         // We render the selection controls if there are at least two
                         // Instructors/TAs
                         if (selectUserIds.size() > 1 && associatedTypes.contains(selectKey) ) {
@@ -498,16 +499,16 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                             }
                         } else  if (selectUserIds.size() == 1  && associatedTypes.contains(selectKey) ) {
                        	    // handle case where there are selections set but ONLY 1 user in the role.
-                        	if (selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
-                                // nothing special to do in all case
-                            } else{
-	                        	for (String userId : selectUserIds) {
+                        	if (! selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
+                        		for (String userId : selectUserIds) {
 	                            	form.parameters.add(new UIELBinding(selectionOTP, userId));
 	                        	}
                             }
                         }else{
                         	// handle case where there are selections set but no users in the roles.
-                            form.parameters.add(new UIELBinding(selectionOTP, "none"));
+                        	if (! selectValue.equals(EvalAssignGroup.SELECTION_OPTION_ALL)) {
+                        		form.parameters.add(new UIELBinding(selectionOTP, "none"));
+                            }
                         }
                     }
                 }
