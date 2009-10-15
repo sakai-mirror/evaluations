@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.sakaiproject.entitybroker.DeveloperHelperService;
 import org.sakaiproject.entitybroker.EntityReference;
 import org.sakaiproject.entitybroker.EntityView;
@@ -32,6 +33,7 @@ import org.sakaiproject.entitybroker.entityprovider.extension.Formats;
 import org.sakaiproject.evaluation.logic.EvalAuthoringService;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.model.EvalTemplateItem;
+import org.sakaiproject.evaluation.utils.TemplateItemUtils;
 
 /**
  * Implementation for the entity provider for template items (questions in a template)
@@ -61,6 +63,13 @@ public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvide
     }
     
     private final static String key_ordered_Ids = "orderedIds";
+
+  //parameter name keys for {@link modifyBlockItems} method
+    private final static String key_block_id = "blockid";
+    private final static String key_items_to_add = "additems";
+
+  //parameter name key for {@link unblock} method
+    private final static String key_item_id = "itemid";
 
     public boolean entityExists(String id) {
         boolean exists = false;
@@ -125,7 +134,7 @@ public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvide
         return id;
     }
     
-  //Custom action to handle /eval-templateitem/block-reorder
+  //Custom action to handle /eval-templateitem/template-items-reorder
 	@EntityCustomAction(action=CUSTOM_TEMPLATE_ITEMS_REORDER,viewKey=EntityView.VIEW_NEW)
 	public void saveTemplateItemsOrdering(EntityView view, Map<String, Object> params) {
 		Object ids = params.get(key_ordered_Ids);
@@ -145,4 +154,56 @@ public class TemplateItemEntityProviderImpl implements TemplateItemEntityProvide
 		}
 	}
 
+	//Custom method to handle /eval-templateitem/modify-block-items
+	@EntityCustomAction(action=CUSTOM_TEMPLATE_ITEMS_BLOCK,viewKey=EntityView.VIEW_NEW)
+	public void modifyBlockItems(EntityView view, Map<String, Object> params) {
+		Long blockId = Long.parseLong( params.get(key_block_id).toString() );
+		String currentUserId = commonLogic.getCurrentUserId();
+		String itemsToAddParams = params.get(key_items_to_add).toString();
+		List<String> itemsToAdd = Arrays.asList(itemsToAddParams.split(","));
+		
+		EvalTemplateItem parent = authoringService.getTemplateItemById(blockId);
+		int totalGroupedItems = authoringService.getBlockChildTemplateItemsForBlockParent(blockId, false).size();
+		
+		for ( String itemIdstring : itemsToAdd){
+			Long itemId = Long.parseLong(itemIdstring);
+			EvalTemplateItem child = authoringService.getTemplateItemById(itemId);
+			
+			int itemPosition = (itemsToAdd.indexOf(itemIdstring) + 1) + totalGroupedItems;
+			
+			child.setBlockParent(Boolean.FALSE);
+			child.setBlockId(blockId);
+			child.setDisplayOrder(itemPosition);
+            child.setCategory(parent.getCategory()); // EVALSYS-441
+            child.setUsesNA(parent.getUsesNA()); // child inherits parent NA setting EVALSYS-549
+            // children have to inherit the parent hierarchy settings
+            child.setHierarchyLevel(parent.getHierarchyLevel());
+            child.setHierarchyNodeId(parent.getHierarchyNodeId());
+            authoringService.saveTemplateItem(child, currentUserId);    
+		}
+	}
+	
+	//Custom method to handle /eval-templateitem/unblock
+	@EntityCustomAction(action=CUSTOM_TEMPLATE_ITEMS_UNBLOCK,viewKey=EntityView.VIEW_NEW)
+	public void unblock(EntityView view, Map<String, Object> params) {
+		Object rawId = params.get(key_item_id);
+		if( rawId !=null ){
+			Long itemId = Long.parseLong( rawId.toString() );
+			String currentUserId = commonLogic.getCurrentUserId();
+			EvalTemplateItem templateItem = authoringService.getTemplateItemById( itemId );
+			if (TemplateItemUtils.isBlockChild(templateItem)){
+				List<EvalTemplateItem> allItems = authoringService.getTemplateItemsForTemplate( templateItem.getTemplate().getId() , new String[]{}, new String[]{}, new String[]{});
+				List<EvalTemplateItem> items = TemplateItemUtils.getNonChildItems(allItems);
+				templateItem.setBlockParent(null);
+				templateItem.setBlockId(null);
+				templateItem.setDisplayOrder(items.size() + 1);
+				authoringService.saveTemplateItem(templateItem, currentUserId);
+			}else{
+				throw new IllegalStateException("Template item "+ itemId +" is not part of a group!");
+			}
+		}else{
+			throw new IllegalArgumentException("No item Id to process.");
+		}
+		
+	}
 }
