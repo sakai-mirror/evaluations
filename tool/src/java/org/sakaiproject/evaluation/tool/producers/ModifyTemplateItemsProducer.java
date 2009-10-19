@@ -352,7 +352,7 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                 }
 
                 if(TemplateItemUtils.isBlockParent(templateItem)){
-                    UIInternalLink unblockItem = UIInternalLink.make(itemBranch,	"remove-row-item-unblock", UIMessage.make("modifytemplate.group.upgroup"),
+                    UIInternalLink unblockItem = UIInternalLink.make(itemBranch,	"remove-row-item-unblock", UIMessage.make("modifytemplate.group.ungroup"),
                             new ItemViewParameters(RemoveItemProducer.VIEW_ID, (Long)null, templateItem.getId(), templateId) );
                     unblockItem.decorate(new UIFreeAttributeDecorator("templateItemId", templateItem.getId().toString()));
                     unblockItem.decorate(new UIFreeAttributeDecorator("templateId", templateId.toString()));
