@@ -2,6 +2,8 @@
  * For the evalAssign view
  */
 $(document).ready(function() {
+    //trigger FB overrides 	
+    evalTemplateFacebox.init();
     $('a[rel=assignInstructorSelector]').assignSelector({type:0});
     $('a[rel=assignTaSelector]').assignSelector({type:1});
     $(':submit').bind('click', function() {
@@ -349,4 +351,4 @@ $(document).ready(function() {
             window.console.log('INFO: ' + obj);
         }
     }
-})($)
+})($);
