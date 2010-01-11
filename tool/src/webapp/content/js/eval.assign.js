@@ -3,7 +3,7 @@
  */
 $(document).ready(function() {
     //trigger FB overrides 	
-    evalTemplateFacebox.init();
+    evalAssignFacebox.init();
     $('a[rel=assignInstructorSelector]').assignSelector({type:0});
     $('a[rel=assignTaSelector]').assignSelector({type:1});
     $(':submit').bind('click', function() {
@@ -29,7 +29,7 @@ $(document).ready(function() {
      */
     $.fn.assignSelector.defaults = {
         type: 1, //Type is for type of category we are handling. ie: 0 = instructor, 1 = ta
-        debug: false
+        debug: true
     };
     /**
      * Private methods and variables
@@ -87,7 +87,6 @@ $(document).ready(function() {
         $(document).bind('afterReveal.facebox', function() {
             variables.initedafterRevealFacebox++;
             log(variables.initedafterRevealFacebox);
-            if (variables.initedafterRevealFacebox == 1) {
                 log("WARN: Lightbox loaded, attaching listerners now...");
                 var _that = $('#facebox div.content:eq(0)');    //lightbox $document object
                 variables.get.documentFB = _that ? _that : null;
@@ -186,7 +185,6 @@ $(document).ready(function() {
                     'height': tableHolder.height() > 200 ? '205px' : (tableHolder.height() + 10) + "px"
                 }) ;
                 log("Formatting table holder hieght. Set height to:" + tableHolder.height());
-            }
         });
         $(document).bind('afterClose.facebox', function() {
             log("Running afterClose.facebox; initialising variables.initedafterRevealFacebox.");
@@ -346,9 +344,6 @@ $(document).ready(function() {
     };
 
     // Debugging
-    function log(obj) {
-        if ((variables.options.debug) && (window.console && window.console.log)) {
-            window.console.log('INFO: ' + obj);
-        }
-    }
+    log = (($.fn.assignSelector.defaults.debug) && window.console) ? console.info : function(){return true;};
+
 })($);
