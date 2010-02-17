@@ -317,7 +317,11 @@ public interface EvalSettings {
      * choices in the eval settings and eval assign views, otherwise the default is used
      */
     public static final String ENABLE_INSTRUCTOR_ASSISTANT_SELECTION = "ENABLE_INSTRUCTOR_ASSISTANT_SELECTION:java.lang.Boolean";
-
+    
+    /**
+     * If this is enabled then all eval users will be sent a mass email whenever a new evaluation is created the default is true
+     */
+    public static final String ENABLE_EMAIL_ON_EVAL_CREATION = "ENABLE_EMAIL_ON_EVAL_CREATION:java.lang.Boolean";
 
     /**
      * This is here to identify all the boolean ONLY settings in the system,
@@ -334,6 +338,7 @@ public interface EvalSettings {
         ENABLE_ADHOC_GROUPS,
         ENABLE_ADHOC_USERS,
         ENABLE_CSV_REPORT_EXPORT,
+        ENABLE_EMAIL_ON_EVAL_CREATION,
         ENABLE_EVAL_CATEGORIES,
         ENABLE_EVAL_EARLY_CLOSE,
         ENABLE_EVAL_REOPEN,

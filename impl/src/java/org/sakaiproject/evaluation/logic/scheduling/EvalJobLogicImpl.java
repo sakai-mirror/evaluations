@@ -262,13 +262,17 @@ public class EvalJobLogicImpl implements EvalJobLogic {
             if (ttws != null && ttws.intValue() > 0) {
                 timeToWaitSecs = ttws.intValue();
             }
-            /*
-             * Note: email should NOT be sent at this point, so we
-             * schedule email for EvalConstants.EVALUATION_TIME_TO_WAIT_MINS minutes from now, 
-             * giving instructor time to delete the evaluation and its notification
-             */
-            long runAt = new Date().getTime() + (1000 * timeToWaitSecs);
-            scheduleJob(eval.getId(), new Date(runAt), EvalConstants.JOB_TYPE_CREATED);
+            //Consider global admin setting wrt sending a mass email notifying users of eval creation
+            Boolean sendEmails = (Boolean) settings.get(EvalSettings.ENABLE_EMAIL_ON_EVAL_CREATION);
+            if (sendEmails){
+	            /*
+	             * Note: email should NOT be sent at this point, so we
+	             * schedule email for EvalConstants.EVALUATION_TIME_TO_WAIT_MINS minutes from now, 
+	             * giving instructor time to delete the evaluation and its notification
+	             */
+	            long runAt = new Date().getTime() + (1000 * timeToWaitSecs);
+	            scheduleJob(eval.getId(), new Date(runAt), EvalConstants.JOB_TYPE_CREATED);
+            }
         }
         scheduleJob(eval.getId(), eval.getStartDate(), EvalConstants.JOB_TYPE_ACTIVE);
     }
