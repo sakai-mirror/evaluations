@@ -321,7 +321,7 @@ public interface EvalSettings {
     /**
      * If this is enabled then all eval users will be sent a mass email whenever a new evaluation is created the default is true
      */
-    public static final String ENABLE_EMAIL_ON_EVAL_CREATION = "ENABLE_EMAIL_ON_EVAL_CREATION:java.lang.Boolean";
+    public static final String ENABLE_EMAIL_ON_EVAL_BEGIN = "ENABLE_EMAIL_ON_EVAL_START:java.lang.Boolean";
 
     /**
      * This is here to identify all the boolean ONLY settings in the system,
@@ -338,7 +338,7 @@ public interface EvalSettings {
         ENABLE_ADHOC_GROUPS,
         ENABLE_ADHOC_USERS,
         ENABLE_CSV_REPORT_EXPORT,
-        ENABLE_EMAIL_ON_EVAL_CREATION,
+        ENABLE_EMAIL_ON_EVAL_BEGIN,
         ENABLE_EVAL_CATEGORIES,
         ENABLE_EVAL_EARLY_CLOSE,
         ENABLE_EVAL_REOPEN,
