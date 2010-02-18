@@ -99,5 +99,13 @@ public interface ExternalEvalGroups {
 	 * @return the count of the eval groups that the user has a permission in
 	 */
 	public int countEvalGroupsForUser(String userId, String permission);
+	
+	/**
+	 * Check if this group/site is published since some operations must be done on published groups/sites.
+	 * 
+	 * @param evalGroupId
+	 * @return TRUE: Group exists and is published. FALSE: Group may not exist or is unpublished
+	 */
+	public boolean isEvalGroupPublished(String evalGroupId);
 
 }

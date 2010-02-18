@@ -189,6 +189,9 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
         // loop through groups and send emails to correct users group
         for (int i = 0; i < assignGroups.size(); i++) {
             EvalAssignGroup assignGroup = assignGroups.get(i);
+            
+            if(! commonLogic.isEvalGroupPublished(assignGroup.getEvalGroupId())) continue;
+            
             EvalGroup group = commonLogic.makeEvalGroupObject(assignGroup.getEvalGroupId());
             if (eval.getInstructorOpt().equals(EvalConstants.INSTRUCTOR_REQUIRED)) {
                 // notify eval takers
@@ -261,6 +264,8 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
     public String[] sendEvalAvailableGroupNotification(Long evaluationId, String evalGroupId) {
 
         List<String> sentEmails = new ArrayList<String>();
+        
+        if(! commonLogic.isEvalGroupPublished(evalGroupId)) return new String[] {};
 
         // get group
         EvalGroup group = commonLogic.makeEvalGroupObject(evalGroupId);
@@ -328,6 +333,8 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
                 continue; // skip processing for invalid groups
             }
             String evalGroupId = group.evalGroupId;
+            
+            if(! commonLogic.isEvalGroupPublished(evalGroupId)) continue;
 
             String[] limitGroupIds = null;
             if (evalGroupId != null) {
@@ -722,5 +729,4 @@ public class EvalEmailsLogicImpl implements EvalEmailsLogic {
         }
         return eval;
     }
-
 }

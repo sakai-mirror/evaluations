@@ -1077,5 +1077,17 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
         String ret = contentHostingService.getSiteCollection(siteId);
         return ret;
     }
+    
+	public boolean isEvalGroupPublished(String evalGroupId) {
+		boolean isEvalGroupPublished = false;
+		if( evalGroupId != null){
+			try{
+			Site site = siteService.getSite(evalGroupId);
+			isEvalGroupPublished = site.isPublished();
+			}catch(IdUnusedException e){} //return false so as not to break processing of other sites
+		}
+		return isEvalGroupPublished;
+	}
+
 
 }

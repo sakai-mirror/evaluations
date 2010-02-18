@@ -711,4 +711,8 @@ public class EvalCommonLogicImpl implements EvalCommonLogic {
         return l;
 	}
 
+	public boolean isEvalGroupPublished(String evalGroupId) {
+		return externalLogic.isEvalGroupPublished(evalGroupId);
+	}
+
 }
