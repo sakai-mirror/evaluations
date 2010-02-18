@@ -189,6 +189,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
         
         boolean canAccess = false; // can a user access this evaluation
         boolean userCanAccess = false; // can THIS user take this evaluation
+        boolean isUserSitePublished = true; //is the users' valid group(s) published? At least one group must be
 
         String currentUserId = commonLogic.getCurrentUserId();
         // use a date which is related to the current users locale
@@ -222,7 +223,7 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
         /* check the states of the evaluation first to give the user a tip that this eval is not takeable,
          * also avoids wasting time checking permissions when the evaluation certainly is closed,
          * also allows us to give the user a nice custom message
-         */
+         */        
         String evalState = evaluationService.returnAndFixEvalState(eval, true); // make sure state is up to date
         if (EvalUtils.checkStateBefore(evalState, EvalConstants.EVALUATION_STATE_ACTIVE, false)) {
             String dueDate = "--------";
@@ -248,6 +249,8 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                 // there was an eval group passed in so make sure things are ok
                 if (evaluationService.canTakeEvaluation(currentUserId, evaluationId, evalGroupId)) {
                     userCanAccess = true;
+                }else{
+                	isUserSitePublished = false;
                 }
             } else {
                 // select the first eval group the current user can take evaluation in,
@@ -291,12 +294,19 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
                                 userCanAccess = true;
                             }
                             validGroups.add( commonLogic.makeEvalGroupObject(group.evalGroupId) );
+                        }else{
+                        	isUserSitePublished = false;
                         }
                     }
                 }
             }
-
-            if (userCanAccess) {
+            
+            if (! isUserSitePublished ){
+            	userCanAccess = false;
+            	UIMessage.make(tofill, "eval-cannot-take-message", "takeeval.eval.site.notpublished");
+                log.info("User ("+currentUserId+") cannot take evaluation because his site(s) are unpublished.");
+            }
+            else if (userCanAccess) {
                 // check if we had a failure during a previous submit and get the missingKeys out if there are some
                 Set<String> missingKeys = new HashSet<String>();
                 if (messages.isError() && messages.size() > 0) {
@@ -564,8 +574,8 @@ public class TakeEvalProducer implements ViewComponentProducer, ViewParamsReport
             }
         }
     }
-    
-    /**
+
+	/**
      * Render each group header
      * @param categorySectionBranch the parent container
      * @param associateType Assistant or Instructor value
