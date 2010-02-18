@@ -1082,9 +1082,11 @@ public class EvalExternalLogicImpl implements EvalExternalLogic {
 		boolean isEvalGroupPublished = false;
 		if( evalGroupId != null){
 			try{
-			Site site = siteService.getSite(evalGroupId);
+			Site site = siteService.getSite(evalGroupId.replaceAll("/site/", ""));
 			isEvalGroupPublished = site.isPublished();
-			}catch(IdUnusedException e){} //return false so as not to break processing of other sites
+			}catch(IdUnusedException e){
+				log.debug(e);
+			} //return false so as not to break processing of other sites
 		}
 		return isEvalGroupPublished;
 	}

@@ -281,6 +281,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             	
             	int numEvaluatorsInSite = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_TAKE_EVALUATION);
             	boolean hasEvaluators = numEvaluatorsInSite > 0;
+            	boolean isPublished = commonLogic.isEvalGroupPublished(evalGroupId);
             	            	
                 UIBranchContainer checkboxRow = UIBranchContainer.make(evalgroupArea, "groups:", count+"");
                 if (count % 2 == 0) {
@@ -317,7 +318,6 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                     form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
                 }
                 
-                
                 evalGroupsLabels.add(evalGroup.title);
                 evalGroupsValues.add(evalGroupId);
 
@@ -325,7 +325,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
                 
-                if (! hasEvaluators){
+                if (! hasEvaluators || ! isPublished){
                 	choice.decorate( new UIDisabledDecorator() );
                 }
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
@@ -337,8 +337,12 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 // get title from the map since it is faster
 	            UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
-	                
-                if( hasEvaluators ){
+	            
+	            if(! isPublished){
+                	title.decorate( new UIStyleDecorator("instruction") );
+                	UIMessage.make(checkboxRow, "select-no", "assigneval.notpublished");
+                }
+	            else if( hasEvaluators ){
 	                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
 	                if(totalUsers > 0){
 	                	int currentUsers = deselectedInsructorIds.size() >= 0 ? ( totalUsers-deselectedInsructorIds.size() ) : totalUsers;
