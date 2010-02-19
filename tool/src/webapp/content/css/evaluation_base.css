@@ -839,3 +839,13 @@ background-repeat : no-repeat !important;
 	background: transparent url(/library/image/silk/page_white_put.png) center left no-repeat
 }
 
+.elementAlertBack{
+	background: transparent url(/library/image/silk/error.png) no-repeat scroll right 0;
+	padding-right: 20px
+}
+
+.elementAlertFront{
+	background: transparent url(/library/image/silk/error.png) no-repeat scroll left 0;
+	padding-left: 20px
+}
+

@@ -30,7 +30,6 @@ import org.sakaiproject.entitybroker.EntityReference;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
-import org.sakaiproject.evaluation.logic.EvalSettings;
 import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
@@ -52,7 +51,6 @@ import uk.org.ponder.rsf.components.UIOutput;
 import uk.org.ponder.rsf.components.UIOutputMany;
 import uk.org.ponder.rsf.components.UISelect;
 import uk.org.ponder.rsf.components.UISelectChoice;
-import uk.org.ponder.rsf.components.decorators.UIDecorator;
 import uk.org.ponder.rsf.components.decorators.UIDisabledDecorator;
 import uk.org.ponder.rsf.components.decorators.UIFreeAttributeDecorator;
 import uk.org.ponder.rsf.components.decorators.UILabelTargetDecorator;
@@ -143,8 +141,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         }
 
         UIMessage.make(tofill, "assign-eval-edit-page-title", "assigneval.assign.page.title", new Object[] {evaluation.getTitle()});
-        UIMessage.make(tofill, "assign-eval-instructions", "assigneval.assign.instructions", new Object[] {evaluation.getTitle()});
-        
+        UIMessage.make(tofill, "assign-eval-instructions", "assigneval.assign.instructions", new Object[] {evaluation.getTitle()});        
 
         UIMessage.make(tofill, "evalAssignInstructions", "evaluationassignconfirm.eval.assign.instructions",
                 new Object[] {df.format(evaluation.getStartDate())});
@@ -274,6 +271,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             }
                            
             int count = 0;
+            int countUnpublishedGroups = 0;
             for (EvalGroup evalGroup : unassignedEvalGroups) {
             	if(evalGroup != null){
             		
@@ -325,7 +323,7 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 UISelectChoice choice = UISelectChoice.make(checkboxRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
                 
-                if (! hasEvaluators || ! isPublished){
+                if (! hasEvaluators){
                 	choice.decorate( new UIDisabledDecorator() );
                 }
                 form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
@@ -339,10 +337,11 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 	            UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
 	            
 	            if(! isPublished){
-                	title.decorate( new UIStyleDecorator("instruction") );
-                	UIMessage.make(checkboxRow, "select-no", "assigneval.notpublished");
+                	title.decorate( new UIStyleDecorator("elementAlertBack") );
+                	countUnpublishedGroups ++;
                 }
-	            else if( hasEvaluators ){
+	            
+	            if( hasEvaluators ){
 	                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
 	                if(totalUsers > 0){
 	                	int currentUsers = deselectedInsructorIds.size() >= 0 ? ( totalUsers-deselectedInsructorIds.size() ) : totalUsers;
@@ -370,6 +369,9 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 
                 count++;
             }
+            }
+            if (countUnpublishedGroups > 0){
+            	UIMessage.make(tofill, "assign-eval-instructions-group-notpublished", "assigneval.assign.instructions.notpublished");
             }
         } else {
             // TODO tell user there are no groups to assign to
