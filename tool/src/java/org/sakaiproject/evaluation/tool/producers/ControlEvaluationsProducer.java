@@ -45,6 +45,8 @@ import uk.org.ponder.rsf.components.UILink;
 import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
 import uk.org.ponder.rsf.components.decorators.DecoratorList;
+import uk.org.ponder.rsf.components.decorators.UIDecorator;
+import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
 import uk.org.ponder.rsf.components.decorators.UITooltipDecorator;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
@@ -170,6 +172,7 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
       List<EvalEvaluation> inqueueEvals = new ArrayList<EvalEvaluation>();
       List<EvalEvaluation> activeEvals = new ArrayList<EvalEvaluation>();
       List<EvalEvaluation> closedEvals = new ArrayList<EvalEvaluation>();
+      List<Long> takableEvaluationIds = new ArrayList<Long>(); // collect evaluation Ids for evaluations that are pending and active ONLY
 
       List<EvalEvaluation> evals = evaluationSetupService.getVisibleEvaluationsForUser(commonLogic.getCurrentUserId(), false, false, true);
       for (int j = 0; j < evals.size(); j++) {
@@ -180,16 +183,21 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
 
          if ( EvalConstants.EVALUATION_STATE_INQUEUE.equals(evalStatus) ) {
             inqueueEvals.add(eval);
+            takableEvaluationIds.add(eval.getId());
          } else if (EvalConstants.EVALUATION_STATE_CLOSED.equals(evalStatus) ||
                EvalConstants.EVALUATION_STATE_VIEWABLE.equals(evalStatus) ) {
             closedEvals.add(eval);
          } else if (EvalConstants.EVALUATION_STATE_ACTIVE.equals(evalStatus) ||
                EvalConstants.EVALUATION_STATE_GRACEPERIOD.equals(evalStatus) ) {
             activeEvals.add(eval);
+            takableEvaluationIds.add(eval.getId());
          } else if (EvalConstants.EVALUATION_STATE_PARTIAL.equals(evalStatus) ) {
             partialEvals.add(eval);
          }
       }
+      
+      // get evalGroups for pending and active evals only. Later we will check if any of them are unpublished
+      Map<Long, List<EvalAssignGroup>> takableAssignGroups = evaluationService.getAssignGroupsForEvals(takableEvaluationIds.toArray(new Long[0]), true, null);
 
       // create start new eval link
       UIInternalLink.make(tofill, "begin-evaluation-link", UIMessage.make("starteval.page.title"), 
@@ -219,6 +227,8 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
                   new EvalViewParameters( RemoveEvalProducer.VIEW_ID, evaluation.getId() ) );
          }
       }
+      
+      int countUnpublishedGroups = 0;
 
       // create inqueue evaluations header
       if (inqueueEvals.size() > 0) {
@@ -229,7 +239,7 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
 
             UIBranchContainer evaluationRow = UIBranchContainer.make(evalListing, "inqueue-eval-row:", evaluation.getId().toString());
 
-            UIInternalLink.make(evaluationRow, "inqueue-eval-link", evaluation.getTitle(), 
+            UIInternalLink evalTitleLink = UIInternalLink.make(evaluationRow, "inqueue-eval-link", evaluation.getTitle(), 
                   new EvalViewParameters( PreviewEvalProducer.VIEW_ID, evaluation.getId(), evaluation.getTemplate().getId() ) );
             UILink.make(evaluationRow, "eval-direct-link", UIMessage.make("controlevaluations.eval.direct.link"), 
                   commonLogic.getEntityURL(evaluation));
@@ -238,6 +248,21 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
                      commonLogic.getEntityURL(EvalCategoryEntityProvider.ENTITY_PREFIX, evaluation.getEvalCategory()) );
                catLink.decorators = new DecoratorList( 
                      new UITooltipDecorator( UIMessage.make("general.category.link.tip", new Object[]{evaluation.getEvalCategory()}) ) );
+            }
+            
+            // check if this eval has any site/group that is unpublished
+            List<EvalAssignGroup> assignGroups = takableAssignGroups.get(evaluation.getId());
+            int countUnpublished = 0;
+            for (EvalAssignGroup group : assignGroups){
+            	if (! commonLogic.isEvalGroupPublished(group.getEvalGroupId())){
+            		countUnpublished ++;
+            	}
+            }
+            
+            if (countUnpublished > 0){
+            	evalTitleLink.decorate( new UIStyleDecorator("elementAlertFront") );
+            	evalTitleLink.decorate( new UITooltipDecorator( UIMessage.make("controlevaluations.instructions.site.unpublished")) );
+            	countUnpublishedGroups ++;
             }
 
             // vary the display depending on the number of groups assigned
@@ -280,7 +305,7 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
 
             UIBranchContainer evaluationRow = UIBranchContainer.make(evalListing, "active-eval-row:", evaluation.getId().toString());
 
-            UIInternalLink.make(evaluationRow, "active-eval-link", evaluation.getTitle(), 
+            UIInternalLink evalTitleLink = UIInternalLink.make(evaluationRow, "active-eval-link", evaluation.getTitle(), 
                   new EvalViewParameters( PreviewEvalProducer.VIEW_ID, evaluation.getId(),	evaluation.getTemplate().getId() ) );
             UILink.make(evaluationRow, "eval-direct-link", UIMessage.make("controlevaluations.eval.direct.link"), 
                   commonLogic.getEntityURL(evaluation));
@@ -290,6 +315,23 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
                catLink.decorators = new DecoratorList( 
                      new UITooltipDecorator( UIMessage.make("general.category.link.tip", new Object[]{evaluation.getEvalCategory()}) ) );
             }
+            
+
+            // check if this eval has any site/group that is unpublished
+            List<EvalAssignGroup> assignGroups = takableAssignGroups.get(evaluation.getId());
+            int countUnpublished = 0;
+            for (EvalAssignGroup group : assignGroups){
+            	if (! commonLogic.isEvalGroupPublished(group.getEvalGroupId())){
+            		countUnpublished ++;
+            	}
+            }
+            
+            if (countUnpublished > 0){
+            	evalTitleLink.decorate( new UIStyleDecorator("elementAlertFront") );
+            	evalTitleLink.decorate( new UITooltipDecorator( UIMessage.make("controlevaluations.instructions.site.unpublished")) );
+            	countUnpublishedGroups ++;
+            }
+
 
             // vary the display depending on the number of groups assigned
             int groupsCount = evaluationService.countEvaluationGroups(evaluation.getId(), false);
@@ -330,6 +372,10 @@ public class ControlEvaluationsProducer implements ViewComponentProducer {
          }
       } else {
          UIMessage.make(tofill, "no-active-evals", "controlevaluations.active.none");
+      }
+      
+      if (countUnpublishedGroups > 0){
+      	UIMessage.make(tofill, "eval-instructions-group-notpublished", "controlevaluations.instructions.site.unpublished");
       }
 
       // create closed evaluations header and link
