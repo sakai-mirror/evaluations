@@ -40,6 +40,7 @@ import uk.org.ponder.rsf.components.UIInternalLink;
 import uk.org.ponder.rsf.components.UILink;
 import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
+import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
 import uk.org.ponder.rsf.viewstate.SimpleViewParameters;
@@ -140,15 +141,21 @@ public class EvaluationAssignmentsProducer implements ViewComponentProducer, Vie
       }
 
       // show the assigned groups
+      int countUnpublishedGroups = 0;
       if (assignGroups.size() > 0) {
          UIBranchContainer groupsBranch = UIBranchContainer.make(tofill, "showSelectedGroups:");
          for (EvalAssignGroup assignGroup : assignGroups) {
             if (assignGroup.getNodeId() == null) {
                // only include directly added groups (i.e. nodeId is null)
                String evalGroupId = assignGroup.getEvalGroupId();
+           	   boolean isPublished = commonLogic.isEvalGroupPublished(evalGroupId);
                EvalGroup group = commonLogic.makeEvalGroupObject(evalGroupId);
                UIBranchContainer groupRow = UIBranchContainer.make(groupsBranch, "groups:", evalGroupId);
-               UIOutput.make(groupRow, "groupTitle", group.title);
+               UIOutput title = UIOutput.make(groupRow, "groupTitle", group.title);
+               if(! isPublished){
+               	title.decorate( new UIStyleDecorator("elementAlertFront") );
+               	countUnpublishedGroups ++;
+               }
                UIOutput.make(groupRow, "groupType", group.type);
                // direct link to the group eval
                UILink.make(groupRow, "directGroupLink", UIMessage.make("evaluationassignconfirm.direct.link"), 
@@ -170,6 +177,10 @@ public class EvaluationAssignmentsProducer implements ViewComponentProducer, Vie
          }
       } else {
          UIMessage.make(tofill, "noGroupsSelected", "evaluationassignments.no.groups");
+      }
+      
+      if (countUnpublishedGroups > 0){
+      	UIMessage.make(tofill, "eval-instructions-group-notpublished", "assigneval.assign.instructions.notpublished");
       }
 
       // show the assigned hierarchy nodes
