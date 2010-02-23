@@ -1649,12 +1649,10 @@ public class EvalAuthoringServiceImpl implements EvalAuthoringService {
         // sort the list of template items
         templateItemsList = TemplateItemUtils.orderTemplateItems(templateItemsList, false);
 
-        int itemCount = 1; // start at display order 1
-        if (toTemplateId == null) {
-            // copying inside one template so start at the item count + 1
-            // get the count of items in the destination template so we know where to start displayOrder from
-            itemCount = getItemCountForTemplate(toTemplate.getId()) + 1;
-        }
+        // start at display order 1 (if to template is empty, 
+        // else get the count of items in the destination template so we know where to start displayOrder from)
+        int itemCount = getItemCountForTemplate(toTemplate.getId()) + 1; 
+
 
         /* http://bugs.sakaiproject.org/jira/browse/EVALSYS-689
          * need to track the copied items and scales to avoid copying them more than once

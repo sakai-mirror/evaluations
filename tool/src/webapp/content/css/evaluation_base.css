@@ -849,3 +849,14 @@ background-repeat : no-repeat !important;
 	padding-left: 20px
 }
 
+/* Change copy buttons to image buttons */
+input.copyButton {
+background:url(/library/image/silk/page_white_copy.png) no-repeat;
+cursor: hand;
+width: 16px;
+height: 16px;
+border: none;
+text-indent: -1000em;
+}
+
+

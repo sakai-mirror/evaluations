@@ -284,22 +284,27 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                 templateItemOTPBinding = "templateItemWBL." + templateItem.getId();
                 templateItemOTP = templateItemOTPBinding + ".";
 
-                UIBranchContainer itemBranch = UIBranchContainer.make(form2, "item-row:", sCurItemNum);
+                UIBranchContainer itemBranch = UIBranchContainer.make(tofill, "item-row:", sCurItemNum);
+                List<Long> itemIds = new ArrayList<Long>();
+                
+                UIForm itemFormBranch = UIForm.make(itemBranch, "row-form");
+                itemFormBranch.parameters.add(new UIELBinding("#{templateBBean.templateId}", templateId));
+                itemIds.add(templateItem.getId());
                 
                 // Add item type and id to item tag only if this is a block item
                 if ( templateItem.getItem().getClassification().equals(EvalConstants.ITEM_TYPE_BLOCK_PARENT) ){
-                	itemBranch.decorate( new UIFreeAttributeDecorator("name", EvalConstants.ITEM_TYPE_BLOCK_PARENT.toLowerCase() + "-" +templateItem.getId() ) );
+                	itemFormBranch.decorate( new UIFreeAttributeDecorator("name", EvalConstants.ITEM_TYPE_BLOCK_PARENT.toLowerCase() + "-" +templateItem.getId() ) );
                 }
                 
                 // hidden item num
-                UIInput.make(itemBranch, "hidden-item-num", templateItemOTP + "displayOrder", sCurItemNum);
-                UIOutput.make(itemBranch, "template-item-id", templateItem.getId() + "");
+                UIInput.make(itemFormBranch, "hidden-item-num", templateItemOTP + "displayOrder", sCurItemNum);
+                UIOutput.make(itemFormBranch, "template-item-id", templateItem.getId() + "");
 
                 // only show Block Check box for scaled and block parents
                 if ( templateItem.getItem().getClassification().equals(EvalConstants.ITEM_TYPE_SCALED) ||
                         templateItem.getItem().getClassification().equals(EvalConstants.ITEM_TYPE_BLOCK_PARENT) ) {
-                    UIOutput checkBranch = UIOutput.make(itemBranch, "block-check-branch");
-                    UIBoundBoolean blockCB = UIBoundBoolean.make(itemBranch, "block-checkbox", Boolean.FALSE);
+                    UIOutput checkBranch = UIOutput.make(itemFormBranch, "block-check-branch");
+                    UIBoundBoolean blockCB = UIBoundBoolean.make(itemFormBranch, "block-checkbox", Boolean.FALSE);
                     // we have to force the id so the JS block checking can work
                     String name = "block-" + templateItem.getItem().getScale().getId() + "-" + templateItem.getId();
                     blockCB.decorators = new DecoratorList( new UIIDStrategyDecorator(name) );
@@ -309,9 +314,9 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                     checkBranch.decorators = new DecoratorList( uild );
                     // tooltip
                     blockCB.decorators.add( new UITooltipDecorator( UIMessage.make("modifytemplate.item.checkbox.title") ) );
-                    UIMessage.make(itemBranch, "check-input-label", "modifytemplate.check.label.title");
+                    UIMessage.make(itemFormBranch, "check-input-label", "modifytemplate.check.label.title");
                 } else {
-                    UIMessage.make(itemBranch, "check-placeholder", "modifytemplate.check.placeholder");
+                    UIMessage.make(itemFormBranch, "check-placeholder", "modifytemplate.check.placeholder");
                 }
 
                 String itemLabelKey = EvalToolConstants.UNKNOWN_KEY;
@@ -321,61 +326,61 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                         break;
                     }
                 }
-                UIMessage.make(itemBranch, "item-classification", itemLabelKey);
+                UIMessage.make(itemFormBranch, "item-classification", itemLabelKey);
 
                 if (templateItem.getScaleDisplaySetting() != null) {
                     String scaleDisplaySettingLabel = " - " + templateItem.getScaleDisplaySetting();
-                    UIOutput.make(itemBranch, "scale-display", scaleDisplaySettingLabel);
+                    UIOutput.make(itemFormBranch, "scale-display", scaleDisplaySettingLabel);
                 }
                 
                 if (templateItem.getCategory() != null && ! EvalConstants.ITEM_CATEGORY_COURSE.equals(templateItem.getCategory())){
                 	String[] category = new String[] { messageLocator.getMessage( RenderingUtils.getCategoryLabelKey(templateItem.getCategory()) ) };
-                	UIMessage.make(itemBranch, "item-category", "modifytemplate.item.category.title", category)
+                	UIMessage.make(itemFormBranch, "item-category", "modifytemplate.item.category.title", category)
                 		.decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.category.tooltip", category)));
                 }
 
-                UIInternalLink.make(itemBranch, "preview-row-item",
+                UIInternalLink.make(itemFormBranch, "preview-row-item",
                         new ItemViewParameters(PreviewItemProducer.VIEW_ID, (Long) null, templateItem.getId()) )
                         .decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.preview")));
 
                 if ((templateItem.getBlockParent() != null) && (templateItem.getBlockParent().booleanValue() == true)) {
                     // if it is a block item
                     BlockIdsParameters target = new BlockIdsParameters(ModifyBlockProducer.VIEW_ID, templateId, templateItem.getId().toString());
-                    UIInternalLink.make(itemBranch, "modify-row-item", target)
+                    UIInternalLink.make(itemFormBranch, "modify-row-item", target)
                     .decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.edit")));
                 } else {
                     //it is a non-block item
                     ViewParameters target = new ItemViewParameters(ModifyItemProducer.VIEW_ID, 
                             templateItem.getItem().getClassification(), templateId, templateItem.getId());
-                    UIInternalLink.make(itemBranch, "modify-row-item", target)
+                    UIInternalLink.make(itemFormBranch, "modify-row-item", target)
                     	.decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.edit")));
                 }
 
                 if(TemplateItemUtils.isBlockParent(templateItem)){
-                    UIInternalLink unblockItem = UIInternalLink.make(itemBranch,	"remove-row-item-unblock", UIMessage.make("modifytemplate.group.ungroup"),
+                    UIInternalLink unblockItem = UIInternalLink.make(itemFormBranch,	"remove-row-item-unblock", UIMessage.make("modifytemplate.group.ungroup"),
                             new ItemViewParameters(RemoveItemProducer.VIEW_ID, (Long)null, templateItem.getId(), templateId) );
                     unblockItem.decorate(new UIFreeAttributeDecorator("templateItemId", templateItem.getId().toString()));
                     unblockItem.decorate(new UIFreeAttributeDecorator("templateId", templateId.toString()));
                     unblockItem.decorate(new UIFreeAttributeDecorator("OTP", templateItemOTPBinding));
                 }
                 else{
-                    UIInternalLink removeItem = UIInternalLink.make(itemBranch,	"remove-row-item",
+                    UIInternalLink removeItem = UIInternalLink.make(itemFormBranch,	"remove-row-item",
                             new ItemViewParameters(RemoveItemProducer.VIEW_ID, (Long)null, templateItem.getId(), templateId) );
                     removeItem.decorate(new UIFreeAttributeDecorator("templateItemId", templateItem.getId().toString()));
                     removeItem.decorate(new UIFreeAttributeDecorator("templateId", templateId.toString()));
                     removeItem.decorate(new UIFreeAttributeDecorator("OTP", templateItemOTPBinding));
-                    removeItem.decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.delete")));
+                    removeItem.decorate(new UITooltipDecorator(UIMessage.make("modifytemplate.item.delete")));                   
                 }
                 
                 // SECOND LINE
 
-                UISelect orderPulldown = UISelect.make(itemBranch, "item-select", itemNumArr, templateItemOTP + "displayOrder", null);
+                UISelect orderPulldown = UISelect.make(itemFormBranch, "item-select", itemNumArr, templateItemOTP + "displayOrder", null);
                 orderPulldown.decorators = new DecoratorList( new UITooltipDecorator( UIMessage.make("modifytemplate.select.order.title") ) );
 
                 String formattedText = FormattedText.convertFormattedTextToPlaintext(templateItem.getItem().getItemText());
 
-                UIBranchContainer branchText = UIBranchContainer.make(itemBranch, "item-text:");
-                UIBranchContainer branchTextHidden = UIBranchContainer.make(itemBranch, "item-text-hidden:");
+                UIBranchContainer branchText = UIBranchContainer.make(itemFormBranch, "item-text:");
+                UIBranchContainer branchTextHidden = UIBranchContainer.make(itemFormBranch, "item-text-hidden:");
                 UIVerbatim itemText = null;
                 if(formattedText.length() < 150){
                     itemText = UIVerbatim.make(branchText, "item-text-short", formattedText);
@@ -399,7 +404,7 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                     /* Don't show the Node Id icon if it's a top level item */
                     if (!templateItem.getHierarchyLevel().equals(EvalConstants.HIERARCHY_LEVEL_TOP)) {
                         EvalHierarchyNode curnode = hierarchyLogic.getNodeById(templateItem.getHierarchyNodeId());
-                        UILink.make(itemBranch, "item-hierarchy")
+                        UILink.make(itemFormBranch, "item-hierarchy")
                         	.decorate( new UITooltipDecorator( messageLocator.getMessage("modifytemplate.item.hierarchy.nodeid.title") + curnode.title ));
                     }
                 }
@@ -413,40 +418,40 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                     } else if ( EvalConstants.SHARING_PRIVATE.equals(templateItem.getResultsSharing()) ) {
                         resultsSharingMessage = "general.private";
                     }
-                    UIMessage.make(itemBranch, "item-results-sharing", resultsSharingMessage);
+                    UIMessage.make(itemFormBranch, "item-results-sharing", resultsSharingMessage);
                 }
 
                 if ( EvalConstants.ITEM_TYPE_SCALED.equals(templateItem.getItem().getClassification()) &&
                         templateItem.getItem().getScale() != null ) {
                     // only show the scale type of this is a scaled item
-                    UIMessage.make(itemBranch, "item-scale-type-title", "modifytemplate.item.scale.type.title");
-                    UIOutput.make(itemBranch, "scale-type", templateItem.getItem().getScale().getTitle());
+                    UIMessage.make(itemFormBranch, "item-scale-type-title", "modifytemplate.item.scale.type.title");
+                    UIOutput.make(itemFormBranch, "scale-type", templateItem.getItem().getScale().getTitle());
                 }
 
                 // display item options
                 boolean showOptions = false;
                 if ( templateItem.getUsesNA() != null 
                         && templateItem.getUsesNA() ) {
-                    UIMessage.make(itemBranch, "item-na-enabled", "modifytemplate.item.na.note");
+                    UIMessage.make(itemFormBranch, "item-na-enabled", "modifytemplate.item.na.note");
                     showOptions = true;
                 }
 
                 if ( templateItem.getUsesComment() != null 
                         && templateItem.getUsesComment() ) {
-                    UIMessage.make(itemBranch, "item-comment-enabled", "modifytemplate.item.comment.note");
+                    UIMessage.make(itemFormBranch, "item-comment-enabled", "modifytemplate.item.comment.note");
                     showOptions = true;
                 }
 
                 if (showOptions) {
-                    UIMessage.make(itemBranch, "item-options", "modifytemplate.item.options");               
+                    UIMessage.make(itemFormBranch, "item-options", "modifytemplate.item.options");               
                 }
 
                 // block child items
                 if ( TemplateItemUtils.isBlockParent(templateItem) ) {
                     List<EvalTemplateItem> childList = TemplateItemUtils.getChildItems(itemList, templateItem.getId());
                     if (childList.size() > 0) {
-                        UIBranchContainer blockChildren = UIBranchContainer.make(itemBranch, "block-children:", Integer.toString(blockChildNum));
-                        UIMessage.make(itemBranch, "modifyblock-items-list-instructions",
+                        UIBranchContainer blockChildren = UIBranchContainer.make(itemFormBranch, "block-children:", Integer.toString(blockChildNum));
+                        UIMessage.make(itemFormBranch, "modifyblock-items-list-instructions",
                         "modifyblock.page.instructions");
                         blockChildNum++;
                         int orderNo = 0;
@@ -454,7 +459,7 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                         // iterate through block children for the current block parent and emit each child item
                         for (int j = 0; j < childList.size(); j++) {
                             EvalTemplateItem child = (EvalTemplateItem) childList.get(j);
-                            emitItem(itemBranch, child, orderNo + 1, templateId, templateItemOTPBinding);
+                            emitItem(itemFormBranch, child, orderNo + 1, templateId, templateItemOTPBinding);
                             orderNo++;
                         }
 
@@ -464,12 +469,16 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
                             UIBranchContainer childRow = UIBranchContainer.make(blockChildren, "child-item:", k+"");
                             UIOutput.make(childRow, "child-item-num", child.getDisplayOrder().toString());
                             UIVerbatim.make(childRow, "child-item-text", child.getItem().getItemText());
-
+                            itemIds.add(child.getId());
                         }
                     } else {
                         throw new IllegalStateException("Block parent with no items in it, id=" + templateItem.getId());
                     }
                 }
+                itemFormBranch.parameters.add(new UIELBinding("#{templateBBean.itemIds}", itemIds));
+                UICommand copyButton = UICommand.make(itemFormBranch, "copy-row-button", 
+                        UIMessage.make("general.copy"), "#{templateBBean.copyTemplateItems}");
+                copyButton.decorate(new UITooltipDecorator(UIMessage.make("general.copy")));
             }
 
         }
@@ -483,7 +492,7 @@ public class ModifyTemplateItemsProducer implements ViewComponentProducer, ViewP
         UICommand createBlock = UICommand.make(blockForm, "createBlockBtn", UIMessage.make("modifytemplate.button.createblock") );
         createBlock.decorators = new DecoratorList( new UITooltipDecorator( UIMessage.make("modifytemplate.button.createblock.title") ) );
 
-        UIMessage.make(form2, "blockInstructions", "modifytemplate.instructions.block");
+        UIMessage.make(tofill, "blockInstructions", "modifytemplate.instructions.block");
     }
 
     /**
