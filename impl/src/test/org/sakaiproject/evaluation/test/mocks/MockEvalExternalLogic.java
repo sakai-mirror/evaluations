@@ -574,7 +574,7 @@ public List<EvalGroup> getFilteredEvalGroupsForUser(String arg0, String arg1,
 
 public boolean isEvalGroupPublished(String evalGroupId) {
 	// TODO Auto-generated method stub
-	return false;
+	return true;
 }
 
 }
