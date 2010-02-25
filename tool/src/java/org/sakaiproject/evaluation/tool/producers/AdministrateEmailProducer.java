@@ -86,7 +86,6 @@ public class AdministrateEmailProducer implements ViewComponentProducer {
         // control the general email options
         AdministrateProducer.makeInput(form, "general-helpdesk-email", EvalSettings.FROM_EMAIL_ADDRESS);
         AdministrateProducer.makeBoolean(form, "general-use-admin-from-email", EvalSettings.USE_ADMIN_AS_FROM_EMAIL);
-        AdministrateProducer.makeBoolean(form, "general-enable-mass-email", EvalSettings.ENABLE_EMAIL_ON_EVAL_BEGIN);
         AdministrateProducer.makeSelect(form, "default-reminders-frequency",
                 EvalToolConstants.REMINDER_EMAIL_DAYS_VALUES,
                 EvalToolConstants.REMINDER_EMAIL_DAYS_LABELS,

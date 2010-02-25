@@ -270,11 +270,7 @@ public class EvalJobLogicImpl implements EvalJobLogic {
             long runAt = new Date().getTime() + (1000 * timeToWaitSecs);
             scheduleJob(eval.getId(), new Date(runAt), EvalConstants.JOB_TYPE_CREATED);
         }
-        //Consider global admin setting wrt sending a mass email notifying users of eval creation
-	    Boolean sendEmails = (Boolean) settings.get(EvalSettings.ENABLE_EMAIL_ON_EVAL_BEGIN);
-	    if (sendEmails){
-	        scheduleJob(eval.getId(), eval.getStartDate(), EvalConstants.JOB_TYPE_ACTIVE);
-	    }
+        scheduleJob(eval.getId(), eval.getStartDate(), EvalConstants.JOB_TYPE_ACTIVE);
     }
 
 

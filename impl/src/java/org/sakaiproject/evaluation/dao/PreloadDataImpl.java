@@ -168,7 +168,6 @@ public class PreloadDataImpl {
             saveConfig(EvalSettings.EMAIL_WAIT_INTERVAL, 0);
             saveConfig(EvalSettings.EMAIL_DELIVERY_OPTION, EvalConstants.EMAIL_DELIVERY_DEFAULT);
             saveConfig(EvalSettings.LOG_EMAIL_RECIPIENTS, false);
-            saveConfig(EvalSettings.ENABLE_EMAIL_ON_EVAL_BEGIN, true);
             saveConfig(EvalSettings.ENABLE_SINGLE_EMAIL_PER_STUDENT, false);
             saveConfig(EvalSettings.DEFAULT_EMAIL_REMINDER_FREQUENCY, 0);
             saveConfig(EvalSettings.EVALUATION_TIME_TO_WAIT_SECS, 300);
