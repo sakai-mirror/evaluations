@@ -22,6 +22,7 @@ import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalAuthoringService;
 import org.sakaiproject.evaluation.model.EvalTemplateItem;
 import org.sakaiproject.evaluation.tool.LocalTemplateLogic;
+import org.sakaiproject.evaluation.utils.TemplateItemUtils;
 
 import uk.org.ponder.beanutil.WriteableBeanLocator;
 import uk.org.ponder.messageutil.TargettedMessage;
@@ -162,6 +163,8 @@ public class TemplateItemWBL implements WriteableBeanLocator {
 			templateItem.setDisplayOrder(totalGroupedItems + 1);
 			templateItem.setHierarchyLevel(parent.getHierarchyLevel());
 			templateItem.setHierarchyNodeId(parent.getHierarchyNodeId());
+			templateItem.setCategory(parent.getCategory());
+			templateItem.setResultsSharing(parent.getResultsSharing());
 			localTemplateLogic.saveTemplateItem(templateItem);
 
 			messages.addMessage(new TargettedMessage(
