@@ -277,8 +277,13 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             		
             	String evalGroupId = evalGroup.evalGroupId;
             	
-            	int numEvaluatorsInSite = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_TAKE_EVALUATION);
-            	boolean hasEvaluators = numEvaluatorsInSite > 0;
+            	boolean hasEvaluators = true;
+            	
+            	if (! EvalConstants.EVALUATION_AUTHCONTROL_NONE.equals(evaluation.getAuthControl())){
+                	int numEvaluatorsInSite = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_TAKE_EVALUATION);
+                	hasEvaluators = numEvaluatorsInSite > 0;
+            	}
+            	
             	boolean isPublished = commonLogic.isEvalGroupPublished(evalGroupId);
             	            	
                 UIBranchContainer checkboxRow = UIBranchContainer.make(evalgroupArea, "groups:", count+"");
