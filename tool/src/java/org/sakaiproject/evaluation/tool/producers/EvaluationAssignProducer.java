@@ -244,11 +244,20 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         String currentSiteId = EntityReference.getIdFromRef(currentEvalGroupId);
 
         // get the groups that this user is allowed to assign evals to
-        //TODO: Filter site types. EVALSYS-762
-        List<EvalGroup> evalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION, currentSiteId);  
-        
+        List<EvalGroup> evalGroups = new ArrayList<EvalGroup>();
         // for backwards compatibility we will pull the list of groups the user is being evaluated in as well and merge it in
-        List<EvalGroup> beEvalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED, currentSiteId);  
+        List<EvalGroup> beEvalGroups = new ArrayList<EvalGroup>();
+        
+        Boolean isGroupFilterEnabled = (Boolean) settings.get(EvalSettings.ENABLE_FILTER_ASSIGNABLE_GROUPS);
+
+        if( isGroupFilterEnabled ){
+	        evalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION, currentSiteId);  
+	        beEvalGroups = commonLogic.getFilteredEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED, currentSiteId);  
+        }else{
+        	evalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_ASSIGN_EVALUATION);
+        	beEvalGroups = commonLogic.getEvalGroupsForUser(commonLogic.getCurrentUserId(), EvalConstants.PERM_BE_EVALUATED);
+        }
+        
         for (EvalGroup evalGroup : beEvalGroups) {
             if (! evalGroups.contains(evalGroup)) {
                 evalGroups.add(evalGroup);
