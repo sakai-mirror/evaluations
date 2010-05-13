@@ -33,6 +33,7 @@ import org.sakaiproject.evaluation.logic.EvalAuthoringService;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
 import org.sakaiproject.evaluation.logic.EvalEvaluationSetupService;
+import org.sakaiproject.evaluation.logic.EvalSettings;
 import org.sakaiproject.evaluation.logic.exceptions.BlankRequiredFieldException;
 import org.sakaiproject.evaluation.logic.exceptions.InvalidDatesException;
 import org.sakaiproject.evaluation.logic.externals.EvalExternalLogic;
@@ -181,6 +182,11 @@ public class SetupEvalBean {
 			AssignGroupSelectionSettings assignGroupSelectionSettings) {
 		this.assignGroupSelectionSettings = assignGroupSelectionSettings;
 	}
+	
+	private EvalSettings settings;
+    public void setSettings(EvalSettings settings) {
+        this.settings = settings;
+    }
 
 	DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
 
@@ -472,37 +478,40 @@ public class SetupEvalBean {
 					selectedHierarchyNodeIDs, selectedGroupIDs, append);
 		}
 		
-		Map<Long, List<EvalAssignGroup>> evalAssignGroupMap = evaluationService.getAssignGroupsForEvals(new Long[] {evaluationId}, true, false);
-		List<EvalAssignGroup> evalAssignGroups = evalAssignGroupMap.get(evaluationId);
-		
-		// Query DB only once to get all EvalAssignUsers
-		List<EvalAssignUser> evalUsers = evaluationService
-			.getParticipantsForEval(evaluationId, null, null, null, EvalEvaluationService.STATUS_ANY, null, null);
-		
-		for (EvalAssignGroup assignGroup : evalAssignGroups) {
-			String currentGroupId = assignGroup.getEvalGroupId();
-			// Save Assistant/Instructor selections now. EVALSYS-618
-			String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentGroupId);
-			String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
-			String[] orderingInstructors = selectedEvaluationUsersLocator.getOrderingForInstructors(currentGroupId);
-			String[] orderingAssistants = selectedEvaluationUsersLocator.getOrderingForAssistants(currentGroupId);
-			updateEvalAssignUsers(deselectedInstructors, orderingInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId, evalUsers);
-			updateEvalAssignUsers(deselectedAssistants, orderingAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId, evalUsers);
-			// set selection settings for assign group
-			String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
-			String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
-			if( settingInstructor == null || "".equals(settingInstructor)){
-				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, EvalAssignGroup.SELECTION_OPTION_ALL );
-			}else{
-				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor );
+		//Work with selection options
+		if( ((Boolean)settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION)).booleanValue() ){
+			Map<Long, List<EvalAssignGroup>> evalAssignGroupMap = evaluationService.getAssignGroupsForEvals(new Long[] {evaluationId}, true, false);
+			List<EvalAssignGroup> evalAssignGroups = evalAssignGroupMap.get(evaluationId);
+			
+			// Query DB only once to get all EvalAssignUsers
+			List<EvalAssignUser> evalUsers = evaluationService
+				.getParticipantsForEval(evaluationId, null, null, null, EvalEvaluationService.STATUS_ANY, null, null);
+			
+			for (EvalAssignGroup assignGroup : evalAssignGroups) {
+				String currentGroupId = assignGroup.getEvalGroupId();
+				// Save Assistant/Instructor selections now. EVALSYS-618
+				String[] deselectedInstructors = selectedEvaluationUsersLocator.getDeselectedInstructors(currentGroupId);
+				String[] deselectedAssistants = selectedEvaluationUsersLocator.getDeselectedAssistants(currentGroupId);
+				String[] orderingInstructors = selectedEvaluationUsersLocator.getOrderingForInstructors(currentGroupId);
+				String[] orderingAssistants = selectedEvaluationUsersLocator.getOrderingForAssistants(currentGroupId);
+				updateEvalAssignUsers(deselectedInstructors, orderingInstructors, EvalAssignUser.TYPE_EVALUATEE, currentGroupId, evalUsers);
+				updateEvalAssignUsers(deselectedAssistants, orderingAssistants, EvalAssignUser.TYPE_ASSISTANT,currentGroupId, evalUsers);
+				// set selection settings for assign group
+				String settingInstructor = assignGroupSelectionSettings.getInstructorSetting(currentGroupId);
+				String settingAssistant = assignGroupSelectionSettings.getAssistantSetting(currentGroupId);
+				if( settingInstructor == null || "".equals(settingInstructor)){
+					assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, EvalAssignGroup.SELECTION_OPTION_ALL );
+				}else{
+					assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR, settingInstructor );
+				}
+				if( settingAssistant == null || "".equals(settingAssistant)){
+					assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, EvalAssignGroup.SELECTION_OPTION_ALL );
+				}else{
+					assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant );
+				}
+				//Save selection settings
+				evaluationSetupService.saveAssignGroup(assignGroup, commonLogic.getCurrentUserId());
 			}
-			if( settingAssistant == null || "".equals(settingAssistant)){
-				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, EvalAssignGroup.SELECTION_OPTION_ALL );
-			}else{
-				assignGroup.setSelectionOption(EvalAssignGroup.SELECTION_TYPE_ASSISTANT, settingAssistant );
-			}
-			//Save selection settings
-			evaluationSetupService.saveAssignGroup(assignGroup, commonLogic.getCurrentUserId());
 		}
 		
 		return "controlEvals";

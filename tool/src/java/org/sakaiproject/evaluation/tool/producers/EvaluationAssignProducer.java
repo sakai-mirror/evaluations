@@ -30,12 +30,16 @@ import org.sakaiproject.entitybroker.EntityReference;
 import org.sakaiproject.evaluation.constant.EvalConstants;
 import org.sakaiproject.evaluation.logic.EvalCommonLogic;
 import org.sakaiproject.evaluation.logic.EvalEvaluationService;
+import org.sakaiproject.evaluation.logic.EvalSettings;
 import org.sakaiproject.evaluation.logic.externals.ExternalHierarchyLogic;
 import org.sakaiproject.evaluation.logic.model.EvalGroup;
 import org.sakaiproject.evaluation.logic.model.EvalHierarchyNode;
+import org.sakaiproject.evaluation.model.EvalAdhocGroup;
 import org.sakaiproject.evaluation.model.EvalAssignGroup;
 import org.sakaiproject.evaluation.model.EvalAssignUser;
 import org.sakaiproject.evaluation.model.EvalEvaluation;
+import org.sakaiproject.evaluation.tool.renderers.HierarchyTreeNodeSelectRenderer;
+import org.sakaiproject.evaluation.tool.viewparams.AdhocGroupParams;
 import org.sakaiproject.evaluation.tool.viewparams.EvalViewParameters;
 import org.sakaiproject.evaluation.utils.ComparatorsUtils;
 
@@ -45,6 +49,7 @@ import uk.org.ponder.rsf.components.UICommand;
 import uk.org.ponder.rsf.components.UIContainer;
 import uk.org.ponder.rsf.components.UIELBinding;
 import uk.org.ponder.rsf.components.UIForm;
+import uk.org.ponder.rsf.components.UIInitBlock;
 import uk.org.ponder.rsf.components.UIInternalLink;
 import uk.org.ponder.rsf.components.UIMessage;
 import uk.org.ponder.rsf.components.UIOutput;
@@ -58,11 +63,13 @@ import uk.org.ponder.rsf.components.decorators.UIStyleDecorator;
 import uk.org.ponder.rsf.components.decorators.UITooltipDecorator;
 import uk.org.ponder.rsf.flow.ARIResult;
 import uk.org.ponder.rsf.flow.ActionResultInterceptor;
+import uk.org.ponder.rsf.request.EarlyRequestParser;
 import uk.org.ponder.rsf.view.ComponentChecker;
 import uk.org.ponder.rsf.view.ViewComponentProducer;
 import uk.org.ponder.rsf.viewstate.SimpleViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParameters;
 import uk.org.ponder.rsf.viewstate.ViewParamsReporter;
+import uk.org.ponder.rsf.viewstate.ViewStateHandler;
 
 /**
  * View for assigning an evaluation to groups and hierarchy nodes. 
@@ -107,6 +114,21 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
     public void setMessageLocator(MessageLocator messageLocator) {
         this.messageLocator = messageLocator;
     }
+    
+    private EvalSettings settings;
+    public void setSettings(EvalSettings settings) {
+        this.settings = settings;
+    }
+    
+    private HierarchyTreeNodeSelectRenderer hierUtil;
+    public void setHierarchyRenderUtil(HierarchyTreeNodeSelectRenderer util) {
+        hierUtil = util;
+    }
+    
+    private ViewStateHandler vsh;
+    public void setViewStateHandler(ViewStateHandler vsh) {
+        this.vsh = vsh;
+    }
    
     public void fillComponents(UIContainer tofill, ViewParameters viewparams, ComponentChecker checker) {
 
@@ -128,6 +150,10 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * this should ONLY be read from, do not change any of these fields
          */
         EvalEvaluation evaluation = evaluationService.getEvaluationById(evalViewParams.evaluationId);
+        
+        //Are we using the selection options (UCT)?
+        boolean useSelectionOptions = ((Boolean)settings.get(EvalSettings.ENABLE_INSTRUCTOR_ASSISTANT_SELECTION)).booleanValue();
+        
         String actionBean = "setupEvalBean.";
         Boolean newEval = false;
         
@@ -184,11 +210,18 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          */
         UIForm form = UIForm.make(tofill, "eval-assign-form");
 
+        // Things for building the UISelect of Hierarchy Node Checkboxes
+        List<String> hierNodesLabels = new ArrayList<String>();
+        List<String> hierNodesValues = new ArrayList<String>();
+        UISelect hierarchyNodesSelect = UISelect.makeMultiple(form, "hierarchyNodeSelectHolder",
+                new String[] {}, new String[] {}, "selectedHierarchyNodeIDs", new String[] {});
+        String hierNodesSelectID = hierarchyNodesSelect.getFullID();
+
         // Things for building the UISelect of Eval Group Checkboxes
         List<String> evalGroupsLabels = new ArrayList<String>();
         List<String> evalGroupsValues = new ArrayList<String>();
-        UISelect evalGroupsSelect = UISelect.makeMultiple(form, "evalGroupSelectHolder", 
-                new String[] {}, new String[] {}, actionBean + "selectedGroupIDs", new String[] {});
+        UISelect evalGroupsSelect = UISelect.makeMultiple(form, "evalGroupSelectHolder",
+                new String[] {}, new String[] {}, (useSelectionOptions? actionBean : "") + "selectedGroupIDs", new String[] {});
         String evalGroupsSelectID = evalGroupsSelect.getFullID();
 
         /*
@@ -199,6 +232,9 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
          * which a checkbox for each one.
          * 
          */
+        
+        Boolean useAdHocGroups = (Boolean) settings.get(EvalSettings.ENABLE_ADHOC_GROUPS);
+        Boolean showHierarchy = (Boolean) settings.get(EvalSettings.DISPLAY_HIERARCHY_OPTIONS);
        
         // NOTE: this is the one place where the perms should be used instead of user assignments (there are no assignments yet) -AZ
         
@@ -227,13 +263,37 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             }
             
             /*
+             * Area 1. Selection GUI for Hierarchy Nodes and Evaluation Groups
+             */
+            if (showHierarchy) {
+                UIBranchContainer hierarchyArea = UIBranchContainer.make(form, "hierarchy-node-area:");
+
+                addCollapseControl(tofill, hierarchyArea, "initJSHierarchyToggle",
+                        "hierarchy-assignment-area", "hide-button", "show-button", true);
+
+                hierUtil.renderSelectHierarchyNodesTree(hierarchyArea, "hierarchy-tree-select:",
+                        evalGroupsSelectID, hierNodesSelectID, evalGroupsLabels, evalGroupsValues,
+                        hierNodesLabels, hierNodesValues);
+            }
+            
+            /*
              * Area 2. display checkboxes for selecting the non-hierarchy groups
              */
             UIBranchContainer evalgroupArea = UIBranchContainer.make(form, "evalgroups-area:");
-
-            UIOutput.make(evalgroupArea, "evalgroups-assignment-area");
+            
+            // If both the hierarchy and adhoc groups are disabled, don't hide the
+            // selection area and don't make it collapsable, since it will be the
+            // only thing on the screen.
+            if (! showHierarchy && ! useAdHocGroups) {
+                UIOutput.make(evalgroupArea, "evalgroups-assignment-area");
+            }
+            else {
+                addCollapseControl(tofill, evalgroupArea, "initJSGroupsToggle",
+                        "evalgroups-assignment-area", "hide-button", "show-button", true);
+            }
             
             String[] nonAssignedEvalGroupIDs = getEvalGroupIDsNotAssignedInHierarchy(evalGroups).toArray(new String[] {});
+            
             List<EvalGroup> unassignedEvalGroups = new ArrayList<EvalGroup>();
             for (int i = 0; i < nonAssignedEvalGroupIDs.length; i++) {
                 unassignedEvalGroups.add(groupsMap.get(nonAssignedEvalGroupIDs[i]));
@@ -264,9 +324,11 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
             		assignGroupsIds.add(assGroup.getEvalGroupId());
             		
             		//Add group selection settings to form to support EVALSYS-778
-            		Map<String, String> selectionOptions = assGroup.getSelectionOptions();
-                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".instructor", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR)));
-                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".assistant", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_ASSISTANT)));
+            		if (useSelectionOptions){
+	            		Map<String, String> selectionOptions = assGroup.getSelectionOptions();
+	                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".instructor", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR)));
+	                    form.parameters.add(new UIELBinding(groupSelectionOTP + assGroup.getEvalGroupId().replaceAll("/site/", "") + ".assistant", selectionOptions.get(EvalAssignGroup.SELECTION_TYPE_ASSISTANT)));
+            		}
             	}
             }
                            
@@ -296,29 +358,31 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 Set<String> deselectedInsructorIds = new HashSet<String>();
                 Set<String> deselectedAssistantIds = new HashSet<String>();
                 
-                
-                if (! newEval) {
-                //Get saved selection settings for this eval
-            	List<EvalAssignUser> deselectedInsructors = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_REMOVED, null, null);
-                List<EvalAssignUser> deselectedAssistants = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_REMOVED, null, null);
-               
-            	//check for already deselected users that match this groupId
-                for(EvalAssignUser deselectedUser:deselectedInsructors){
-                	deselectedInsructorIds.add(deselectedUser.getUserId());
-                }
-                for(EvalAssignUser deselectedUser:deselectedAssistants){
-                	deselectedAssistantIds.add(deselectedUser.getUserId());
-                }
-               
-                //Assign attribute to row to help JS set checkbox selection to true
-                if(assignGroupsIds.contains(evalGroupId)){
-                	checkboxRow.decorate(new UIStyleDecorator("selectedGroup"));
-                }
-                 
-                }else{
-                	//add blank selection options for this group for use by evalAssign.js
-                	form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".instructor", ""));
-                    form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
+                if (useSelectionOptions){
+	                
+	                if (! newEval) {
+	                //Get saved selection settings for this eval
+	            	List<EvalAssignUser> deselectedInsructors = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_EVALUATEE, EvalAssignUser.STATUS_REMOVED, null, null);
+	                List<EvalAssignUser> deselectedAssistants = evaluationService.getParticipantsForEval(evalViewParams.evaluationId, null, new String[]{evalGroupId}, EvalAssignUser.TYPE_ASSISTANT, EvalAssignUser.STATUS_REMOVED, null, null);
+	               
+	            	//check for already deselected users that match this groupId
+	                for(EvalAssignUser deselectedUser:deselectedInsructors){
+	                	deselectedInsructorIds.add(deselectedUser.getUserId());
+	                }
+	                for(EvalAssignUser deselectedUser:deselectedAssistants){
+	                	deselectedAssistantIds.add(deselectedUser.getUserId());
+	                }
+	               
+	                //Assign attribute to row to help JS set checkbox selection to true
+	                if(assignGroupsIds.contains(evalGroupId)){
+	                	checkboxRow.decorate(new UIStyleDecorator("selectedGroup"));
+	                }
+	                 
+	                }else{
+	                	//add blank selection options for this group for use by evalAssign.js
+	                	form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".instructor", ""));
+	                    form.parameters.add(new UIELBinding(groupSelectionOTP + evalGroupId.replaceAll("/site/", "") + ".assistant", ""));	
+	                }
                 }
                 
                 evalGroupsLabels.add(evalGroup.title);
@@ -331,12 +395,15 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 if (! hasEvaluators){
                 	choice.decorate( new UIDisabledDecorator() );
                 }
-                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
-                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedAssistants", deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
                 
-                //add ordering bindings
-                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingInstructors", new String[]{} ));
-                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingAssistants", new String[]{} ));
+                if (useSelectionOptions){
+	                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedInstructors", deselectedInsructorIds!=null?deselectedInsructorIds.toArray(new String[deselectedInsructorIds.size()]):new String[]{}));
+	                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "")+".deselectedAssistants", deselectedAssistantIds!=null?deselectedAssistantIds.toArray(new String[deselectedAssistantIds.size()]):new String[]{}));
+	                
+	                //add ordering bindings
+	                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingInstructors", new String[]{} ));
+	                form.parameters.add(new UIELBinding(evalUsersLocator + evalGroupId.replaceAll("/site/", "") + ".orderingAssistants", new String[]{} ));
+                }
                 
                 // get title from the map since it is faster
 	            UIOutput title = UIOutput.make(checkboxRow, "groupTitle", evalGroup.title );
@@ -346,29 +413,32 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
                 	countUnpublishedGroups ++;
                 }
 	            
-	            if( hasEvaluators ){
-	                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
-	                if(totalUsers > 0){
-	                	int currentUsers = deselectedInsructorIds.size() >= 0 ? ( totalUsers-deselectedInsructorIds.size() ) : totalUsers;
-	                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
-	                			new Object[] {currentUsers,totalUsers}), 
-	                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
-	                	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
-	                	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
+	            if (useSelectionOptions){
+		            if( hasEvaluators ){
+		                int totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroupId, EvalConstants.PERM_BE_EVALUATED);
+		                if(totalUsers > 0){
+		                	int currentUsers = deselectedInsructorIds.size() >= 0 ? ( totalUsers-deselectedInsructorIds.size() ) : totalUsers;
+		                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-instructors", UIMessage.make("assignselect.instructors.select", 
+		                			new Object[] {currentUsers,totalUsers}), 
+		                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroupId, EvalAssignGroup.SELECTION_TYPE_INSTRUCTOR) );
+		                	link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+		                	link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.instructors.page.title")));
+		                }
+		                totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);
+		                if(totalUsers > 0){
+		                	int currentUsers = deselectedAssistantIds.size() >= 0 ? ( totalUsers-deselectedAssistantIds.size() ) : totalUsers;
+		                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", 
+		                			new Object[] {currentUsers,totalUsers}) , 
+		                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
+		                    link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
+		                    link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.tas.page.title")));
+		                }
+	                }else{
+	                	title.decorate( new UIStyleDecorator("instruction") );
+	                	UIMessage.make(checkboxRow, "select-no", "assigneval.cannot.assign");
 	                }
-	                totalUsers = commonLogic.countUserIdsForEvalGroup(evalGroup.evalGroupId, EvalConstants.PERM_ASSISTANT_ROLE);
-	                if(totalUsers > 0){
-	                	int currentUsers = deselectedAssistantIds.size() >= 0 ? ( totalUsers-deselectedAssistantIds.size() ) : totalUsers;
-	                	UIInternalLink link = UIInternalLink.make(checkboxRow, "select-tas", UIMessage.make("assignselect.tas.select", 
-	                			new Object[] {currentUsers,totalUsers}) , 
-	                			new EvalViewParameters(EvaluationAssignSelectProducer.VIEW_ID, evaluation.getId() ,evalGroup.evalGroupId, EvalAssignGroup.SELECTION_TYPE_ASSISTANT) );
-	                    link.decorate(new UIStyleDecorator("addItem total:"+totalUsers));
-	                    link.decorate(new UITooltipDecorator(messageLocator.getMessage("assignselect.tas.page.title")));
-	                }
-                }else{
-                	title.decorate( new UIStyleDecorator("instruction") );
-                	UIMessage.make(checkboxRow, "select-no", "assigneval.cannot.assign");
-                }
+	            }
+	            
                 UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
 	                
                 
@@ -381,14 +451,92 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
         } else {
             // TODO tell user there are no groups to assign to
         }
+        
+        /*
+         * Area 3: Selection GUI for Adhoc Groups
+         */
+        String[] adhocGroupRowIds = new String[] {};
+        if (useAdHocGroups) {
+            UIBranchContainer adhocGroupsArea = UIBranchContainer.make(form, "use-adhoc-groups-area:");
+
+            UIMessage.make(adhocGroupsArea, "adhoc-groups-deleted", "modifyadhocgroup.group.deleted");
+            addCollapseControl(tofill, adhocGroupsArea, "initJSAdhocToggle",
+                    "adhocgroups-assignment-area", "hide-button", "show-button", true);
+
+            // Table of Existing adhoc groups for selection
+            List<EvalAdhocGroup> myAdhocGroups = commonLogic.getAdhocGroupsForOwner(currentUserId);
+            if (myAdhocGroups.size() > 0) {
+                UIOutput.make(adhocGroupsArea, "adhoc-groups-table");
+
+                ArrayList<String> adhocGroupRowIdsArray = new ArrayList<String>(myAdhocGroups.size());
+                int count = 0;
+                for (EvalAdhocGroup adhocGroup: myAdhocGroups) {
+                    UIBranchContainer tableRow = UIBranchContainer.make(adhocGroupsArea, "groups:");
+                    adhocGroupRowIdsArray.add(tableRow.getFullID());
+                    if (count % 2 == 0) {
+                        tableRow.decorate( new UIStyleDecorator("itemsListOddLine") ); // must match the existing CSS class
+                    }
+
+                    evalGroupsLabels.add(adhocGroup.getTitle());
+                    evalGroupsValues.add(adhocGroup.getEvalGroupId());
+
+                    UISelectChoice choice = UISelectChoice.make(tableRow, "evalGroupId", evalGroupsSelectID, evalGroupsLabels.size()-1);
+
+                    // get title from the map since it is faster
+                    UIOutput title = UIOutput.make(tableRow, "groupTitle", adhocGroup.getTitle() );
+                    UILabelTargetDecorator.targetLabel(title, choice); // make title a label for checkbox
+
+                    // Link to allow editing an existing group
+                    UIInternalLink.make(tableRow, "editGroupLink", UIMessage.make("assigneval.page.adhocgroups.editgrouplink"),
+                            new AdhocGroupParams(ModifyAdhocGroupProducer.VIEW_ID, adhocGroup.getId(), vsh.getFullURL(evalViewParams)));
+                    count ++;
+                }
+                adhocGroupRowIds = adhocGroupRowIdsArray.toArray(new String[adhocGroupRowIdsArray.size()]);
+            }
+            UIInternalLink.make(adhocGroupsArea, "new-adhocgroup-link", UIMessage.make("assigneval.page.adhocgroups.newgrouplink"),
+                    new AdhocGroupParams(ModifyAdhocGroupProducer.VIEW_ID, null, vsh.getFullURL(evalViewParams)));
+        }
 
         evalGroupsSelect.optionlist = UIOutputMany.make(evalGroupsValues.toArray(new String[] {}));
         evalGroupsSelect.optionnames = UIOutputMany.make(evalGroupsLabels.toArray(new String[] {}));
         
+        hierarchyNodesSelect.optionlist = UIOutputMany.make(hierNodesValues.toArray(new String[] {}));
+        hierarchyNodesSelect.optionnames = UIOutputMany.make(hierNodesLabels.toArray(new String[] {}));
+        
         form.parameters.add( new UIELBinding(actionBean + "evaluationId", evalViewParams.evaluationId) );
         
         UIMessage.make(form, "back-button", "general.back.button");
-        UICommand.make(form, "confirmAssignCourses", UIMessage.make("evaluationassignconfirm.done.button"),actionBean + "completeConfirmAction" );
+        
+        if (useSelectionOptions){
+        	UIOutput.make(tofill, "JS-facebox");
+        	UIOutput.make(tofill, "JS-facebox-assign");
+        	UIOutput.make(tofill, "JS-assign");
+        	UIMessage.make(form, "select-column-title", "assignselect.page.column.title");
+        	form.type = EarlyRequestParser.ACTION_REQUEST;
+        	UICommand.make(form, "confirmAssignCourses", UIMessage.make("evaluationassignconfirm.done.button"),actionBean + "completeConfirmAction" );
+        }else{
+        	// this is a get form which does not submit to a backing bean
+            EvalViewParameters formViewParams = (EvalViewParameters) evalViewParams.copyBase();
+            formViewParams.viewID = EvaluationAssignConfirmProducer.VIEW_ID;
+            form.viewparams = formViewParams;
+        	form.type = EarlyRequestParser.RENDER_REQUEST;
+        	 // all command buttons are just HTML now so no more bindings
+        	UIMessage assignButton = UIMessage.make(form, "confirmAssignCourses", "assigneval.save.assigned.button" );
+
+            // activate the adhoc groups deletion javascript
+            if (useAdHocGroups) {
+                UIInitBlock.make(tofill, "initJavaScriptAdhoc", "EvalSystem.initEvalAssignAdhocDelete",
+                        new Object[] {adhocGroupRowIds});
+            }
+
+            // Error message to be triggered by javascript if users doesn't select anything
+            // There is a 'evalgroupselect' class on each input checkbox that the JS
+            // can check for now.
+            UIMessage assignErrorDiv = UIMessage.make(tofill, "nogroups-error", "assigneval.invalid.selection");
+
+            UIInitBlock.make(tofill, "initJavaScript", "EvalSystem.initEvalAssignValidation",
+                    new Object[] {form.getFullID(), assignErrorDiv.getFullID(), assignButton.getFullID()});
+        }
         
     }
 
@@ -424,6 +572,38 @@ public class EvaluationAssignProducer implements ViewComponentProducer, ViewPara
 
         return evalGroupIDs;
     }
+    
+    /**
+     * Taking the parent container and rsf:id's for the collapsed area and tags
+     * to show and hide, creates the necessary javascript.  The Javascript is
+     * appended to the instance variable holding the javascript that will be
+     * rendered at the bottom of the page for javascript initialization.
+     */
+    private void addCollapseControl(UIContainer tofill, UIContainer parent,
+            String rsfId, String areaId, String hideId, String showId, boolean initialHide) {
+        UIOutput hideControl = UIOutput.make(parent, hideId);
+        UIOutput showControl = UIOutput.make(parent, showId);
+        UIOutput areaDiv = UIOutput.make(parent, areaId);
+
+        //makeToggle: function (showId, hideId, areaId, toggleClass, initialHide) {
+        if (initialHide) {
+            UIInitBlock.make(tofill, rsfId, "EvalSystem.makeToggle",
+                    new Object[] { showControl.getFullID(),
+                    hideControl.getFullID(),
+                    areaDiv.getFullID(),
+                    null,
+                    initialHide
+                }
+            );
+        } else {
+            UIInitBlock.make(tofill, rsfId, "EvalSystem.makeToggle",
+                    new Object[] { showControl.getFullID(),
+                    hideControl.getFullID(),
+                    areaDiv.getFullID() }
+            );
+        }
+    }
+
 
 
     /* (non-Javadoc)
